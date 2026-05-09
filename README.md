@@ -1,2 +1,0 @@
-# replit
-real estate project 
