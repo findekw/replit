@@ -12,8 +12,12 @@ if (!process.env.DATABASE_URL) {
 
 const rawUrl = process.env.DATABASE_URL;
 
-// Replit's internal database lives on helium and needs standard pg (no SSL).
+// Use standard node-postgres (not the Neon serverless HTTP driver) when talking
+// to a self-hosted / internal Postgres. Set DATABASE_DRIVER=pg for self-hosted
+// deployments (Docker on a VPS, localhost). The host-name checks below also
+// cover Replit's internal helium DB, which needs standard pg (no SSL).
 const isInternalDb =
+  process.env.DATABASE_DRIVER === "pg" ||
   rawUrl.includes("helium") ||
   rawUrl.includes("localhost") ||
   rawUrl.includes("127.0.0.1");
