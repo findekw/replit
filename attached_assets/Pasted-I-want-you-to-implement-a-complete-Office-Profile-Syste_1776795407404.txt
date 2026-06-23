@@ -1,0 +1,183 @@
+I want you to implement a complete "Office Profile System" in my real estate app with clean UX and full mobile responsiveness.
+
+========================
+GOAL
+========================
+Each property must display the real estate office (company) that posted it, and users can click it to view all listings from that office.
+
+========================
+BACKEND REQUIREMENTS
+========================
+
+1. Ensure each property has:
+- officeId
+- officeName
+- officeSlug (unique, URL-friendly)
+
+2. Create endpoint:
+GET /api/offices/:slug
+
+Response should return:
+{
+  id,
+  name,
+  phone,
+  whatsapp,
+  slug,
+  properties: [
+    {
+      id,
+      title,
+      price,
+      type (rent/sale/swap),
+      city,
+      area,
+      primaryImage
+    }
+  ]
+}
+
+3. When creating a property:
+- Automatically attach logged-in office info (officeId, officeName, officeSlug)
+
+========================
+FRONTEND – PROPERTY PAGE
+========================
+
+1. At the bottom of property detail page, add:
+
+Section title:
+"المعلن"
+
+Below it:
+- Office name (bold)
+- Clickable container → navigates to office page
+
+Example layout:
+
+[ المعلن ]
+مكتب الفنطاس العقاري →
+(زر أو بلوك قابل للضغط بالكامل)
+
+2. Make entire block clickable:
+onClick → /office/{slug}
+
+3. Styling:
+- padding: 16px
+- border-radius: 12px
+- background: light gray (#f9fafb)
+- hover: slight shadow
+- cursor: pointer
+
+========================
+OFFICE PAGE (NEW)
+========================
+
+Route:
+ /office/:slug
+
+Page content:
+
+1. Header:
+- Office name (large bold)
+- Buttons:
+   - WhatsApp (green)
+   - Call (blue)
+
+2. Listings section:
+
+Tabs:
+- الكل
+- للإيجار
+- للبيع
+- بدل
+
+3. Show listings as cards:
+- image
+- title
+- price
+- area
+- type badge
+
+4. Clicking property → goes to property page
+
+========================
+RESPONSIVE DESIGN (VERY IMPORTANT)
+========================
+
+MOBILE:
+- Single column layout
+- Cards full width
+- Buttons fixed at bottom (sticky):
+   [ اتصال ] [ واتساب ]
+
+TABLET:
+- 2 columns
+
+DESKTOP:
+- 3 columns grid
+
+Use:
+grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+
+========================
+UI FIXES (IMPORTANT)
+========================
+
+1. Price must NEVER wrap:
+add:
+white-space: nowrap;
+
+2. Fix spacing:
+- consistent padding (16px mobile / 24px desktop)
+- card gap = 16px
+
+3. Images:
+- object-fit: cover
+- height:
+  mobile: 200px
+  desktop: 250px
+
+========================
+EXTRA UX IMPROVEMENT
+========================
+
+If office has:
+- WhatsApp → show floating WhatsApp button
+- Only phone → show floating CALL button
+
+Position:
+bottom: 20px
+right: 20px
+
+========================
+DATA SAFETY
+========================
+
+- Do NOT break existing properties
+- If officeSlug missing → auto-generate from officeName
+
+========================
+FINAL CHECK
+========================
+
+Test:
+1. Create property
+2. Open property page
+3. Click office name
+4. Verify office page loads
+5. Verify listings filter works
+6. Test on mobile screen
+
+========================
+IMPORTANT
+========================
+
+Keep design clean, modern, minimal.
+Arabic RTL support required.
+Do NOT overcomplicate UI.
+Focus on usability.
+
+========================
+END
+========================

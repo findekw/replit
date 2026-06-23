@@ -1,0 +1,116 @@
+<style>
+
+/* ===== تحسين كرت الباقة ===== */
+.pricing-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+/* العنوان */
+.pricing-card h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2d3d;
+  margin-bottom: 10px;
+}
+
+/* نصوص واضحة (بدون بهتان) */
+.pricing-card p,
+.pricing-card span {
+  color: #4a5568;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* السعر */
+.price {
+  font-size: 40px;
+  font-weight: 900;
+  color: #1f2d3d;
+  margin: 10px 0;
+}
+
+/* المميزات (إغراء) */
+.pricing-features {
+  margin-top: 15px;
+  text-align: right;
+}
+
+.pricing-features li {
+  font-size: 15px;
+  color: #2d3748;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* ===== زر نبض خفيف ===== */
+.cta-button {
+  margin-top: 18px;
+  background: linear-gradient(90deg, #2b6cb0, #3182ce);
+  color: #fff;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+}
+
+/* تأثير النبض */
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(49,130,206,0.4); }
+  70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(49,130,206,0); }
+  100% { transform: scale(1); }
+}
+
+/* ===== إخفاء الكرت القديم ===== */
+.start-now-card {
+  display: none !important;
+}
+
+/* ===== تحسين الموبايل ===== */
+@media (max-width: 768px) {
+  .pricing-card {
+    padding: 22px 15px;
+  }
+
+  .pricing-card h2 {
+    font-size: 20px;
+  }
+
+  .price {
+    font-size: 32px;
+  }
+
+  .cta-button {
+    font-size: 15px;
+    padding: 12px;
+  }
+}
+
+</style>
+
+<!-- ===== داخل كرت الباقة ===== -->
+<div class="pricing-card">
+
+  <h2>باقة المكاتب العقارية</h2>
+  <p>تجربة مجانية 7 أيام</p>
+
+  <div class="price">14.5 د.ك / شهرياً</div>
+  <p>ابدأ مجاناً 7 أيام — بعدها 14.5 د.ك فقط</p>
+
+  <ul class="pricing-features">
+    <li>✔ صفحة خاصة لمكتبك</li>
+    <li>✔ عرض جميع عقاراتك برابط واحد</li>
+    <li>✔ استقبال العملاء مباشرة عبر واتساب</li>
+    <li>✔ إدارة سهلة لجميع الإعلانات</li>
+  </ul>
+
+  <button class="cta-button">ابدأ التجربة المجانية</button>
+
+</div>

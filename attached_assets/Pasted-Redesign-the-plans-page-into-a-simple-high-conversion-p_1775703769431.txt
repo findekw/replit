@@ -1,0 +1,131 @@
+Redesign the /plans page into a simple high-conversion pricing page for real estate offices.
+
+IMPORTANT:
+- Remove all multiple plan logic and cards
+- Keep ONLY ONE pricing card in the center
+- The card should contain only the most important bullet points
+- Detailed explanations must be shown BELOW the card, not inside it
+- Arabic RTL layout only
+
+====================================
+1) PAGE HEADER
+====================================
+Top title:
+"ابدأ مجانًا وفعّل مكتبك العقاري خلال دقائق"
+
+Subtitle:
+"صفحة مكتب + إعلانات + عملاء مهتمين في مكان واحد"
+
+Center aligned, clean, premium, simple
+
+====================================
+2) MAIN PRICING CARD (ONLY ONE CARD)
+====================================
+Card title:
+"الباقة الاحترافية"
+
+Old price:
+"29 د.ك / شهرياً"
+
+Discount badge:
+"خصم 50% لفترة محدودة"
+
+New discounted price:
+"14.5 د.ك / شهرياً"
+
+Trial badge:
+"تجربة مجانية 7 أيام"
+
+Inside the card include ONLY these short bullet points:
+- حتى 30 إعلان نشط
+- 5 إعلانات مميزة
+- صفحة مكتب خاصة
+- زر واتساب مباشر
+- إحصائيات التفاعل
+- العملاء المهتمين
+
+Primary CTA button:
+"ابدأ التجربة المجانية"
+
+Small text below button:
+"بدون دفع الآن"
+
+====================================
+3) DETAILS BELOW THE CARD
+====================================
+Under the pricing card, create clean sections/cards for details:
+
+Section 1 title:
+"تفاصيل الإعلانات"
+Items:
+- مدة الإعلان 30 يوم
+- يمكن تعديل الإعلان في أي وقت
+- روابط مباشرة لكل إعلان
+
+Section 2 title:
+"صفحة المكتب"
+Items:
+- صفحة خاصة باسم مكتبك
+- رابط ثابت قابل للمشاركة
+- عرض جميع إعلانات المكتب في صفحة واحدة
+- مناسب للواتساب و QR
+
+Section 3 title:
+"الإحصائيات والتفاعل"
+Items:
+- عدد المشاهدات
+- ضغطات الواتساب
+- عدد الاتصالات
+- معرفة أكثر إعلان عليه اهتمام
+
+Section 4 title:
+"العملاء المهتمون"
+Items:
+- تسجيل المهتمين تلقائياً عند التفاعل
+- حالات بسيطة:
+  جديد / مهتم / تم التواصل / غير جاد / مغلق
+
+====================================
+4) CTA FLOW
+====================================
+When office clicks:
+"ابدأ التجربة المجانية"
+
+Do this:
+- if not logged in:
+  redirect to office registration/login
+- if logged in as office:
+  activate/start trial flow
+
+====================================
+5) DESIGN STYLE
+====================================
+- Premium, clean, simple
+- Centered single card
+- Strong visual hierarchy
+- Do not overcrowd
+- Use brand dark blue for card
+- Use soft gold/amber for discount badge
+- Use white background
+- Rounded corners
+- Soft shadow
+- Mobile responsive
+
+====================================
+6) REMOVE OLD CONTENT
+====================================
+Remove:
+- الباقة الأساسية
+- الباقة المميزة
+- any 3-column pricing layout
+- any confusing comparison table
+
+====================================
+7) FINAL GOAL
+====================================
+The pricing page should feel:
+- simple
+- premium
+- easy for non-technical office owners
+- focused on conversion
+- one offer only, no confusion

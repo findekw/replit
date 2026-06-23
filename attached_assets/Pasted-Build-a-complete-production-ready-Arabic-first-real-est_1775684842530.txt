@@ -1,0 +1,424 @@
+Build a complete production-ready Arabic-first real estate marketplace web application inspired by finde.co, but more modern, more scalable, and designed as a SaaS platform for real estate offices in Kuwait and the Gulf.
+
+IMPORTANT:
+- The website must be RTL-first and Arabic-first.
+- The design must be premium, modern, clean, fast, and conversion-focused.
+- Use the FINDE branding style and use the logo/assets from finde.co as visual inspiration.
+- The homepage search experience should feel inspired by finde.co, but the UI/UX must be better, cleaner, and more modern.
+- Build it as a real multi-role platform, not just a static property listing site.
+
+GOAL:
+Create a real estate marketplace where:
+1) end users search for properties,
+2) real estate offices/brokers can subscribe, manage listings, receive leads, and get their own office page,
+3) admins can manage the full platform.
+
+TECH STACK:
+- Frontend: Next.js latest with App Router + TypeScript
+- Styling: Tailwind CSS + shadcn/ui
+- Icons: lucide-react
+- Forms: react-hook-form + zod validation
+- Database/Backend: Supabase or PostgreSQL with Prisma
+- Auth: secure authentication with email/password and Google login
+- File upload: image upload for listings and office logos
+- Dashboard charts: simple analytics cards/charts
+- Fully responsive: mobile-first and desktop-ready
+- SEO-friendly pages and clean URL structure
+
+LANGUAGE + UX:
+- Default language Arabic
+- RTL layout everywhere
+- Professional Arabic typography
+- Elegant cards, shadows, spacing, and premium modern layout
+- Fast-loading interface with clean filters
+- Make the experience feel like a serious Kuwaiti/GCC proptech startup
+
+CORE SITE STRUCTURE:
+Create the following main pages and flows:
+
+1) Homepage
+- Hero section with a large smart property search box
+- Search fields inspired by finde.co:
+  - Property status
+  - Property type
+  - Governorate
+  - Area
+  - Keyword
+- Featured properties
+- Latest properties
+- Featured offices
+- Statistics section
+- “Why choose us” section
+- CTA for offices to subscribe
+- Footer with useful links
+
+2) Property search system
+The search must support:
+- Property status:
+  - للإيجار
+  - للبيع
+  - للبدل
+- IMPORTANT LOGIC:
+  - “للـبدل” should only be enabled for Kuwait
+  - For other Gulf countries, only “للإيجار” and “للبيع”
+- Property types:
+  - بيت
+  - قسيمة
+  - ارض
+  - دور
+  - شقة
+  - محل
+  - مكتب
+  - مخزن
+  - مستودع
+  - شاليه
+  - استراحة
+  - مزرعة
+  - عمارة
+  - مجمع
+  - قسيمة صناعية
+  - قسيمة حرفية
+  - and allow future expansion
+- Country support:
+  - Kuwait first
+  - scalable for GCC later
+- Governorate and area relation:
+  - In Kuwait, there are exactly 6 governorates:
+    1. محافظة العاصمة
+    2. محافظة حولي
+    3. محافظة الفروانية
+    4. محافظة مبارك الكبير
+    5. محافظة الأحمدي
+    6. محافظة الجهراء
+- Areas must be dynamically linked to the selected governorate
+- When the user selects a governorate, only its related areas appear
+- Add advanced filters:
+  - price range
+  - bedrooms
+  - bathrooms
+  - area size
+  - furnished / unfurnished
+  - featured only
+  - office listings only
+  - amenities
+  - sorting by newest, price low to high, price high to low, featured
+
+3) Property listing pages
+- Grid/list toggle
+- Modern property cards
+- Property image
+- Price
+- Status badge
+- Property type
+- Area / governorate / country
+- Beds / baths / size
+- Office/agent name
+- WhatsApp button
+- Call button
+- Save/favorite button
+- Compare button if possible
+- Smart filtering sidebar
+- Pagination or infinite load
+
+4) Single property details page
+- High-end property gallery
+- Property title
+- Price
+- Status
+- Type
+- Full location
+- Reference ID
+- Description
+- Property facts
+- Amenities
+- Map placeholder section
+- Office/agent card
+- WhatsApp CTA
+- Call CTA
+- Lead form
+- Similar properties
+- Share buttons
+- Report listing option
+
+5) Offices directory
+Create a page called:
+- المكاتب
+This page should list real estate offices/agencies with:
+- Office logo
+- Office name
+- Short description
+- Number of listings
+- City/governorate
+- Verified badge if applicable
+- Visit office page button
+
+6) Dedicated office page for each office
+Each office must have its own branded public page:
+- URL example: /offices/[slug]
+Page content:
+- Office logo
+- Cover image
+- Office name
+- About the office
+- Contact info
+- WhatsApp button
+- Call button
+- Social links
+- Subscription badge/plan
+- All listings by this office
+- Office stats:
+  - total listings
+  - active listings
+  - total views
+  - total leads
+- Optional inquiry form to contact the office
+
+7) Subscription system for offices
+Create SaaS-style subscription plans for offices:
+- Basic
+- Pro
+- Premium
+Each plan controls:
+- maximum listings
+- featured listings count
+- access to lead dashboard
+- analytics access
+- office page customization
+- WhatsApp lead support
+- priority placement
+Add subscription plan cards and billing UI
+
+8) Office dashboard
+Create a complete office dashboard with:
+- Overview page
+- My listings
+- Add new listing
+- Edit listing
+- Delete listing
+- Leads inbox
+- Analytics
+- Office profile settings
+- Subscription / billing
+- Team members (optional)
+Dashboard features:
+- total listings
+- active listings
+- featured listings
+- views count
+- lead count
+- WhatsApp clicks
+- call clicks
+- latest inquiries
+
+9) Lead management system
+This is very important.
+Every property inquiry should become a structured lead.
+Create lead statuses:
+- جديد
+- مهتم
+- تم التواصل
+- غير جاد
+- مغلق
+Lead fields:
+- customer name
+- phone number
+- inquiry type
+- property reference
+- message
+- source page
+- created date
+- office owner
+Allow office users to:
+- filter leads
+- update lead status
+- add notes
+- track lead history
+
+10) Admin dashboard
+Create a full admin panel to manage:
+- users
+- offices
+- subscriptions
+- listings
+- property types
+- countries
+- governorates
+- areas
+- leads
+- homepage sections
+- featured listings
+- featured offices
+- content moderation
+- reports
+- settings
+
+11) Country architecture
+The platform should be built in a scalable way:
+- Kuwait is the primary launch market
+- GCC expansion later
+- For Kuwait:
+  - enable “للإيجار / للبيع / للبدل”
+  - use governorates and linked areas
+- For other GCC countries:
+  - disable “للبدل”
+  - use city/region structure
+Create clean schema for future expansion
+
+12) Search data structure
+Seed the database with Kuwait data architecture:
+- 6 governorates
+- related areas for each governorate
+Make the code easy to extend with full area lists later.
+Use a relational structure:
+Country -> Governorate/Region -> Area -> Property
+
+13) User roles
+Create these roles:
+- admin
+- office owner
+- office staff
+- end user
+Permissions:
+- admin manages everything
+- office owner manages office and listings
+- office staff manages assigned content/leads
+- end user can browse, favorite, and contact
+
+14) Authentication
+Support:
+- Sign up
+- Sign in
+- Forgot password
+- Google login
+- Separate onboarding for offices
+- Office registration request flow
+
+15) Favorites / saved searches
+For end users:
+- save favorite properties
+- save searches
+- get alerts later (placeholder ready)
+
+16) WhatsApp-first Gulf conversion flow
+Every listing and office page should prominently include:
+- WhatsApp button
+- Call button
+Track click analytics for both
+
+17) Design requirements
+Design style:
+- luxurious but simple
+- modern proptech
+- dark blue / white / gray base palette
+- subtle premium accents
+- clean cards
+- modern search UI
+- strong Arabic typography
+Do not make it look generic.
+It must feel like a serious premium Kuwaiti real estate startup.
+
+18) SEO and performance
+- server-side rendering where useful
+- SEO-friendly metadata
+- fast image loading
+- semantic HTML
+- clean URLs
+Examples:
+- /properties
+- /properties/[slug]
+- /offices
+- /offices/[slug]
+- /rent
+- /sale
+- /exchange
+
+19) Data models
+Create complete database schema/models for:
+- User
+- Office
+- OfficeMember
+- SubscriptionPlan
+- Subscription
+- Property
+- PropertyImage
+- PropertyType
+- PropertyStatus
+- Country
+- Governorate
+- Area
+- Lead
+- LeadNote
+- Favorite
+- SavedSearch
+- Amenity
+- PropertyAmenity
+- AnalyticsEvent
+
+20) Seed content
+Seed the project with demo Arabic content and example listings in Kuwait.
+Use realistic Arabic labels and example content for:
+- home page
+- offices
+- listings
+- dashboard
+- plans
+- forms
+
+21) Important functional details
+- Build area dropdown dependent on governorate
+- Build country-specific logic for property status
+- Build property reference ID generation
+- Build featured property logic
+- Build role-based dashboards
+- Build real form validation
+- Build realistic Arabic placeholders and labels
+- Build reusable components
+
+22) Deliverables
+Generate:
+- complete project structure
+- reusable components
+- database schema
+- seed data
+- sample API routes / server actions
+- responsive UI pages
+- dashboard pages
+- public pages
+- dummy but realistic demo data
+- setup instructions in README
+
+23) Output quality
+Do not generate a toy app.
+Generate a serious, well-structured MVP that looks investor-ready and client-ready.
+
+24) Visual direction
+The homepage search and content architecture should be inspired by finde.co, which includes:
+- property status filters such as للإيجار / للبيع / للبدل
+- many property types
+- Kuwait governorates and areas
+- listings pages
+- office pages
+- login/register flow
+But the final result must be cleaner, more premium, and more modern than finde.co.
+
+25) Extra innovation beyond finde.co
+Add improvements that make the platform stronger as a SaaS:
+- office profile pages
+- office analytics
+- lead pipeline
+- subscription plans
+- WhatsApp tracking
+- better dashboard UX
+- scalable GCC architecture
+
+Now generate the full codebase structure and start by creating:
+1. app routes
+2. database schema
+3. seed data
+4. homepage
+5. search/filter system
+6. office dashboard
+7. office page
+8. admin dashboard skeleton
+9. shared UI components
+10. README setup guide

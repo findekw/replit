@@ -1,0 +1,154 @@
+<section class="plans-section">
+
+<style>
+.plans-section {
+  background: #f3f6f9;
+  padding: 60px 20px;
+  text-align: center;
+  direction: rtl;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* العنوان */
+.main-title {
+  font-size: 34px;
+  font-weight: 700;
+  color: #1f3b57;
+  margin-bottom: 10px;
+}
+
+/* الوصف */
+.main-desc {
+  font-size: 18px;
+  color: #6b7c8f;
+  margin-bottom: 20px;
+}
+
+/* عنوان المميزات */
+.features-title {
+  font-size: 22px;
+  color: #2d4a66;
+  margin-bottom: 35px;
+}
+
+/* الشبكة */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* الكروت */
+.feature-card {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  text-align: right;
+  transition: 0.3s;
+}
+
+/* عنوان الكرت */
+.feature-card h3 {
+  color: #1f3b57;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* وصف */
+.feature-card p {
+  color: #6b7c8f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* حركة */
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 📱 تابلت */
+@media (max-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 📱 جوال */
+@media (max-width: 600px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-title {
+    font-size: 26px;
+  }
+
+  .main-desc {
+    font-size: 16px;
+  }
+
+  .features-title {
+    font-size: 18px;
+  }
+}
+</style>
+
+<div class="container">
+
+<h1 class="main-title">اشتراك المكاتب العقارية</h1>
+<p class="main-desc">كل ما تحتاجه لإدارة وعرض عقارات مكتبك في مكان واحد</p>
+
+<h2 class="features-title">ماذا ستحصل عند الاشتراك؟</h2>
+
+<div class="features-grid">
+
+<div class="feature-card">
+<h3>رابط خاص لمكتبك</h3>
+<p>شارك جميع عقاراتك برابط واحد في واتساب وإنستغرام والبزنس كارد</p>
+</div>
+
+<div class="feature-card">
+<h3>صفحة خاصة لمكتبك</h3>
+<p>صفحة داخل المنصة تعرض جميع عقاراتك بشكل منظم</p>
+</div>
+
+<div class="feature-card">
+<h3>إدارة العقارات</h3>
+<p>أضف وعدل عقاراتك بسهولة من لوحة تحكم واحدة</p>
+</div>
+
+<div class="feature-card">
+<h3>30 إعلان نشط</h3>
+<p>أضف حتى 30 إعلان مع حرية التعديل والحذف في أي وقت</p>
+</div>
+
+<div class="feature-card">
+<h3>عرض مستمر</h3>
+<p>عقاراتك تظهر يوميًا داخل المنصة للباحثين</p>
+</div>
+
+<div class="feature-card">
+<h3>تواصل مباشر</h3>
+<p>استقبل العملاء مباشرة عبر واتساب بدون تعقيد</p>
+</div>
+
+<div class="feature-card">
+<h3>العملاء المهتمون</h3>
+<p>تابع جميع العملاء المهتمين بعقاراتك من مكان واحد</p>
+</div>
+
+<div class="feature-card">
+<h3>متابعة الأداء</h3>
+<p>اعرف عدد المشاهدات والتفاعل على عقاراتك بسهولة</p>
+</div>
+
+</div>
+
+</div>
+
+</section>

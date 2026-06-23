@@ -1,0 +1,96 @@
+Replace the current "keyword search" field on the homepage search bar with a clean "Advanced Search" experience.
+
+GOAL:
+Keep the main search simple and fast, while moving secondary filters into an expandable advanced search section.
+
+====================================
+1) REMOVE CURRENT FIELD
+====================================
+Remove the current field:
+- "كلمة البحث (رقم...)"
+
+It is creating clutter and is not useful in the current product stage.
+
+====================================
+2) MAIN SEARCH BAR (KEEP SIMPLE)
+====================================
+On the main homepage search bar, keep only the essential fields:
+- نوع العقار
+- المحافظة
+- زر بحث
+
+If region/area is already available and working well with governorate dependency, it can stay too.
+Otherwise keep the main search minimal.
+
+Main principle:
+- simple
+- clean
+- fast to use
+- not crowded
+
+====================================
+3) ADD ADVANCED SEARCH TOGGLE
+====================================
+Add a small, clean link/button below or beside the main search area:
+
+"بحث متقدم"
+
+Optional icon:
+- ⚙️
+- chevron/down arrow
+
+Behavior:
+- clicking it expands a hidden advanced search panel
+- clicking again collapses it
+
+Do NOT open a new page.
+Do NOT make it heavy or confusing.
+
+====================================
+4) ADVANCED SEARCH FIELDS
+====================================
+Inside the advanced search panel, include these filters:
+
+- المنطقة
+- السعر من
+- السعر إلى
+- عدد الغرف
+- عدد الحمامات
+- المساحة
+- مفروش / غير مفروش
+- نوع العرض (if needed depending on current tab logic)
+
+Important:
+- show them in a clean grid
+- RTL Arabic layout
+- mobile responsive
+- keep spacing comfortable
+
+====================================
+5) UX RULES
+====================================
+- Main search must remain visually simple
+- Advanced filters should be hidden by default
+- No clutter on first load
+- Use smooth expand/collapse animation if possible
+- Keep the design consistent with the site style
+
+====================================
+6) MOBILE BEHAVIOR
+====================================
+On mobile:
+- keep the main search compact
+- advanced search opens below in stacked layout
+- fields should be easy to tap
+- avoid overcrowding
+
+====================================
+7) FINAL GOAL
+====================================
+The homepage search should feel:
+- easy for normal users
+- powerful for serious users
+- simple by default
+- advanced only when needed
+
+This is a UX improvement for clarity and conversion.

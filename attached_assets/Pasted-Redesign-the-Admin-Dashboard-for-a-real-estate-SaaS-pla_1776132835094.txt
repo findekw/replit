@@ -1,0 +1,89 @@
+Redesign the Admin Dashboard for a real estate SaaS platform to be SIMPLE, FOCUSED, and DECISION-DRIVEN.
+
+Goal:
+The dashboard must help the admin understand what is happening in 5 seconds and take clear actions.
+
+Requirements:
+
+1. PRIORITY LAYOUT (very important):
+- Show ONLY 4 main KPI cards at the top:
+  - Total Offices
+  - Active Offices
+  - Total Ads
+  - WhatsApp Clicks
+
+- All other data should NOT appear in the first view.
+
+2. SMART ALERTS (critical):
+- Add a "Smart Alerts" section directly under the KPIs.
+- Show only important actionable alerts such as:
+  - Offices with low performance
+  - Offices with zero activity
+  - Expiring subscriptions
+- Each alert must include a clear suggested action.
+
+3. OFFICE PERFORMANCE (simplified):
+- Show a clean table with:
+  - Office Name
+  - Ads count
+  - Views
+  - WhatsApp clicks
+  - Status (Strong / Medium / Weak / Inactive)
+
+- Default view shows TOP 10 offices only.
+- Add a button "View All".
+
+4. REMOVE CLUTTER:
+- Hide or move the following to secondary tabs:
+  - Detailed analytics charts
+  - Full ads analytics
+  - Deep statistics
+
+5. MOBILE-FIRST DESIGN:
+- Dashboard must be fully responsive.
+- On mobile:
+  - KPI cards stacked
+  - No tables (replace with simple cards)
+  - Show only top insights
+
+6. CLEAN UI:
+- Reduce number of cards
+- Use spacing and hierarchy
+- Highlight important numbers only
+- Avoid too many colors
+
+7. DECISION-DRIVEN UX:
+- Every section must answer:
+  → What should I do next?
+
+- Add quick actions like:
+  - "Contact weak office"
+  - "Review inactive ads"
+  - "Renew subscription"
+
+8. NUMBER FORMAT (very important):
+- Use English numbers only across the entire platform.
+- Apply this everywhere:
+  - Admin dashboard
+  - User dashboard
+  - Add listing forms
+  - Statistics
+  - Charts
+  - Tables
+  - Counters
+  - All numeric values in the UI
+
+- Required format:
+  1, 2, 3 ✅
+  1234567890 ✅
+  1,548 ✅
+
+- Forbidden:
+  ١،٢،٣ ❌
+  ١٢٣٤٥٦٧٨٩٠ ❌
+
+- Force all displayed numbers to use Western digits only.
+- Use consistent English numeric formatting globally.
+
+Goal:
+Transform the dashboard from "data display" into a "control center" that helps the admin take actions quickly, while keeping all numbers in English format only across the full platform.

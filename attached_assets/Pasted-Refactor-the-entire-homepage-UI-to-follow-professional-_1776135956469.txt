@@ -1,0 +1,117 @@
+Refactor the entire homepage UI to follow professional SaaS UX standards with clear hierarchy, spacing, and typography (similar to Airbnb / Property Finder).
+
+GOAL:
+Make the page clean, readable, and visually structured with proper spacing and text hierarchy.
+
+---
+
+1) GLOBAL SPACING SYSTEM (VERY IMPORTANT):
+
+- Between major sections:
+  margin-top: 40px to 56px
+
+- Between section title and content:
+  margin-top: 16px to 24px
+
+- Between cards:
+  gap: 16px to 20px
+
+- Inside cards (padding):
+  padding: 16px
+
+---
+
+2) TYPOGRAPHY HIERARCHY:
+
+Define 3 clear levels:
+
+- Main Title (Hero):
+  font-size: 24px–28px
+  font-weight: bold
+
+- Section Titles (e.g. عقارات مميزة):
+  font-size: 18px–20px
+  font-weight: 600
+
+- Normal Text:
+  font-size: 14px–15px
+  color: slightly muted
+
+- Small details (location, date):
+  font-size: 12px–13px
+  color: gray
+
+---
+
+3) HERO SECTION (TOP AREA):
+
+- Add proper spacing under the main title (min 24px)
+- Increase line-height for readability
+- Add spacing between title and search box (24px–32px)
+
+---
+
+4) SEARCH BOX:
+
+- Add vertical spacing:
+  margin-top: 24px
+  margin-bottom: 32px
+
+- Add padding inside:
+  padding: 12px–14px
+
+- Make it visually separated (card style or soft shadow)
+
+---
+
+5) SECTION STRUCTURE:
+
+Each section must follow this:
+
+[ Title ]
+(space 16px–24px)
+[ Content (cards / list) ]
+
+- Ensure clear separation between sections
+- Do NOT stack sections too close
+
+---
+
+6) CARDS (PROPERTIES):
+
+- Add vertical spacing between cards: 16px–20px
+- Add subtle shadow
+- Border radius: 10px–12px
+- Ensure consistent internal spacing
+
+---
+
+7) VISUAL BREATHING SPACE:
+
+- Avoid tight stacking of elements
+- Increase white space for comfort
+- Make scrolling feel smooth and relaxed
+
+---
+
+8) FOOTER SEPARATION:
+
+- Add margin-top: 48px+
+- Optional: different background color
+
+---
+
+9) CONSISTENCY RULE:
+
+- All spacing must follow the same system
+- No random margins
+- No inconsistent font sizes
+
+---
+
+10) RESULT:
+
+- Clean layout
+- Clear hierarchy
+- Easy scanning
+- Professional SaaS look

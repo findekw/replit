@@ -1,0 +1,18 @@
+# ── finde frontend (Vite SPA) served by Caddy ───────────────────────────────
+FROM node:20-bookworm-slim AS build
+
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+# Build the SPA. PORT + BASE_PATH are required by vite.config.ts.
+# No VITE_API_URL -> API calls stay same-origin ("/api/...") and Caddy proxies them.
+ENV NODE_ENV=production PORT=3000 BASE_PATH=/
+RUN pnpm --filter @workspace/aqar-platform build
+
+# ── Runtime: Caddy serves static + reverse-proxies /api -> app ───────────────
+FROM caddy:2-alpine
+COPY --from=build /app/artifacts/aqar-platform/dist/public /srv
+COPY Caddyfile /etc/caddy/Caddyfile

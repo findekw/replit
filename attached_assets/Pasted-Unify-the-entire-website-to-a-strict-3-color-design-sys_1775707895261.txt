@@ -1,0 +1,101 @@
+Unify the entire website to a strict 3-color design system only.
+
+APPROVED COLORS ONLY:
+- Primary blue: #0B2545
+- White: #FFFFFF
+- Green for CTA buttons only: #22C55E
+
+REMOVE completely:
+- Gold
+- Yellow
+- Any extra accent colors
+- Any 4th or 5th color usage
+
+====================================
+1) HEADER
+====================================
+- Background: #0B2545
+- Text: white
+- Brand name "Finde": white
+- Navigation links: white
+- "إضافة إعلان" button: green (#22C55E)
+
+====================================
+2) HERO SECTION
+====================================
+- Keep blue background or soft blue gradient
+- Main heading/subheading: white
+- Search box: white background
+- Search button: green
+- Tabs and active state must use blue/white only
+- No yellow/gold accents
+
+====================================
+3) PRICING PAGE
+====================================
+IMPORTANT:
+The pricing card currently has too many colors and looks inconsistent.
+
+Fix it:
+- Pricing card background: white
+- Card border or shadow: subtle light gray
+- Title and text: blue
+- Main price: blue
+- CTA button: green
+- Trial badge: use blue outline or light gray style
+- Remove all gold/yellow badges and icons
+- Check icons can be green or blue only
+
+This page must look clean, premium, and minimal.
+
+====================================
+4) FOOTER
+====================================
+- Background: white
+- Text: blue
+- Footer headings: blue
+- Footer links: blue
+- Social icons: blue
+- Bottom disclaimer section: white with subtle top border
+- No dark blue footer block
+- No gold/yellow elements
+
+====================================
+5) BUTTON RULES
+====================================
+Use green ONLY for:
+- Search button
+- Add listing button
+- Subscribe / Start trial buttons
+- Important CTA buttons
+
+Do NOT use green for:
+- backgrounds of sections
+- cards
+- headings
+- footer background
+
+====================================
+6) GLOBAL STYLE RULE
+====================================
+Use only these 3 colors across the whole website:
+- Blue
+- White
+- Green
+
+No gold
+No yellow
+No orange
+No extra accent colors
+
+====================================
+7) FINAL GOAL
+====================================
+The site should feel:
+- modern
+- minimal
+- trustworthy
+- SaaS-like
+- visually consistent
+
+This is a full visual cleanup and brand consistency update.

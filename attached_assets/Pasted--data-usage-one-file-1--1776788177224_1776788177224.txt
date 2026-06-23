@@ -1,0 +1,146 @@
+/* =========================
+   data + usage (one file)
+   ========================= */
+
+/* 1) البيانات (المحافظات ← المناطق) */
+const AREAS: Record<string, string[]> = {
+  "العاصمة": ["المرقاب","شرق","الدعية","الدسمة","بنيد القار","كيفان"],
+  "حولي": ["السالمية","الجابرية","الرميثية","بيان","مشرف","حولي"],
+  "الفروانية": ["خيطان","العمرية","جليب الشيوخ","العارضية","الفردوس"],
+  "الأحمدي": ["الفحيحيل","المنقف","أبو حليفة","الرقة","الصباحية"],
+  "الجهراء": ["الجهراء","النسيم","العيون","القصر","الواحة"],
+  "مبارك الكبير": ["العدان","القرين","صباح السالم","أبو فطيرة","المسيلة"]
+};
+
+/* 2) حالات الاختيار (React مثال بسيط) */
+import { useState } from "react";
+
+export default function SearchBox() {
+  const [purpose, setPurpose] = useState<string>("");     // إيجار/بيع/بدل
+  const [propertyType, setPropertyType] = useState<string>("");
+  const [province, setProvince] = useState<string>("");
+  const [area, setArea] = useState<string>("");
+
+  const provinces = Object.keys(AREAS);
+  const areasByProvince = province ? AREAS[province] : [];
+
+  return (
+    <div style={{ maxWidth: 800, margin: "auto", padding: 12 }}>
+
+      {/* 1) نوع العملية */}
+      <select
+        value={purpose}
+        onChange={(e) => {
+          setPurpose(e.target.value);
+          setPropertyType("");
+          setProvince("");
+          setArea("");
+        }}
+        style={selectStyle}
+      >
+        <option value="">اختر (إيجار / بيع / بدل)</option>
+        <option value="rent">إيجار</option>
+        <option value="sale">بيع</option>
+        <option value="swap">بدل</option>
+      </select>
+
+      {/* 2) نوع العقار */}
+      <select
+        value={propertyType}
+        onChange={(e) => {
+          setPropertyType(e.target.value);
+          setProvince("");
+          setArea("");
+        }}
+        disabled={!purpose}
+        style={selectStyle}
+      >
+        <option value="">
+          {purpose ? "اختر نوع العقار" : "اختر العملية أولاً"}
+        </option>
+        <option value="apartment">شقة</option>
+        <option value="villa">فيلا</option>
+        <option value="office">مكتب</option>
+        <option value="shop">محل</option>
+      </select>
+
+      {/* 3) المحافظة */}
+      <select
+        value={province}
+        onChange={(e) => {
+          setProvince(e.target.value);
+          setArea("");
+        }}
+        disabled={!propertyType}
+        style={selectStyle}
+      >
+        <option value="">
+          {propertyType ? "اختر المحافظة" : "اختر نوع العقار أولاً"}
+        </option>
+        {provinces.map((p) => (
+          <option key={p} value={p}>{p}</option>
+        ))}
+      </select>
+
+      {/* 4) المنطقة (حسب المحافظة) */}
+      <select
+        value={area}
+        onChange={(e) => setArea(e.target.value)}
+        disabled={!province}
+        style={selectStyle}
+      >
+        <option value="">
+          {province ? "اختر المنطقة" : "اختر المحافظة أولاً"}
+        </option>
+        {areasByProvince.map((a) => (
+          <option key={a} value={a}>{a}</option>
+        ))}
+      </select>
+
+      {/* زر البحث */}
+      <button
+        style={btnStyle}
+        disabled={!purpose || !propertyType || !province}
+        onClick={() => {
+          // استخدم القيم هنا للبحث
+          console.log({ purpose, propertyType, province, area });
+        }}
+      >
+        بحث
+      </button>
+    </div>
+  );
+}
+
+/* 3) ستايل بسيط متجاوب */
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px",
+  marginBottom: "10px",
+  borderRadius: "10px",
+  border: "1px solid #E5E7EB",
+  fontSize: "14px"
+};
+
+const btnStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "14px",
+  borderRadius: "10px",
+  background: "#3B82F6",
+  color: "#fff",
+  border: "none",
+  fontWeight: 700,
+  cursor: "pointer"
+};
+
+/* موبايل */
+if (typeof window !== "undefined") {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @media (max-width: 768px) {
+      select { font-size: 15px !important; }
+      button { padding: 16px !important; }
+    }
+  `;
+  document.head.appendChild(style);
+}

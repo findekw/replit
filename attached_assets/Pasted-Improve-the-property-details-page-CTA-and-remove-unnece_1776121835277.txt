@@ -1,0 +1,90 @@
+Improve the property details page CTA and remove unnecessary inquiry clutter, based on these exact rules.
+
+GOAL:
+Make the page mobile-first, clean, and direct:
+user reads the property first, then contacts directly via WhatsApp or phone.
+No internal inquiry workflow.
+
+REQUIRED CHANGES:
+
+1) REMOVE the internal inquiry form completely
+- Delete the entire "أرسل استفساراً" form section
+- Delete all related fields and submit button
+- Delete any inquiry-only logic/UI from this page
+
+2) KEEP ONLY DIRECT CONTACT ACTIONS
+- Main CTA = WhatsApp
+- Secondary CTA = Phone call
+- Keep "عرض صفحة المكتب" as a smaller tertiary action
+
+3) WHATSAPP MESSAGE
+When user clicks WhatsApp, open WhatsApp with this exact message format:
+
+السلام عليكم،
+استفسار عن هذا الإعلان:
+
+{PROPERTY_TITLE}
+
+Finde:
+{PROPERTY_URL}
+
+- Replace {PROPERTY_TITLE} dynamically with the actual property title
+- Replace {PROPERTY_URL} dynamically with the actual property page URL
+
+4) ADD STICKY WHATSAPP BUTTON ON MOBILE
+- Add a floating circular WhatsApp button
+- Position: bottom-right
+- Mobile only
+- It must be clean, not huge, and not block content
+- Use WhatsApp green
+- Icon only (no text)
+- Clicking it opens the same WhatsApp message above
+- Keep enough spacing from screen edges and bottom safe area
+
+5) KEEP PAGE FLOW PROFESSIONAL
+The page order should be:
+
+- Images
+- Title + price + location
+- Key details (rooms / bathrooms / size only if available)
+- Description
+- Features
+- Office card
+- Contact actions only
+
+6) PRICE FORMAT
+- Replace KWD with: د.ك
+- Apply this consistently on property details page
+
+7) OFFICE CARD CLEANUP
+- Remove the word: "موثق"
+- Do not show that text anymore
+- Keep the office card minimal and clean
+- If needed, keep only a subtle visual badge/icon with no text
+- Make office name clear
+- Make location lighter/smaller
+- Keep spacing clean between office info and buttons
+
+8) DO NOT ADD EXTRA CLUTTER
+- No internal inquiry form
+- No duplicate CTA sections
+- No extra labels
+- No unnecessary explanations
+
+9) UX STYLE
+- Clean
+- Stable
+- No movement animations
+- No bouncing elements
+- No hover shifts
+- Mobile-first readability
+
+10) IMPORTANT
+Do not redesign the whole page.
+Keep the current visual identity.
+Only improve contact logic, remove clutter, and make the page feel more professional and conversion-focused.
+
+After finishing:
+- briefly list exactly what was removed
+- exactly what was added
+- and confirm WhatsApp works from both the main button and the sticky floating button

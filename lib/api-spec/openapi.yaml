@@ -1,0 +1,1065 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Aqar Real Estate Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: properties
+    description: Property listings
+  - name: offices
+    description: Real estate offices
+  - name: leads
+    description: Lead management
+  - name: locations
+    description: Countries, governorates, areas
+  - name: plans
+    description: Subscription plans
+  - name: stats
+    description: Platform statistics
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Service unavailable (DB down)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List properties with filters
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: governorateId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: areaId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: minPrice
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: maxPrice
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: bedrooms
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: bathrooms
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: furnished
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: featured
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: officeId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: keyword
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: sort
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyListResponse"
+
+  /properties/featured:
+    get:
+      operationId: getFeaturedProperties
+      tags: [properties]
+      summary: Get featured properties for homepage
+      responses:
+        "200":
+          description: Featured properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+  /properties/latest:
+    get:
+      operationId: getLatestProperties
+      tags: [properties]
+      summary: Get latest properties for homepage
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Latest properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get property details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /properties/{id}/similar:
+    get:
+      operationId: getSimilarProperties
+      tags: [properties]
+      summary: Get similar properties
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Similar properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+  /offices:
+    get:
+      operationId: listOffices
+      tags: [offices]
+      summary: List all offices
+      parameters:
+        - name: governorateId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: verified
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of offices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfficeListResponse"
+
+  /offices/featured:
+    get:
+      operationId: getFeaturedOffices
+      tags: [offices]
+      summary: Get featured offices for homepage
+      responses:
+        "200":
+          description: Featured offices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Office"
+
+  /offices/{id}:
+    get:
+      operationId: getOffice
+      tags: [offices]
+      summary: Get office details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Office details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfficeDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /offices/{id}/properties:
+    get:
+      operationId: getOfficeProperties
+      tags: [offices]
+      summary: Get properties for a specific office
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Office properties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyListResponse"
+
+  /offices/{id}/stats:
+    get:
+      operationId: getOfficeStats
+      tags: [offices]
+      summary: Get office analytics stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Office stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfficeStats"
+
+  /leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List leads for an office
+      parameters:
+        - name: officeId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: propertyId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Submit a property inquiry / lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeadBody"
+      responses:
+        "201":
+          description: Lead created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /leads/{id}:
+    patch:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update lead status or notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLeadBody"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /locations/governorates:
+    get:
+      operationId: listGovernorates
+      tags: [locations]
+      summary: List all governorates
+      responses:
+        "200":
+          description: List of governorates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Governorate"
+
+  /locations/areas:
+    get:
+      operationId: listAreas
+      tags: [locations]
+      summary: List areas, optionally filtered by governorate
+      parameters:
+        - name: governorateId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Area"
+
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [plans]
+      summary: List subscription plans
+      responses:
+        "200":
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionPlan"
+
+  /stats/platform:
+    get:
+      operationId: getPlatformStats
+      tags: [stats]
+      summary: Get platform-wide statistics for homepage
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  /stats/dashboard/{officeId}:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard stats for office
+      parameters:
+        - name: officeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an uploaded object
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content streamed.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        db:
+          type: string
+          enum: [ok, error]
+        uptimeSeconds:
+          type: number
+        dbLatencyMs:
+          type: number
+        timestamp:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+        referenceId:
+          type: string
+        title:
+          type: string
+        titleAr:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionAr:
+          type: ["string", "null"]
+        status:
+          type: string
+        type:
+          type: string
+        price:
+          type: integer
+        currency:
+          type: string
+        area:
+          type: ["integer", "null"]
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        furnished:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+        active:
+          type: boolean
+        views:
+          type: integer
+        whatsappClicks:
+          type: integer
+        callClicks:
+          type: integer
+        governorateId:
+          type: ["integer", "null"]
+        governorateName:
+          type: ["string", "null"]
+        areaId:
+          type: ["integer", "null"]
+        areaName:
+          type: ["string", "null"]
+        officeId:
+          type: ["integer", "null"]
+        officeName:
+          type: ["string", "null"]
+        officeLogo:
+          type: ["string", "null"]
+        primaryImage:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - referenceId
+        - title
+        - titleAr
+        - status
+        - type
+        - price
+        - currency
+        - featured
+        - active
+        - views
+        - whatsappClicks
+        - callClicks
+        - createdAt
+        - updatedAt
+
+    PropertyDetail:
+      allOf:
+        - $ref: "#/components/schemas/Property"
+        - type: object
+          properties:
+            images:
+              type: array
+              items:
+                $ref: "#/components/schemas/PropertyImage"
+            amenities:
+              type: array
+              items:
+                type: string
+            office:
+              $ref: "#/components/schemas/Office"
+
+    PropertyImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        isPrimary:
+          type: boolean
+        sortOrder:
+          type: integer
+      required:
+        - id
+        - url
+        - isPrimary
+        - sortOrder
+
+    PropertyListResponse:
+      type: object
+      properties:
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - properties
+        - total
+        - page
+        - limit
+        - totalPages
+
+    Office:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionAr:
+          type: ["string", "null"]
+        logo:
+          type: ["string", "null"]
+        coverImage:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        whatsapp:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        instagram:
+          type: ["string", "null"]
+        twitter:
+          type: ["string", "null"]
+        governorateId:
+          type: ["integer", "null"]
+        governorateName:
+          type: ["string", "null"]
+        verified:
+          type: boolean
+        featured:
+          type: boolean
+        active:
+          type: boolean
+        totalListings:
+          type: integer
+        activeListings:
+          type: integer
+        planName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - nameAr
+        - slug
+        - verified
+        - featured
+        - active
+        - totalListings
+        - activeListings
+        - createdAt
+
+    OfficeDetail:
+      allOf:
+        - $ref: "#/components/schemas/Office"
+        - type: object
+          properties:
+            totalViews:
+              type: integer
+            totalLeads:
+              type: integer
+
+    OfficeListResponse:
+      type: object
+      properties:
+        offices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Office"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - offices
+        - total
+        - page
+        - limit
+        - totalPages
+
+    OfficeStats:
+      type: object
+      properties:
+        totalListings:
+          type: integer
+        activeListings:
+          type: integer
+        featuredListings:
+          type: integer
+        totalViews:
+          type: integer
+        totalLeads:
+          type: integer
+        whatsappClicks:
+          type: integer
+        callClicks:
+          type: integer
+        recentLeads:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+      required:
+        - totalListings
+        - activeListings
+        - featuredListings
+        - totalViews
+        - totalLeads
+        - whatsappClicks
+        - callClicks
+        - recentLeads
+
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        inquiryType:
+          type: string
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        propertyId:
+          type: ["integer", "null"]
+        propertyTitle:
+          type: ["string", "null"]
+        propertyRef:
+          type: ["string", "null"]
+        officeId:
+          type: ["integer", "null"]
+        sourcePage:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - customerName
+        - phone
+        - inquiryType
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateLeadBody:
+      type: object
+      properties:
+        customerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        inquiryType:
+          type: string
+        propertyId:
+          type: ["integer", "null"]
+        officeId:
+          type: ["integer", "null"]
+        sourcePage:
+          type: ["string", "null"]
+      required:
+        - customerName
+        - phone
+        - inquiryType
+
+    UpdateLeadBody:
+      type: object
+      properties:
+        status:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    Governorate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        countryCode:
+          type: string
+      required:
+        - id
+        - name
+        - nameAr
+        - countryCode
+
+    Area:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        governorateId:
+          type: integer
+        governorateName:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - nameAr
+        - governorateId
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        price:
+          type: integer
+        currency:
+          type: string
+        maxListings:
+          type: integer
+        featuredListings:
+          type: integer
+        hasLeadDashboard:
+          type: boolean
+        hasAnalytics:
+          type: boolean
+        hasWhatsappSupport:
+          type: boolean
+        hasPriorityPlacement:
+          type: boolean
+        hasCustomProfile:
+          type: boolean
+        features:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - nameAr
+        - price
+        - currency
+        - maxListings
+        - featuredListings
+        - hasLeadDashboard
+        - hasAnalytics
+        - hasWhatsappSupport
+        - hasPriorityPlacement
+        - hasCustomProfile
+        - features
+
+    PlatformStats:
+      type: object
+      properties:
+        totalProperties:
+          type: integer
+        totalOffices:
+          type: integer
+        totalCities:
+          type: integer
+        totalLeads:
+          type: integer
+      required:
+        - totalProperties
+        - totalOffices
+        - totalCities
+        - totalLeads
+
+    DashboardStats:
+      type: object
+      properties:
+        totalListings:
+          type: integer
+        activeListings:
+          type: integer
+        featuredListings:
+          type: integer
+        totalViews:
+          type: integer
+        totalLeads:
+          type: integer
+        newLeads:
+          type: integer
+        whatsappClicks:
+          type: integer
+        callClicks:
+          type: integer
+        recentLeads:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+        topProperties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+      required:
+        - totalListings
+        - activeListings
+        - featuredListings
+        - totalViews
+        - totalLeads
+        - newLeads
+        - whatsappClicks
+        - callClicks
+        - recentLeads
+        - topProperties

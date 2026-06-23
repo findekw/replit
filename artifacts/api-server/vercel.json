@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "framework": null,
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+  "buildCommand": "node build-vercel.mjs"
+}

@@ -1,0 +1,164 @@
+/* 🎯 الألوان الأساسية */
+:root {
+  --bg: #F8FAFC;        /* خلفية Off-white */
+  --primary: #1E293B;   /* كحلي */
+  --secondary: #4F6FAD; /* أزرق */
+  --border: #E5E7EB;
+}
+
+/* 🔹 الخلفية العامة */
+body {
+  background: var(--bg) !important;
+  color: var(--primary);
+}
+
+/* 🔹 الهيدر */
+header, .header {
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+/* 🔹 حذف الخلفية الكحلية القديمة */
+.hero,
+.hero-section {
+  background: transparent !important;
+}
+
+/* 🔹 العنوان الرئيسي */
+.hero h1,
+.main-title {
+  color: var(--primary) !important;
+  font-weight: 800;
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 🔹 حقول البحث */
+input, select {
+  background: #fff !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  padding: 10px;
+}
+
+/* 🔹 زر البحث */
+button,
+.search-btn {
+  background: var(--secondary) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  padding: 12px;
+  font-weight: 700;
+}
+
+/* 🔹 المميزات (Features) */
+.feature-box {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  margin-bottom: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.feature-box i {
+  color: var(--secondary);
+  font-size: 20px;
+}
+
+.feature-box p {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* 🔹 كروت العقارات */
+.property-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* الصورة */
+.property-image {
+  position: relative;
+  height: 180px;
+}
+
+.property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* تغبيش خفيف */
+.property-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+}
+
+/* السعر */
+.property-price {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* البادج */
+.property-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--secondary);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* المحتوى */
+.property-content {
+  padding: 12px;
+}
+
+.property-title {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.property-location {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* 🔹 الفوتر */
+footer {
+  background: var(--primary) !important;
+  color: #fff;
+}
+
+/* 📱 موبايل */
+@media (max-width: 768px) {
+
+  .feature-box {
+    flex-direction: row;
+  }
+
+  .hero h1 {
+    font-size: 20px;
+  }
+
+}

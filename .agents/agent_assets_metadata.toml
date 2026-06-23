@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "8ePjpgyumTEFEaepmxBSI"
+uri = "file://artifacts/aqar-platform/public/hero-bg.png"
+type = "image"
+title = "Kuwait City skyline hero background"

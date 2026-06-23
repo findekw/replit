@@ -1,0 +1,173 @@
+/* ===================== */
+/* 🎯 FIND E FINAL CLEAN SYSTEM */
+/* ===================== */
+
+:root {
+  --primary: #2C4870;   /* الكحلي المعتمد */
+  --blue: #4F6FAD;      /* الأزرق للأزرار */
+  --bg: #F8FAFC;        /* الخلفية */
+  --border: #E5E7EB;
+}
+
+/* ===================== */
+/* 🔹 الخلفية العامة */
+/* ===================== */
+
+body {
+  background: var(--bg) !important;
+  color: var(--primary) !important;
+}
+
+/* ===================== */
+/* 🔹 الهيدر */
+/* ===================== */
+
+header {
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* ===================== */
+/* 🔥 HERO (أهم جزء) */
+/* ===================== */
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 20px 30px;
+}
+
+/* العنوان */
+.hero-section h1 {
+  color: var(--primary) !important;
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1.3;
+  margin-bottom: 14px;
+}
+
+/* موبايل */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 28px;
+  }
+}
+
+/* الوصف */
+.hero-section p {
+  color: #64748b;
+  font-size: 17px;
+  line-height: 1.8;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+/* ===================== */
+/* 🔍 محرك البحث */
+/* ===================== */
+
+.search-container {
+  width: 100%;
+  max-width: 900px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 10px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* منع السكرول الجانبي */
+.search-container * {
+  max-width: 100%;
+}
+
+/* الحقول */
+.search-container select,
+.search-container input {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* زر البحث */
+.search-container button {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+/* ===================== */
+/* ❌ إلغاء العقارات من الرئيسية */
+/* ===================== */
+
+.property-section,
+.properties,
+.property-list {
+  display: none !important;
+}
+
+/* ===================== */
+/* 🔹 المميزات (تنزل تحت) */
+/* ===================== */
+
+.features {
+  margin-top: 40px;
+}
+
+/* ===================== */
+/* 🔹 CTA (صاحب مكتب) */
+/* ===================== */
+
+.cta-section {
+  background: linear-gradient(135deg, #2C4870, #3B5E8A);
+  color: #fff;
+  border-radius: 20px;
+  padding: 26px 20px;
+  margin: 50px 16px;
+  text-align: center;
+}
+
+.cta-section h2 {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.cta-section p {
+  opacity: 0.9;
+  margin-bottom: 18px;
+}
+
+.cta-section button {
+  background: var(--blue);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+/* ===================== */
+/* 🔹 الفوتر */
+/* ===================== */
+
+footer {
+  background: var(--primary);
+  color: #fff;
+  margin-top: 50px;
+}
+
+/* ===================== */
+/* ✨ مسافات نظيفة */
+/* ===================== */
+
+section {
+  margin-bottom: 40px;
+}

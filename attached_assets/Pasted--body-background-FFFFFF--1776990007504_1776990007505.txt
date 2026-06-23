@@ -1,0 +1,132 @@
+/* ====== الصفحة الرئيسية - تحسين كامل ====== */
+
+/* خلفية الصفحة */
+body {
+  background: #FFFFFF;
+  font-family: 'Cairo', sans-serif;
+  color: #111827;
+}
+
+/* ====== الهيرو ====== */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+
+/* العنوان */
+.hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.6;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+/* وصف بسيط */
+.hero p {
+  font-size: 15px;
+  color: #6B7280;
+  margin-bottom: 20px;
+}
+
+/* ====== صورة العقار ====== */
+.hero-image {
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 20px;
+}
+
+/* ====== محرك البحث ====== */
+.search-box {
+  width: 100%;
+  max-width: 380px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+  border: 1px solid #E5E7EB;
+}
+
+/* الأزرار (إيجار/بيع/بدل) */
+.tabs button {
+  background: #F3F4F6;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.tabs .active {
+  background: #054A91;
+  color: #FFFFFF;
+}
+
+/* الحقول */
+.search-box select,
+.search-box input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+/* زر البحث */
+.search-box button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #054A91;
+  color: #FFFFFF;
+  font-weight: 700;
+  border: none;
+}
+
+/* ====== الكروت تحت ====== */
+.features {
+  padding: 30px 20px;
+}
+
+.feature-card {
+  background: #F9FAFB;
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* ====== الفوتر ====== */
+footer {
+  background: #07223D;
+  color: #FFFFFF;
+  padding: 30px 20px;
+}
+
+/* ====== ريسبونسف ====== */
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: right;
+    padding: 60px;
+  }
+
+  .hero-text {
+    width: 50%;
+  }
+
+  .hero-image {
+    width: 45%;
+    max-width: 450px;
+  }
+
+  .search-box {
+    max-width: 500px;
+  }
+}

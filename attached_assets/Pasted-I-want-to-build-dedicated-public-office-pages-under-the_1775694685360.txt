@@ -1,0 +1,125 @@
+I want to build dedicated public office pages under the main platform domain.
+
+Goal:
+Each real estate office should have its own public page inside the platform, such as:
+- /alfintas
+- /dar-alkhaleej
+- /prime-home
+
+This page must feel like a mini landing page for the office, but still under the main platform brand.
+
+Requirements:
+
+1) Add office slug system
+- Each office must have a unique slug
+- Example:
+  - Office name: مكتب الفنطاس العقاري
+  - Slug: alfintas
+- Public office page URL:
+  - /[slug]
+
+2) Slug creation rules
+- Slug should be English only
+- lowercase only
+- use letters, numbers, and hyphens only
+- no spaces
+- no Arabic characters
+- short and clean
+- prefer one word or two words max
+
+3) During office registration or office settings
+Add a field:
+- Arabic label: "رابط صفحتك"
+- Description:
+  "استخدم كلمة أو كلمتين فقط بالإنجليزية. سيظهر رابط صفحتك بهذا الشكل: finde.co/your-slug"
+
+4) Smart slug suggestion
+When office name is entered, suggest clean slug options automatically
+Example:
+- مكتب الفنطاس العقاري
+suggest:
+  - alfintas
+  - fintas
+  - al-fintas
+
+But the office owner can edit and choose the final slug.
+
+5) Slug validation
+- Must be unique
+- If already taken, show Arabic error:
+  "هذا الرابط مستخدم بالفعل"
+- Prevent invalid characters
+- Prevent long ugly slugs
+
+6) Office public page UI
+Create a public page for each office at /[slug]
+The page should include:
+
+A) Header section
+- Office name
+- office logo if available
+- short office description
+- governorate / area if available
+- contact phone
+- WhatsApp button
+- Call button
+
+B) Office info section
+- About the office
+- service areas
+- office status badge if needed (مثل: مكتب موثق أو معتمد) — placeholder allowed
+
+C) Office listings section
+- Show only approved listings for that office
+- Cards should match the main site style
+- allow filter tabs:
+  - الكل
+  - للبيع
+  - للإيجار
+  - للبدل
+
+D) Empty state
+If office has no approved listings, show a clean Arabic empty state
+
+7) Important visibility logic
+- Public office page should show ONLY approved listings
+- Pending or rejected listings must stay hidden from public
+- Office owner can still see all listings inside dashboard
+
+8) Dashboard integration
+Inside office dashboard add a section or card:
+- "رابط صفحتك"
+- show full URL
+- add button:
+  "نسخ الرابط"
+
+9) Routing
+- Make sure dynamic office page route /[slug] does not break existing routes like:
+  - /
+  - /properties
+  - /offices
+  - /admin
+  - /login
+  - /register
+  - /plans
+  - /dashboard
+
+10) SEO + UX
+- Office page title should use office name
+- clean Arabic RTL layout
+- mobile friendly
+- fast loading
+
+11) Admin / data support
+- slug stored in database
+- office page loads office data by slug
+- approved listings loaded by office id
+
+12) Test flow
+- Create office with slug
+- Visit /slug
+- Confirm office page loads correctly
+- Confirm only approved listings appear
+- Confirm dashboard shows "رابط صفحتك"
+
+Build this end-to-end in frontend + backend + database.

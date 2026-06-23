@@ -1,0 +1,145 @@
+IMPORTANT: The previous UI updates DID NOT work. The design is still broken.
+You must FIX the existing components directly (do NOT create new ones).
+
+Focus ONLY on the homepage search bar.
+
+========================
+REQUIRED FIXES (MANDATORY)
+========================
+
+1) TEXT VISIBILITY (CRITICAL BUG)
+- Fix all Arabic text being cut or unclear
+- Ensure NO text is truncated (like: "العقار", "كل المناطق")
+- Add:
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+
+- Increase field width so full Arabic text appears clearly
+
+------------------------
+
+2) RTL ALIGNMENT (VERY IMPORTANT)
+- Entire search bar must follow Arabic RTL correctly:
+  - Text aligned RIGHT
+  - Dropdown arrow on LEFT
+  - Label on RIGHT
+
+Apply:
+  direction: rtl;
+  text-align: right;
+
+Fix inconsistency:
+- All dropdowns must follow SAME layout
+- No mixing (some left, some right)
+
+------------------------
+
+3) REMOVE UNUSED FIELDS (CLEAN UI)
+REMOVE completely:
+- التأثيث
+- كلمة مفتاحية / search input
+
+Do NOT hide → DELETE from UI
+
+------------------------
+
+4) DROPDOWN REDESIGN (PROPER UX)
+Apply to ALL dropdowns:
+- نوع العقار
+- المحافظة
+- المنطقة
+
+REQUIREMENTS:
+- Modern dropdown (Airbnb style)
+- Clear hover state
+- Selected item has ✔ checkmark
+- Smooth spacing
+- Rounded corners
+- Shadow
+
+------------------------
+
+5) NO SCROLL WHERE NOT NEEDED
+
+- المحافظة:
+  Show ALL options (NO scroll)
+  (because only ~6 items)
+
+- المنطقة:
+  Allow scroll + include search input inside dropdown
+
+- نوع العقار:
+  Clean list with spacing
+  Optional small scroll if needed
+
+------------------------
+
+6) FORCE USER FLOW (IMPORTANT LOGIC)
+
+- Disable "المنطقة" until "المحافظة" is selected
+
+- Placeholder text:
+  "اختر المحافظة أولاً"
+
+- Style:
+  opacity: 0.5;
+  cursor: not-allowed;
+
+------------------------
+
+7) SPACING + SIZE FIX
+
+- All fields must be equal width
+- Increase height of inputs (more premium look)
+- Add proper padding
+
+Example:
+  height: 52px;
+  padding: 12px 16px;
+  border-radius: 12px;
+
+------------------------
+
+8) CONSISTENT LABELS
+
+Fix text to be clear:
+
+- نوع العقار
+- اختر المحافظة
+- اختر المنطقة
+
+No cut text. No fading text.
+
+------------------------
+
+9) KEEP DESIGN CLEAN (NO CLUTTER)
+
+- Remove anything unnecessary
+- Keep only:
+  - نوع العقار
+  - المحافظة
+  - المنطقة
+  - زر بحث
+
+------------------------
+
+10) DO NOT BREAK LAYOUT
+
+- Dropdown must NOT overflow outside screen
+- Must stay inside container
+- Fix positioning if needed
+
+------------------------
+
+FINAL RESULT MUST BE:
+- Clean
+- Clear Arabic UI
+- No cut text
+- No random scroll
+- Consistent alignment
+- Feels like Airbnb / Property Finder
+
+DO NOT SKIP ANY STEP.
+DO NOT CREATE NEW COMPONENTS.
+FIX EXISTING UI ONLY.

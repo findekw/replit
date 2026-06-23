@@ -1,0 +1,12 @@
+dist/
+.vercel-staging/
+vercel-dist/
+.vercel/output/
+api/*.js
+api/*.ts
+api/package.json
+index.js
+pino-worker.js
+pino-file.js
+pino-pretty.js
+thread-stream-worker.js

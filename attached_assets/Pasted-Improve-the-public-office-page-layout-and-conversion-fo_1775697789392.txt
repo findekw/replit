@@ -1,0 +1,73 @@
+Improve the public office page layout and conversion-focused design.
+
+Current problems:
+- Large empty space on the left side
+- Content feels pushed to the right
+- Page does not feel balanced or premium
+- WhatsApp/Call buttons are too weak
+- Office header is too plain
+- Listing card area feels disconnected
+
+Fix everything below:
+
+1) PAGE LAYOUT
+- Center the whole office page content properly
+- Remove the huge empty space on the left
+- Use a balanced responsive container
+- On desktop:
+  - office page content should feel centered and full
+  - avoid narrow content stuck on one side
+- On mobile:
+  - stack sections cleanly with good spacing
+
+2) HEADER / HERO SECTION
+- Reduce unnecessary empty vertical space
+- Create a cleaner premium office header card
+- Header should include:
+  - office logo/avatar on the right
+  - office name large and bold
+  - short description
+  - office location
+  - badge like "مكتب موثق" or "مكتب معتمد" placeholder
+  - total active listings count
+- Make the header visually stronger and more trustworthy
+
+3) CONTACT CTA
+- Make WhatsApp button more prominent
+- Arabic labels:
+  - "تواصل عبر واتساب"
+  - "اتصال مباشر"
+- Buttons should be larger and clearer
+- On mobile make WhatsApp a strong visible CTA
+
+4) OFFICE PAGE STRUCTURE
+Reorganize public office page sections in this order:
+- Office header
+- Contact buttons
+- Office stats / trust info
+- Listings section
+- Inquiry form
+- Related properties (if needed)
+
+5) LISTINGS SECTION
+- Bring listings closer visually to the office header
+- Reduce disconnected white space
+- Improve listing cards:
+  - stronger image area
+  - price more visible
+  - property type badge clear
+  - location visible
+- If image missing, use a nicer placeholder instead of weak empty state
+
+6) RESPONSIVE DESIGN
+- Test desktop and mobile layouts
+- No broken alignment
+- No giant unused blank areas
+- Make page feel like a real marketplace landing page
+
+7) VISUAL QUALITY
+- Improve spacing, hierarchy, and balance
+- Make the page feel more premium and commercial
+- Goal: when a real estate office sees this page, it should feel valuable enough to subscribe
+
+Do not break slug-based routing or approved listings logic.

@@ -1,0 +1,109 @@
+Apply the following UX and UI updates across the website with a clean, professional, mobile-first approach.
+
+==================================================
+1) HERO TITLE + SPACING (HOMEPAGE)
+==================================================
+
+Update the hero text to exactly:
+
+Line 1:
+ابحث عن العقار المناسب بسهولة
+
+Line 2:
+عقارات متنوعة من مكاتب عقارية في مختلف مناطق الكويت
+
+Styling:
+- Line 1 = main heading
+  - large
+  - bold
+  - clear hierarchy
+- Line 2 = supporting text
+  - slightly smaller
+  - lighter weight
+  - readable
+
+Spacing:
+- Add clear top spacing above the hero title so it does NOT look stuck to the header
+- Add balanced spacing between:
+  - title
+  - subtitle
+  - search box
+- The hero section must feel breathable and premium
+
+Important:
+- Keep Arabic layout
+- Keep text right-aligned
+- Do not compress the hero section
+
+==================================================
+2) GLOBAL SCROLL-TO-TOP ARROW (ALL PAGES)
+==================================================
+
+Add a professional floating arrow-up control on ALL pages.
+
+Behavior:
+- Hidden by default
+- Appears only after scrolling down enough
+- On click: smooth scroll to top
+- Hide again near the top
+
+Design:
+- Arrow only (up direction)
+- Positioned on the LEFT side
+- Elegant and minimal
+- Not circular-heavy
+- Must NOT block content behind it
+- Slight shadow / light background for visibility
+- Small, premium, and non-intrusive
+- Clear enough so users understand it returns them to top
+
+Animation:
+- Smooth fade/slide in
+- Smooth hide when returning to top
+
+Apply globally to all pages.
+
+==================================================
+3) FOOTER UNIFICATION
+==================================================
+
+Unify the footer across the site.
+
+Use this footer description text under the brand/title:
+
+ابحث عن العقار المناسب بسهولة
+عقارات متنوعة من مكاتب عقارية في مختلف مناطق الكويت
+
+Footer rules:
+- Keep all content right-aligned
+- Keep current social icons as they are
+- Improve footer titles:
+  - المنصة
+  - روابط مهمة
+  - تابعنا
+  Make them slightly larger and bold
+- Keep links readable and clean
+- Do NOT increase spacing between footer sections too much
+- Keep footer simple, balanced, and consistent on all pages
+
+==================================================
+4) GENERAL RULES
+==================================================
+
+- Do not break the search UX that is currently working
+- Do not redesign unrelated sections
+- Keep the current branding style
+- Focus only on:
+  - hero title + spacing
+  - global scroll-to-top arrow
+  - unified footer
+
+==================================================
+5) FINAL CHECK
+==================================================
+
+After finishing:
+- show updated homepage
+- show footer
+- show the arrow after scrolling
+- confirm the arrow works on all pages

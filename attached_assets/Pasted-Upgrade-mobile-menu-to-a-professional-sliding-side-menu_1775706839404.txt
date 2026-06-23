@@ -1,0 +1,113 @@
+Upgrade mobile menu to a professional sliding side menu (like apps)
+
+GOAL:
+Make the mobile menu slide from the right side instead of appearing over content.
+
+====================================
+1) STRUCTURE
+====================================
+
+<div class="menu-overlay"></div>
+
+<div class="side-menu">
+  <button class="close-menu">✕</button>
+
+  <a href="/">الرئيسية</a>
+  <a href="/properties">العقارات</a>
+  <a href="/offices">المكاتب</a>
+  <a href="/plans">الباقات</a>
+
+  <hr />
+
+  <a href="/login">تسجيل الدخول</a>
+  <button class="add-btn">إضافة إعلان</button>
+</div>
+
+====================================
+2) CSS (IMPORTANT)
+====================================
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 75%;
+  height: 100%;
+  background: #0f2a44;
+  color: white;
+  padding: 20px;
+  transition: 0.3s ease;
+  z-index: 999;
+}
+
+.side-menu.active {
+  right: 0;
+}
+
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  z-index: 998;
+}
+
+.menu-overlay.active {
+  display: block;
+}
+
+.side-menu a {
+  display: block;
+  margin: 15px 0;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.add-btn {
+  background: #f5b400;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 8px;
+}
+
+.close-menu {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: white;
+}
+
+====================================
+3) JAVASCRIPT
+====================================
+
+document.querySelector(".menu-toggle").onclick = function () {
+  document.querySelector(".side-menu").classList.add("active");
+  document.querySelector(".menu-overlay").classList.add("active");
+};
+
+document.querySelector(".close-menu").onclick = closeMenu;
+document.querySelector(".menu-overlay").onclick = closeMenu;
+
+function closeMenu() {
+  document.querySelector(".side-menu").classList.remove("active");
+  document.querySelector(".menu-overlay").classList.remove("active");
+}
+
+====================================
+4) RESULT
+====================================
+
+- Menu slides from RIGHT (important for Arabic RTL)
+- Background dark overlay
+- Looks like real mobile app
+- Smooth animation
+- Clean UX
+
+This is the correct professional behavior.

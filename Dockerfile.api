@@ -1,0 +1,19 @@
+# ── finde api-server (Express) ──────────────────────────────────────────────
+FROM node:20-bookworm-slim
+
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+
+# Install all workspace deps (dev deps kept so drizzle-kit is available for db push,
+# and externalized runtime deps like @google-cloud/* / pg are present at runtime).
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+# Build the API bundle -> artifacts/api-server/dist/index.mjs
+RUN pnpm --filter @workspace/api-server build
+
+ENV NODE_ENV=production
+# process.cwd() is /app -> uploaded files live in /app/uploads (mounted as a volume)
+RUN mkdir -p /app/uploads
+
+CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]

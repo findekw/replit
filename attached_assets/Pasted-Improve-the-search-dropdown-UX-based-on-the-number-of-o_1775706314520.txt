@@ -1,0 +1,76 @@
+Improve the search dropdown UX based on the number of options in each field.
+
+GOAL:
+Only keep search inputs inside dropdowns where they are actually useful.
+Remove unnecessary search boxes from short lists to reduce clutter.
+
+====================================
+1) GOVERNORATE DROPDOWN
+====================================
+For the governorate field (المحافظة):
+- REMOVE the internal search input
+- Show the 6 governorates directly in the dropdown list
+- No "ابحث عن محافظة..." field
+- Keep it simple because the list is short and users can understand it quickly
+
+====================================
+2) AREA DROPDOWN
+====================================
+For the area field (المنطقة):
+- KEEP the internal search input
+- This field has many options and needs search
+- Keep scroll support
+- Keep it dependent on governorate selection
+
+Behavior:
+- area dropdown is disabled until governorate is selected
+- once governorate is selected, enable area dropdown and load relevant areas
+- area dropdown should still include search input because the list is long
+
+====================================
+3) PROPERTY TYPE DROPDOWN
+====================================
+For the property type field (نوع العقار):
+- KEEP the internal search input
+- This list is long and search is useful
+- Keep scroll support if needed
+
+====================================
+4) EXCHANGE / BADAL TAB
+====================================
+For the "للبدل" tab:
+- REMOVE internal search inputs from short dropdowns
+- If the options are few and simple, show them directly
+- Do not add unnecessary search boxes in small lists
+
+====================================
+5) UX PRINCIPLE
+====================================
+Rule to apply:
+- Short list = no search input
+- Long list = keep search input
+
+This should make the search form feel simpler and less crowded.
+
+====================================
+6) DESIGN / BEHAVIOR
+====================================
+- Keep Arabic RTL layout
+- Keep same visual style
+- Keep dropdowns clean and premium
+- No clutter
+- No popup warnings
+- Mobile responsive
+
+====================================
+7) FINAL EXPECTED RESULT
+====================================
+Search inputs should remain ONLY in:
+- المنطقة
+- نوع العقار
+
+Search inputs should be REMOVED from:
+- المحافظة
+- short lists in "للبدل"
+
+This is a UX cleanup improvement for clarity and speed.

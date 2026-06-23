@@ -1,0 +1,129 @@
+Improve office public page, dashboard UX, and overall product readiness for real estate marketplace.
+
+Based on current implementation, apply the following improvements:
+
+========================
+1. OFFICE PUBLIC PAGE (CRITICAL)
+========================
+
+1. Ensure office page URL uses slug:
+- Route must be: /:slug
+- Remove any ID-based URLs completely
+- Always fetch using:
+  GET /api/offices/by-slug/:slug
+
+2. Improve office header UI:
+- Add:
+  - Office logo (fallback placeholder if missing)
+  - Office name (bold, large)
+  - Verified badge (static for now: "مكتب موثق")
+  - Location (city/area if available)
+  - Number of listings (count)
+
+3. Improve contact section:
+- WhatsApp button (primary CTA, green)
+- Call button (secondary)
+- Make buttons sticky on mobile (important)
+
+4. Listings section:
+- Show real property cards:
+  - Image (fallback placeholder)
+  - Price
+  - Area/location
+  - Property type
+- Remove "no image" empty feeling
+- Add empty state:
+  "لا توجد إعلانات حالياً" with icon
+
+5. Filters:
+- Tabs: الكل / للبيع / للإيجار / للبدل
+- Must filter listings correctly (frontend state)
+
+6. Add pagination or load more:
+- If listings > 6 → paginate or infinite scroll
+
+========================
+2. DASHBOARD IMPROVEMENTS (OFFICE PANEL)
+========================
+
+1. Fix public URL display:
+- Replace current link (ID-based) with:
+  `${BASE_URL}/${office.slug}`
+
+2. Improve URL section UI:
+- Add:
+  - "زيارة الصفحة"
+  - "نسخ الرابط"
+- Display clean URL only (no long Replit IDs if possible)
+
+3. Stats cards:
+- Ensure all counters are working:
+  - إجمالي المشاهدات
+  - نقرات الاتصال
+  - نقرات واتساب
+- If no data → show 0 cleanly
+
+4. Add quick actions:
+- زر "إضافة إعلان"
+- زر "تعديل بيانات المكتب"
+
+========================
+3. DATA QUALITY (IMPORTANT FOR TRUST)
+========================
+
+1. Add default placeholder images:
+- For office
+- For properties
+
+2. Prevent empty listings UI:
+- Always show structured card even if missing data
+
+========================
+4. ADMIN PANEL IMPROVEMENTS
+========================
+
+1. Improve approval UI:
+- Add confirmation popup before approve/reject
+- Show toast after action:
+  - "تم القبول"
+  - "تم الرفض"
+
+2. Separate clearly:
+- Pending offices
+- Pending listings
+
+========================
+5. UX + MOBILE OPTIMIZATION
+========================
+
+1. Ensure full responsiveness:
+- Office page
+- Listings
+- Dashboard
+
+2. Improve spacing and readability:
+- Increase padding
+- Improve font sizes for Arabic
+
+3. Fix scroll behavior:
+- Dropdowns (property type, areas) must scroll smoothly like areas dropdown
+
+========================
+6. CLEANUP + CONSISTENCY
+========================
+
+1. Remove any debug or dev text
+2. Standardize Arabic labels:
+- Use consistent wording across app
+
+3. Ensure no broken links or routes
+
+========================
+FINAL GOAL
+========================
+
+Transform the current system from a functional prototype into a clean, professional, trustable product where:
+
+- Office feels it owns a real page
+- User trusts listings
+- UI looks production-ready

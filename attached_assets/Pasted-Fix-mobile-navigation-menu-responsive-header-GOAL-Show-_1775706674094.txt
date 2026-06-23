@@ -1,0 +1,111 @@
+Fix mobile navigation menu (responsive header)
+
+GOAL:
+Show navigation menu properly on mobile instead of hiding it.
+
+====================================
+1) DESKTOP (no change)
+====================================
+On desktop:
+- Keep menu visible:
+الرئيسية | العقارات | المكاتب | الباقات
+
+====================================
+2) MOBILE BEHAVIOR
+====================================
+On mobile screens:
+- Hide the horizontal menu
+- Show a menu icon (☰) instead
+
+Top bar should look like:
+[☰]        Finde
+
+====================================
+3) WHEN CLICK MENU ICON
+====================================
+When user clicks ☰:
+- Open a dropdown or side menu
+
+Menu should contain:
+- الرئيسية
+- العقارات
+- المكاتب
+- الباقات
+- تسجيل الدخول
+
+====================================
+4) UI STYLE
+====================================
+- Clean modern design
+- Dark blue background (same as site)
+- White text
+- Smooth animation (slide down or slide from side)
+
+====================================
+5) HTML STRUCTURE
+====================================
+Add menu button:
+
+<button class="menu-toggle">☰</button>
+
+<nav class="mobile-menu">
+  <a href="/">الرئيسية</a>
+  <a href="/properties">العقارات</a>
+  <a href="/offices">المكاتب</a>
+  <a href="/plans">الباقات</a>
+  <a href="/login">تسجيل الدخول</a>
+</nav>
+
+====================================
+6) CSS
+====================================
+Hide desktop menu on mobile:
+
+@media (max-width: 768px) {
+  .desktop-menu {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: block;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #000;
+  }
+
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    background: #0f2a44;
+    padding: 15px;
+  }
+
+  .mobile-menu a {
+    color: white;
+    padding: 10px 0;
+    text-decoration: none;
+  }
+
+  .mobile-menu.active {
+    display: flex;
+  }
+}
+
+====================================
+7) JAVASCRIPT
+====================================
+Toggle menu:
+
+document.querySelector(".menu-toggle").onclick = function () {
+  document.querySelector(".mobile-menu").classList.toggle("active");
+};
+
+====================================
+8) RESULT
+====================================
+- Desktop: normal menu
+- Mobile: clean hamburger menu ☰
+- User can navigate easily
+
+This is essential UX fix for mobile users.

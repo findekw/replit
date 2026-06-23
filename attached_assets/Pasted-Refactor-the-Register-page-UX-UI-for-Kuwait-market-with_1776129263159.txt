@@ -1,0 +1,109 @@
+Refactor the Register page UX/UI for Kuwait market with clean validation and mandatory fields only.
+
+1) GENERAL RULES
+- Remove all asterisks (*) from labels.
+- Do not show "اختياري" anywhere.
+- Treat required fields through validation only.
+- All labels and inputs must be Arabic-first and RTL.
+
+2) ACCOUNT TYPES
+Keep the 2 account types:
+- "مكتب عقاري"
+- "باحث عن عقار"
+
+3) REQUIRED FIELDS
+
+For "باحث عن عقار":
+- الاسم الكامل
+- البريد الإلكتروني
+- رقم الهاتف
+- كلمة المرور
+- تأكيد كلمة المرور
+
+For "مكتب عقاري":
+- اسم المكتب
+- رابط الصفحة
+- البريد الإلكتروني
+- رقم الهاتف
+- كلمة المرور
+- تأكيد كلمة المرور
+
+4) OFFICE PAGE LINK FIELD
+- "رابط الصفحة" must exist for office registration.
+- It should feel editable by the user.
+- Show a clean helper text below it:
+  "سيظهر رابط صفحتك بهذا الشكل: finde.co/offices/your-slug"
+- Allow English letters, numbers, and hyphen only.
+- Auto-suggest from office name, but user can edit it manually.
+
+5) PHONE FIELD - KUWAIT ONLY
+- Replace country dropdown completely.
+- No country selector.
+- No "KW" text.
+- Show fixed Kuwait flag icon only + fixed code +965.
+- Country must be locked to Kuwait only.
+- Input accepts local phone number only.
+
+Phone rules:
+- digits only
+- exactly 8 digits
+- must start with 5 or 6 or 9
+
+Phone input layout:
+[ local number field ] [ 🇰🇼 +965 fixed prefix ]
+
+6) VALIDATION UX
+- Do not use popups or generic alerts.
+- When a field is invalid:
+  - border turns red
+  - show small red error text below the same field
+- When corrected:
+  - red state disappears immediately
+
+Validation messages:
+- الاسم الكامل / اسم المكتب:
+  "يرجى إدخال الاسم"
+- رابط الصفحة:
+  "يرجى إدخال رابط صحيح"
+- البريد الإلكتروني:
+  "يرجى إدخال بريد إلكتروني صحيح"
+- رقم الهاتف:
+  "يرجى إدخال رقم هاتف كويتي صحيح"
+- كلمة المرور:
+  "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
+- تأكيد كلمة المرور:
+  "كلمة المرور غير متطابقة"
+
+7) PASSWORD UX
+- Keep eye icon for show/hide password.
+- Apply to both password fields.
+- Placeholder/helper for password:
+  "8 أحرف على الأقل"
+
+8) FORM BEHAVIOR
+- On submit:
+  - block submission if any field is invalid
+  - highlight only the invalid fields
+- No submission unless all required fields are valid
+
+9) DESIGN CLEANUP
+- Keep card centered and clean
+- Improve spacing between labels and inputs
+- Keep button full width
+- Keep form compact, modern, and simple
+- Match current visual style of the site
+
+10) BUTTON TEXT
+- For office account:
+  "تقديم طلب التسجيل"
+- For seeker account:
+  "إنشاء الحساب"
+
+11) FINAL GOAL
+Make the registration page feel:
+- simple
+- clear
+- Kuwait-specific
+- no clutter
+- no optional confusion
+- strong field-level validation

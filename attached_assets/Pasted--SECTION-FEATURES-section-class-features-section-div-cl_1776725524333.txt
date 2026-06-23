@@ -1,0 +1,155 @@
+<!-- SECTION: FEATURES -->
+<section class="features-section">
+  <div class="container">
+
+    <h2 class="section-title">ماذا ستحصل عند الاشتراك؟</h2>
+
+    <div class="features-grid">
+
+      <!-- 1 -->
+      <div class="feature-card">
+        <div class="icon">🔗</div>
+        <h3>رابط خاص لمكتبك</h3>
+        <p>شارك جميع عقاراتك برابط واحد في واتساب وإنستغرام والبزنس كارد</p>
+      </div>
+
+      <!-- 2 -->
+      <div class="feature-card">
+        <div class="icon">🏢</div>
+        <h3>صفحة خاصة لمكتبك</h3>
+        <p>مكتبك يحصل على صفحة داخل المنصة تعرض جميع عقاراته بشكل منظم</p>
+      </div>
+
+      <!-- 3 -->
+      <div class="feature-card">
+        <div class="icon">📂</div>
+        <h3>إدارة العقارات</h3>
+        <p>أضف وعدّل عقاراتك بسهولة من لوحة تحكم واحدة</p>
+      </div>
+
+      <!-- 4 -->
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <h3>30 إعلان نشط</h3>
+        <p>لديك حتى 30 إعلان مع حرية التعديل والحذف في أي وقت</p>
+      </div>
+
+      <!-- 5 -->
+      <div class="feature-card">
+        <div class="icon">👁️</div>
+        <h3>عرض مستمر</h3>
+        <p>عقاراتك تظهر داخل المنصة للباحثين بشكل يومي</p>
+      </div>
+
+      <!-- 6 -->
+      <div class="feature-card">
+        <div class="icon">💬</div>
+        <h3>تواصل مباشر</h3>
+        <p>استقبل العملاء مباشرة عبر واتساب بدون تعقيد</p>
+      </div>
+
+      <!-- 7 -->
+      <div class="feature-card">
+        <div class="icon">👥</div>
+        <h3>العملاء المهتمون</h3>
+        <p>تابع جميع العملاء المهتمين بعقاراتك من مكان واحد</p>
+      </div>
+
+      <!-- 8 -->
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h3>متابعة الأداء</h3>
+        <p>اعرف عدد المشاهدات والتفاعل على عقاراتك بسهولة</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+.features-section {
+  background: #f6f7f9;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  color: #1f2d3d;
+}
+
+/* GRID */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* CARD */
+.feature-card {
+  background: linear-gradient(135deg, #1f3c5a, #2c587c);
+  color: #fff;
+  padding: 25px 15px;
+  border-radius: 16px;
+  transition: 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-card .icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.feature-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* TABLET */
+@media (max-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+}
+
+/* SMALL MOBILE */
+@media (max-width: 480px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .feature-card {
+    padding: 18px 10px;
+  }
+
+  .feature-card h3 {
+    font-size: 15px;
+  }
+
+  .feature-card p {
+    font-size: 12px;
+  }
+}
+</style>

@@ -1,0 +1,141 @@
+Transform the public office page into a high-conversion real estate landing page (similar to professional marketplaces like Haraj/Aqar).
+
+GOAL:
+Make the office page feel valuable, trustworthy, and conversion-focused so real estate offices see real benefit and users take action.
+
+------------------------------------
+1) REMOVE CONFUSION (CRITICAL)
+------------------------------------
+- Remove duplicated WhatsApp / contact sections
+- Keep ONLY ONE main CTA area
+- Do NOT repeat the same buttons in multiple places
+
+------------------------------------
+2) NEW PAGE STRUCTURE (IMPORTANT)
+------------------------------------
+Rebuild layout in this exact order:
+
+1. Office Header (Hero)
+2. Main CTA (Contact)
+3. Listings (MAIN SECTION)
+4. Office Info (secondary)
+5. Inquiry form (optional bottom)
+
+------------------------------------
+3) OFFICE HEADER (HERO SECTION)
+------------------------------------
+- Clean premium card design
+- Include:
+  - Office logo/avatar (right side)
+  - Office name (large + bold)
+  - Short description (max 2 lines)
+  - Location (e.g. محافظة الأحمدي)
+  - Badge: "مكتب موثق" (UI only for now)
+  - Stats:
+    - عدد الإعلانات
+    - عدد المشاهدات (if available)
+
+- Reduce empty space
+- Make it compact but strong
+
+------------------------------------
+4) MAIN CTA (VERY IMPORTANT)
+------------------------------------
+- Place ONE main CTA under the header
+- Large primary button:
+
+  "📲 تواصل الآن عبر واتساب"
+
+- Secondary button:
+  "📞 اتصال مباشر"
+
+- Make WhatsApp button dominant (green, larger)
+
+- On mobile:
+  - Sticky bottom button (WhatsApp)
+
+------------------------------------
+5) LISTINGS SECTION (CORE OF PAGE)
+------------------------------------
+- This is the MOST IMPORTANT section
+
+- Move listings to center of the page
+- Remove side layout dominance
+
+- Use grid layout:
+  - Desktop: 2–3 cards per row
+  - Mobile: 1 card per row
+
+------------------------------------
+6) PROPERTY CARD IMPROVEMENTS
+------------------------------------
+Each property card must include:
+
+- Strong image area
+  - If no image:
+    → show high-quality placeholder (not empty)
+    → with subtle icon + gradient
+
+- Price (VERY CLEAR):
+  - Example: "KWD 501 / شهرياً"
+  - Bigger font
+
+- Title (bold)
+
+- Location (with icon)
+
+- Key details:
+  - غرف
+  - حمامات
+  - المساحة
+
+- Property type badge:
+  - للبيع / للإيجار / بدل
+
+------------------------------------
+7) REMOVE LEFT SIDEBAR DOMINANCE
+------------------------------------
+- Do NOT keep a heavy left column
+- Page must feel centered and balanced
+
+------------------------------------
+8) OFFICE INFO SECTION (SECONDARY)
+------------------------------------
+Move office info BELOW listings:
+
+- About office (short)
+- Contact info (optional)
+- Stats summary
+
+------------------------------------
+9) VISUAL HIERARCHY (VERY IMPORTANT)
+------------------------------------
+- Priority order:
+  1) Listings
+  2) CTA
+  3) Office info
+
+NOT the opposite
+
+------------------------------------
+10) MOBILE EXPERIENCE
+------------------------------------
+- Perfect spacing
+- No broken layout
+- Sticky WhatsApp button
+- Cards full width
+
+------------------------------------
+11) TRUST & VALUE FEEL
+------------------------------------
+Make the page feel like:
+
+- A real business page
+- Worth paying for subscription
+- Not a demo or empty page
+
+------------------------------------
+IMPORTANT:
+- Do NOT break slug system (/alfintas)
+- Do NOT break existing API
+- Only improve UI/UX and layout

@@ -1,0 +1,167 @@
+Refactor the OFFICES section (offices listing page + office card UI + office details header) into a clean, simple, Arabic-first marketplace experience. Apply ALL of the following exactly:
+
+==================================================
+1) GLOBAL RTL RULE
+==================================================
+- Unify all dropdowns and select fields across the offices section:
+  - Text aligned RIGHT
+  - Arrow aligned LEFT
+- Keep this rule consistent everywhere
+- Do not mix directions
+
+==================================================
+2) OFFICES LIST PAGE (MAIN LISTING)
+==================================================
+Goal:
+Simple cards focused only on office identity, not internal system data.
+
+REMOVE completely from office cards:
+- governorate display
+- area display
+- "نشط"
+- "موثق"
+- "مميز"
+- "مكتب نشط"
+- "موثق ومعتمد على Finde"
+- any internal/admin/system labels
+- any unnecessary location metadata
+
+KEEP ONLY on office cards:
+- office logo or default office/building icon
+- office name
+- short description (max 2 lines)
+- total properties count only
+  example: "12 عقار"
+
+Do NOT show governorate or area on office cards.
+
+==================================================
+3) OFFICE CARD LAYOUT
+==================================================
+- Fix the current bug where the top of cards is visually cut/cropped
+- Cards must be fully visible with no clipping from top
+- Remove any overflow/height/position issue causing cropped cards
+- Ensure cards have:
+  - proper top padding
+  - proper internal spacing
+  - no broken image/logo area
+  - auto height or properly calculated height
+- If there is any badge/container causing clipping, remove/fix it
+
+Card structure should be:
+- top area: logo/icon
+- below it: office name
+- below it: short description
+- bottom/meta: property count only
+
+Typography:
+- office name = strongest text
+- description = smaller muted text
+- count = subtle but clear
+
+==================================================
+4) OFFICE LOGO / ICON
+==================================================
+- Use one consistent visual system
+- If office has logo:
+  - display it cleanly inside the card
+- If no logo:
+  - show one unified default office/building icon
+- Icon/logo should feel centered and balanced
+- No broken placeholder blocks
+- No random badge overlays
+
+==================================================
+5) OFFICES PAGE FILTER
+==================================================
+- Keep only one simple dropdown filter at top:
+  "كل المحافظات"
+- Keep it visually clean and properly aligned
+- Text right, arrow left
+- This filter is only for browsing convenience
+- But DO NOT display governorate on office cards
+
+==================================================
+6) OFFICE DETAILS PAGE (TOP SECTION / HERO)
+==================================================
+Simplify office detail header.
+
+KEEP ONLY:
+- office logo
+- office name
+- short description
+- clear contact buttons:
+  - primary: WhatsApp
+  - secondary: Call
+- optional small icons only if available:
+  - Instagram
+  - Email
+
+REMOVE completely:
+- "موثق"
+- "معتمد"
+- "نشط"
+- "مميز"
+- any trust/system badges
+- any unnecessary system/internal labels
+
+Do NOT show office governorate here unless truly needed later.
+For now keep it simple:
+- name
+- description
+- contact
+
+==================================================
+7) OFFICE DETAILS PAGE - PROPERTY LIST
+==================================================
+- Keep section title:
+  "إعلانات المكتب"
+- Keep listing cards readable and clean
+- Do not redesign everything radically
+- Just ensure:
+  - consistent spacing
+  - clean image
+  - title
+  - price
+  - basic property info
+
+==================================================
+8) MOBILE RULES
+==================================================
+- Keep mobile office listing simple
+- No extra controls
+- No grid/list switch on mobile
+- Cards must stack vertically
+- No clipping, no cropped top area
+- Office name and description must remain readable
+- Filter stays simple and clear
+
+==================================================
+9) VISUAL CLEANUP
+==================================================
+- Remove clutter
+- Remove noisy metadata
+- Improve spacing between card elements
+- Improve card padding
+- Improve card hierarchy
+- Keep design minimal and premium
+- Make the offices section feel closer to Boshamlan simplicity:
+  office name + short info + count + contact on details page
+
+==================================================
+10) IMPORTANT IMPLEMENTATION NOTES
+==================================================
+- Do NOT add new badges
+- Do NOT add new admin/system texts
+- Do NOT show governorate/area on office cards
+- Do NOT keep broken cropped layout
+- Fix the current top clipping bug first
+- Reuse existing structure where possible, but simplify UI heavily
+
+FINAL RESULT SHOULD FEEL LIKE:
+- clean
+- minimal
+- office-focused
+- user-friendly
+- Arabic-first
+- no internal clutter

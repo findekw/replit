@@ -1,0 +1,172 @@
+<!-- ===== صفحة: باقة المكاتب العقارية ===== -->
+<section class="office-package">
+
+  <div class="container">
+
+    <!-- العنوان الرئيسي -->
+    <h1 class="title">
+      كل عقاراتك في رابط واحد يختصر وقتك ويساعدك على إغلاق الصفقات
+    </h1>
+
+    <p class="subtitle">
+      أنشئ صفحة خاصة بمكتبك تجمع كل عقاراتك في مكان واحد، وارسِلها للعميل بدل ما تشرح كل مرة، واعرف منو مهتم فعلاً بعروضك.
+    </p>
+
+    <!-- المشاكل -->
+    <div class="problems">
+      <h2>هل تعاني من هالمشاكل؟</h2>
+
+      <div class="item">❌ كل يوم نفس الأسئلة من العملاء</div>
+      <div class="item">❌ ترسل نفس تفاصيل العقار أكثر من مرة</div>
+      <div class="item">❌ إعلاناتك متفرقة بين واتساب وانستغرام</div>
+      <div class="item">❌ ما تعرف منو مهتم وجاهز يشتري</div>
+    </div>
+
+    <!-- الحل -->
+    <div class="solution">
+      <h2>مع Finde كل شيء يتغير</h2>
+
+      <div class="item">✅ رابط واحد يجمع كل عقاراتك</div>
+      <div class="item">✅ ترسله للعميل بدل الشرح كل مرة</div>
+      <div class="item">✅ صفحة احترافية باسم مكتبك</div>
+      <div class="item">✅ تعرف عدد المشاهدات والمهتمين</div>
+      <div class="item">✅ تتابع العملاء بسهولة</div>
+    </div>
+
+    <!-- القيمة -->
+    <div class="value-box">
+      شغل مرتب + وقت أقل + عملاء أكثر جاهزين للتواصل
+    </div>
+
+    <!-- السعر -->
+    <div class="pricing">
+      <h2>باقة المكاتب العقارية</h2>
+
+      <p class="price-old">29 د.ك / شهرياً</p>
+      <p class="price-new">14.5 د.ك / شهرياً</p>
+
+      <ul>
+        <li>✔ حتى 30 إعلان نشط</li>
+        <li>✔ 5 إعلانات مميزة</li>
+        <li>✔ صفحة خاصة باسم مكتبك</li>
+        <li>✔ زر واتساب مباشر</li>
+        <li>✔ إحصائيات المشاهدات والتفاعل</li>
+      </ul>
+
+      <a href="/register" class="cta">
+        ابدأ التجربة المجانية
+      </a>
+
+      <p class="note">تجربة مجانية 7 أيام — بدون دفع الآن</p>
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+.office-package {
+  direction: rtl;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: sans-serif;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.problems, .solution {
+  margin-bottom: 30px;
+}
+
+.problems h2, .solution h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.item {
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.solution .item {
+  background: #eaf7ee;
+}
+
+.value-box {
+  background: #2f4b6e;
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.pricing {
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.price-old {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.price-new {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.pricing ul {
+  list-style: none;
+  padding: 0;
+  text-align: right;
+}
+
+.pricing li {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.cta {
+  display: block;
+  background: #4a7dfc;
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 15px;
+  text-decoration: none;
+}
+
+.note {
+  font-size: 12px;
+  color: #888;
+  margin-top: 10px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .title { font-size: 28px; }
+  .subtitle { font-size: 16px; }
+}
+</style>

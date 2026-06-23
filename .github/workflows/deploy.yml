@@ -1,0 +1,32 @@
+name: Deploy to VPS
+
+# Auto-deploy on every push to main. The server pulls the latest code,
+# rebuilds the containers, and runs DB migrations.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/finde
+            git fetch --all
+            git reset --hard origin/main
+            docker compose up -d --build
+            # sync DB schema (idempotent)
+            docker compose run --rm -T app pnpm --filter @workspace/db push-force
+            docker image prune -f

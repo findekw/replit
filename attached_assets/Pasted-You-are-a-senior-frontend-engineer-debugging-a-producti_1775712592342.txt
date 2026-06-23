@@ -1,0 +1,88 @@
+You are a senior frontend engineer debugging a production-only interaction issue.
+
+Context:
+- This is a React + Radix UI based dropdown (Popover + Command)
+- The UI works perfectly in Preview (development)
+- In production, the governorate dropdown does NOT respond to clicks
+- The overlay issue has already been fixed (no visual blocking layer now)
+
+Current confirmed state:
+- UI renders correctly
+- No overlay blocking clicks
+- Dropdown opens visually
+- Clicking governorate does NOTHING (no selection, no response)
+
+Your task is NOT to guess.
+Your task is to deeply DEBUG and IDENTIFY the exact root cause.
+
+---
+
+DEBUG REQUIREMENTS (MANDATORY):
+
+1. Event Layer:
+- Add console logs to:
+  - onClick
+  - onSelect
+  - onPointerDown
+- Confirm if events fire or not in production
+- If not firing → identify what blocks them
+
+2. DOM Inspection:
+- Inspect the governorate dropdown trigger and items
+- Check:
+  - pointer-events
+  - z-index
+  - visibility
+  - disabled attributes
+- Ensure NO parent has pointer-events: none
+
+3. State Flow:
+- Log state before and after selecting property type
+- Confirm:
+  - governorate dropdown is not conditionally disabled
+  - required state is actually updated
+
+4. Radix Behavior:
+- Inspect Popover + Command interaction
+- Confirm:
+  - no leftover invisible element in DOM
+  - no focus trap preventing interaction
+  - no portal misplacement
+
+5. Production vs Dev Difference:
+- Compare behavior differences
+- Identify EXACTLY why production behaves differently
+
+---
+
+CRITICAL RULES:
+
+- DO NOT rewrite components
+- DO NOT change UI
+- DO NOT replace dropdown
+- DO NOT simplify logic blindly
+
+---
+
+EXPECTED OUTPUT:
+
+You must:
+1. Identify the EXACT root cause (not assumptions)
+2. Show the exact line/component causing the issue
+3. Apply a MINIMAL FIX (surgical fix only)
+4. Explain briefly WHY it failed in production only
+5. Ensure fix does NOT break filtering logic
+
+---
+
+SUCCESS CONDITION:
+
+- Clicking governorate works instantly
+- No UI change
+- No regression
+- Same behavior in dev and production
+
+---
+
+Think like a debugger, not a generator.
+Do not rush. Trace the issue step by step until root cause is proven.

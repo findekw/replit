@@ -1,0 +1,135 @@
+Fix and simplify the homepage search filters with a clean Arabic RTL experience.
+
+GOAL:
+Make the homepage search simple, clear, and mobile-friendly.
+No clutter. No confusion.
+
+---
+
+1) REMOVE UNUSED FIELDS
+- Remove "التأثيث" completely
+- Remove keyword search field from homepage
+(keep keyword only for results page)
+
+---
+
+2) SIMPLIFY SEARCH STRUCTURE
+
+Homepage must contain ONLY:
+- نوع العقار
+- المحافظة
+- المنطقة
+- زر "بحث"
+
+Nothing else.
+
+---
+
+3) PROPERTY TYPE (نوع العقار)
+
+- Simple dropdown (NO internal search)
+- No scroll if items are few
+- Show items clearly:
+  شقة
+  بيت
+  قسيمة
+  أرض
+  تجاري
+  etc.
+
+---
+
+4) GOVERNORATE (المحافظة)
+
+- Simple dropdown (NO internal search)
+- No scroll
+- Placeholder must be:
+  "اختر المحافظة"
+
+- Remove confusing options like:
+  "الكل" or "جميع المحافظات"
+
+---
+
+5) AREA (المنطقة)
+
+- Disabled until governorate is selected
+- Show placeholder:
+  "اختر المحافظة أولاً"
+
+- After selecting governorate:
+  enable area dropdown
+
+- Allow scroll ONLY here if many areas
+
+---
+
+6) FIX RTL ALIGNMENT (VERY IMPORTANT)
+
+- All text aligned RIGHT
+- Dropdown arrow ALWAYS on LEFT
+- Same layout for all dropdowns
+
+NO:
+- mixed alignment
+- arrow switching sides
+
+---
+
+7) FIX TEXT CUTTING
+
+- Prevent text like "كل المناطق" from being cut
+- Ensure:
+  - full width inputs
+  - proper padding
+  - no overflow hidden
+  - readable font size
+
+---
+
+8) UNIFY DROPDOWN DESIGN
+
+All dropdowns must have:
+- same height
+- same padding
+- same border radius
+- same spacing
+- same arrow position
+- same font size
+
+---
+
+9) VISUAL CLEANUP
+
+- Increase text clarity (not faded)
+- Improve contrast
+- Clean spacing between fields
+- Equal width inputs
+- Proper alignment with search button
+
+---
+
+10) KEEP BEHAVIOR SIMPLE
+
+- No animations
+- No complex effects
+- Fast open/close
+- Clean UX
+
+---
+
+11) DO NOT TOUCH
+
+- Do NOT modify property cards
+- Do NOT modify property details page
+- Do NOT change backend logic
+
+---
+
+RESULT:
+Homepage search must feel:
+- simple
+- clear
+- fast
+- Arabic-first
+- mobile-friendly

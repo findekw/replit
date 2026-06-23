@@ -1,0 +1,107 @@
+/* ===================== */
+/* 🎯 الألوان المعتمدة */
+/* ===================== */
+
+:root {
+  --primary-navy: #243B5A;   /* الكحلي المعتمد */
+  --secondary-blue: #4F6FAD; /* الأزرق للأزرار */
+  --bg-light: #F8FAFC;       /* الخلفية */
+  --border-light: #E5E7EB;
+}
+
+/* ===================== */
+/* 🔹 الخلفية العامة */
+/* ===================== */
+
+body {
+  background: var(--bg-light) !important;
+  color: var(--primary-navy) !important;
+}
+
+/* ===================== */
+/* 🔹 الهيدر */
+/* ===================== */
+
+header, .header {
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  border: none !important;
+}
+
+/* ===================== */
+/* 🔹 العناوين */
+/* ===================== */
+
+h1, h2, h3, .main-title {
+  color: var(--primary-navy) !important;
+}
+
+/* ===================== */
+/* 🔹 محرك البحث */
+/* ===================== */
+
+.search-box,
+.search-container {
+  background: #ffffff !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 14px !important;
+}
+
+/* ===================== */
+/* 🔹 الأزرار */
+/* ===================== */
+
+button,
+.btn,
+.search-btn {
+  background: var(--secondary-blue) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* ===================== */
+/* 🔹 المميزات */
+/* ===================== */
+
+.feature-box {
+  background: #ffffff !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 16px !important;
+}
+
+.feature-box i {
+  color: var(--primary-navy) !important;
+}
+
+.feature-box p {
+  color: var(--primary-navy) !important;
+}
+
+/* ===================== */
+/* 🔹 قسم CTA (صاحب مكتب) */
+/* ===================== */
+
+.owner-section,
+.cta-section {
+  background: linear-gradient(135deg, #243B5A, #2F4E7A) !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}
+
+/* ===================== */
+/* 🔹 الفوتر */
+/* ===================== */
+
+footer {
+  background: var(--primary-navy) !important;
+  color: #ffffff !important;
+}
+
+/* ===================== */
+/* 🔹 النصوص الثانوية */
+/* ===================== */
+
+p, .text-muted {
+  color: #64748b !important;
+}

@@ -1,0 +1,74 @@
+Fix the governorate → area dependency logic from the root without breaking the existing governorate dropdown.
+
+Problem:
+The governorate dropdown was working before, but the dependent area dropdown became unstable:
+- first it showed nothing
+- then only one item
+- then all areas without scroll
+- then after scroll fix it showed nothing again
+
+Root fix required:
+
+1. Keep the governorate dropdown exactly working as it already does
+- Do NOT break the existing governorate behavior
+- Do NOT change its data source if it already works
+
+2. Rebuild the area dropdown as a true dependent field:
+- The area field must depend only on the selected governorate
+- No governorate selected = area dropdown disabled
+- Show hint: "اختر المحافظة أولاً"
+
+3. When a governorate is selected:
+- Load ONLY the areas التابعة لهذه المحافظة
+- Reset any previously selected area
+- Replace the area options array with the correct filtered list
+- Do NOT reuse stale values
+- Do NOT keep old area state from previous governorate
+
+4. Data binding:
+- Verify the governorate key and area key names are correct
+- Verify filtering uses the correct relation between governorate and areas
+- Ensure the area dropdown maps over the filtered areas array only
+
+5. Rendering:
+- The area dropdown must render ALL matching areas
+- Not placeholder only
+- Not one fake item
+- Not empty if data exists
+
+6. Scroll behavior:
+- Add internal scroll to the area dropdown list
+- max-height: 250px
+- overflow-y: auto
+- smooth scrolling on mobile
+- Keep the dropdown attached under its own field
+
+7. Positioning:
+- Parent field container must be relative
+- Dropdown must be absolute under the field
+- width: 100%
+- right: 0 for RTL
+- high z-index
+- small margin-top
+
+8. State safety:
+- On governorate change:
+  - clear selected area
+  - clear old dropdown state
+  - reload fresh filtered areas
+- Close any other open dropdowns before opening area dropdown
+
+9. Debugging:
+Add temporary logs for:
+- selected governorate
+- total filtered areas
+- first 5 area names
+- selected area value
+
+10. Important:
+This must be a root logic fix, not a visual patch.
+Do NOT break the governorate dropdown while fixing the area dropdown.
+
+Goal:
+Governorate works as before.
+After selecting governorate, the area dropdown shows all related areas only, with proper scroll, correct positioning, and stable mobile behavior.

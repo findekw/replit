@@ -1,0 +1,668 @@
+import { Router, type IRouter, type Request, type Response } from "express";
+import { db, propertiesTable, propertyImagesTable, officesTable, governoratesTable, areasTable, usersTable } from "@workspace/db";
+import { eq, and, desc, asc, sql, count, gte, lte, inArray } from "drizzle-orm";
+import {
+  ListPropertiesQueryParams,
+  ListPropertiesResponse,
+  GetFeaturedPropertiesResponse,
+  GetLatestPropertiesQueryParams,
+  GetLatestPropertiesResponse,
+  GetPropertyParams,
+  GetPropertyResponse,
+  GetSimilarPropertiesParams,
+  GetSimilarPropertiesResponse,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+function normalizeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("/uploads/")) return `/api${url}`;
+  return url;
+}
+
+function buildPropertyObject(
+  property: typeof propertiesTable.$inferSelect,
+  extras: {
+    governorateName?: string | null;
+    areaName?: string | null;
+    officeName?: string | null;
+    officeLogo?: string | null;
+    primaryImage?: string | null;
+  }
+) {
+  return {
+    id: property.id,
+    referenceId: property.referenceId,
+    title: property.title,
+    titleAr: property.titleAr,
+    description: property.description ?? null,
+    descriptionAr: property.descriptionAr ?? null,
+    status: property.status,
+    type: property.type,
+    price: property.price,
+    currency: property.currency,
+    area: property.areaSize ?? null,
+    bedrooms: property.bedrooms ?? null,
+    bathrooms: property.bathrooms ?? null,
+    furnished: property.furnished ?? null,
+    featured: property.featured,
+    active: property.active,
+    approvalStatus: property.approvalStatus,
+    views: property.views,
+    whatsappClicks: property.whatsappClicks,
+    callClicks: property.callClicks,
+    governorateId: property.governorateId ?? null,
+    governorateName: extras.governorateName ?? null,
+    areaId: property.areaId ?? null,
+    areaName: extras.areaName ?? null,
+    officeId: property.officeId ?? null,
+    officeName: extras.officeName ?? null,
+    officeLogo: extras.officeLogo ?? null,
+    primaryImage: extras.primaryImage ?? null,
+    createdAt: property.createdAt.toISOString(),
+    updatedAt: property.updatedAt.toISOString(),
+  };
+}
+
+async function getPrimaryImages(propertyIds: number[]): Promise<Record<number, string>> {
+  if (!propertyIds.length) return {};
+  const images = await db
+    .select()
+    .from(propertyImagesTable)
+    .where(and(
+      inArray(propertyImagesTable.propertyId, propertyIds),
+      eq(propertyImagesTable.isPrimary, true)
+    ));
+  const map: Record<number, string> = {};
+  for (const img of images) {
+    const normalized = normalizeImageUrl(img.url);
+    if (normalized) map[img.propertyId] = normalized;
+  }
+  return map;
+}
+
+router.get("/properties", async (req, res): Promise<void> => {
+  const parsed = ListPropertiesQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const {
+    status, type, governorateId, areaId,
+    minPrice, maxPrice, bedrooms, bathrooms,
+    furnished, featured, officeId, keyword,
+    sort, page: rawPage, limit: rawLimit,
+  } = parsed.data;
+
+  // minArea / maxArea are not yet in the generated OpenAPI schema — read directly
+  const minArea = req.query["minArea"] != null ? Number(req.query["minArea"]) : null;
+  const maxArea = req.query["maxArea"] != null ? Number(req.query["maxArea"]) : null;
+
+  const page = Number(rawPage ?? 1);
+  const limit = Number(rawLimit ?? 12);
+  const offset = (page - 1) * limit;
+
+  const conditions = [eq(propertiesTable.active, true)];
+
+  if (status != null) conditions.push(eq(propertiesTable.status, status));
+  if (type != null) conditions.push(eq(propertiesTable.type, type));
+  if (governorateId != null) conditions.push(eq(propertiesTable.governorateId, Number(governorateId)));
+  if (areaId != null) conditions.push(eq(propertiesTable.areaId, Number(areaId)));
+  if (minPrice != null) conditions.push(gte(propertiesTable.price, Number(minPrice)));
+  if (maxPrice != null) conditions.push(lte(propertiesTable.price, Number(maxPrice)));
+  if (minArea != null) conditions.push(gte(propertiesTable.areaSize, Number(minArea)));
+  if (maxArea != null) conditions.push(lte(propertiesTable.areaSize, Number(maxArea)));
+  if (bedrooms != null) conditions.push(eq(propertiesTable.bedrooms, Number(bedrooms)));
+  if (bathrooms != null) conditions.push(eq(propertiesTable.bathrooms, Number(bathrooms)));
+  if (furnished != null) conditions.push(eq(propertiesTable.furnished, furnished));
+  if (featured === "true") conditions.push(eq(propertiesTable.featured, true));
+  if (officeId != null) conditions.push(eq(propertiesTable.officeId, Number(officeId)));
+  if (keyword != null && keyword.trim()) {
+    conditions.push(sql`(${propertiesTable.titleAr} ilike ${'%' + keyword + '%'} or ${propertiesTable.descriptionAr} ilike ${'%' + keyword + '%'})`);
+  }
+
+  const whereClause = and(...conditions);
+
+  let orderBy;
+  if (sort === "price_asc") orderBy = asc(propertiesTable.price);
+  else if (sort === "price_desc") orderBy = desc(propertiesTable.price);
+  else orderBy = desc(propertiesTable.createdAt);
+
+  const [propsRaw, totalRaw] = await Promise.all([
+    db
+      .select({
+        property: propertiesTable,
+        governorateName: governoratesTable.nameAr,
+        areaName: areasTable.nameAr,
+        officeName: officesTable.nameAr,
+        officeLogo: officesTable.logo,
+      })
+      .from(propertiesTable)
+      .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
+      .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
+      .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
+      .where(whereClause)
+      .orderBy(desc(propertiesTable.featured), orderBy)
+      .limit(limit)
+      .offset(offset),
+    db.select({ count: count() }).from(propertiesTable).where(whereClause),
+  ]);
+
+  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+  const total = Number(totalRaw[0]?.count ?? 0);
+
+  res.json(ListPropertiesResponse.parse({
+    properties: propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
+      buildPropertyObject(property, {
+        governorateName: governorateName ?? null,
+        areaName: areaName ?? null,
+        officeName: officeName ?? null,
+        officeLogo: officeLogo ?? null,
+        primaryImage: imageMap[property.id] ?? null,
+      })
+    ),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  }));
+});
+
+router.get("/properties/featured", async (_req, res): Promise<void> => {
+  const propsRaw = await db
+    .select({
+      property: propertiesTable,
+      governorateName: governoratesTable.nameAr,
+      areaName: areasTable.nameAr,
+      officeName: officesTable.nameAr,
+      officeLogo: officesTable.logo,
+    })
+    .from(propertiesTable)
+    .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
+    .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
+    .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
+    .where(and(eq(propertiesTable.active, true), eq(propertiesTable.featured, true)))
+    .orderBy(desc(propertiesTable.createdAt))
+    .limit(8);
+
+  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+
+  res.json(GetFeaturedPropertiesResponse.parse(
+    propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
+      buildPropertyObject(property, {
+        governorateName: governorateName ?? null,
+        areaName: areaName ?? null,
+        officeName: officeName ?? null,
+        officeLogo: officeLogo ?? null,
+        primaryImage: imageMap[property.id] ?? null,
+      })
+    )
+  ));
+});
+
+router.get("/properties/latest", async (req, res): Promise<void> => {
+  const parsed = GetLatestPropertiesQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const limit = Number(parsed.data.limit ?? 8);
+
+  const propsRaw = await db
+    .select({
+      property: propertiesTable,
+      governorateName: governoratesTable.nameAr,
+      areaName: areasTable.nameAr,
+      officeName: officesTable.nameAr,
+      officeLogo: officesTable.logo,
+    })
+    .from(propertiesTable)
+    .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
+    .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
+    .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
+    .where(eq(propertiesTable.active, true))
+    .orderBy(desc(propertiesTable.createdAt))
+    .limit(limit);
+
+  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+
+  res.json(GetLatestPropertiesResponse.parse(
+    propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
+      buildPropertyObject(property, {
+        governorateName: governorateName ?? null,
+        areaName: areaName ?? null,
+        officeName: officeName ?? null,
+        officeLogo: officeLogo ?? null,
+        primaryImage: imageMap[property.id] ?? null,
+      })
+    )
+  ));
+});
+
+router.get("/properties/:id", async (req, res): Promise<void> => {
+  const params = GetPropertyParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const propId = params.data.id;
+
+  const [row] = await db
+    .select({
+      property: propertiesTable,
+      governorateName: governoratesTable.nameAr,
+      areaName: areasTable.nameAr,
+      officeName: officesTable.nameAr,
+      officeLogo: officesTable.logo,
+      officePhone: officesTable.phone,
+      officeWhatsapp: officesTable.whatsapp,
+    })
+    .from(propertiesTable)
+    .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
+    .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
+    .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
+    .where(eq(propertiesTable.id, propId));
+
+  if (!row) {
+    res.status(404).json({ error: "Property not found" });
+    return;
+  }
+
+  // Count views only for real external visitors.
+  // Skip if: (1) viewer is the property owner, (2) viewer is admin.
+  let shouldCountView = true;
+  const sessionUserId = (req as any).session?.userId as number | undefined;
+  if (sessionUserId) {
+    const [viewer] = await db
+      .select({ officeId: usersTable.officeId, role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.id, sessionUserId))
+      .limit(1);
+    if (viewer) {
+      const isOwner = viewer.officeId !== null && viewer.officeId === row.property.officeId;
+      const isAdmin = viewer.role === "admin";
+      if (isOwner || isAdmin) shouldCountView = false;
+    }
+  }
+
+  if (shouldCountView) {
+    await db
+      .update(propertiesTable)
+      .set({ views: sql`${propertiesTable.views} + 1` })
+      .where(eq(propertiesTable.id, propId));
+  }
+
+  const images = await db
+    .select()
+    .from(propertyImagesTable)
+    .where(eq(propertyImagesTable.propertyId, propId))
+    .orderBy(asc(propertyImagesTable.sortOrder));
+
+  const primaryImage = normalizeImageUrl(images.find((img) => img.isPrimary)?.url ?? images[0]?.url ?? null);
+
+  let officeObj = null;
+  if (row.property.officeId) {
+    const [office] = await db.select().from(officesTable).where(eq(officesTable.id, row.property.officeId));
+    if (office) {
+      officeObj = {
+        id: office.id,
+        name: office.name,
+        nameAr: office.nameAr,
+        slug: office.slug,
+        description: office.description ?? null,
+        descriptionAr: office.descriptionAr ?? null,
+        logo: office.logo ?? null,
+        coverImage: office.coverImage ?? null,
+        phone: office.phone ?? null,
+        whatsapp: office.whatsapp ?? null,
+        email: office.email ?? null,
+        website: office.website ?? null,
+        instagram: office.instagram ?? null,
+        twitter: office.twitter ?? null,
+        governorateId: office.governorateId ?? null,
+        governorateName: row.governorateName ?? null,
+        verified: office.verified,
+        featured: office.featured,
+        active: office.active,
+        totalListings: 0,
+        activeListings: 0,
+        planName: null,
+        createdAt: office.createdAt.toISOString(),
+      };
+    }
+  }
+
+  res.json(GetPropertyResponse.parse({
+    ...buildPropertyObject(row.property, {
+      governorateName: row.governorateName ?? null,
+      areaName: row.areaName ?? null,
+      officeName: row.officeName ?? null,
+      officeLogo: row.officeLogo ?? null,
+      primaryImage,
+    }),
+    images: images.map((img) => ({
+      id: img.id,
+      url: normalizeImageUrl(img.url) ?? img.url,
+      isPrimary: img.isPrimary,
+      sortOrder: img.sortOrder,
+    })),
+    amenities: row.property.amenities,
+    office: officeObj,
+  }));
+});
+
+router.get("/properties/:id/similar", async (req, res): Promise<void> => {
+  const params = GetSimilarPropertiesParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const propId = params.data.id;
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId));
+  if (!prop) {
+    res.json(GetSimilarPropertiesResponse.parse([]));
+    return;
+  }
+
+  const conditions = [
+    eq(propertiesTable.active, true),
+    sql`${propertiesTable.id} != ${propId}`,
+  ];
+  if (prop.type) conditions.push(eq(propertiesTable.type, prop.type));
+
+  const propsRaw = await db
+    .select({
+      property: propertiesTable,
+      governorateName: governoratesTable.nameAr,
+      areaName: areasTable.nameAr,
+      officeName: officesTable.nameAr,
+      officeLogo: officesTable.logo,
+    })
+    .from(propertiesTable)
+    .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
+    .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
+    .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
+    .where(and(...conditions))
+    .orderBy(desc(propertiesTable.createdAt))
+    .limit(4);
+
+  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+
+  res.json(GetSimilarPropertiesResponse.parse(
+    propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
+      buildPropertyObject(property, {
+        governorateName: governorateName ?? null,
+        areaName: areaName ?? null,
+        officeName: officeName ?? null,
+        officeLogo: officeLogo ?? null,
+        primaryImage: imageMap[property.id] ?? null,
+      })
+    )
+  ));
+});
+
+router.post("/properties", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "غير مسجّل الدخول" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+
+  if (!user || !user.officeId) {
+    res.status(403).json({ error: "يجب أن تكون مكتب عقاري لإضافة إعلانات" });
+    return;
+  }
+
+  const body = req.body as Record<string, unknown>;
+  const titleAr = String(body.titleAr ?? "").trim();
+  const status = String(body.status ?? "").trim();
+  const type = String(body.type ?? "").trim();
+  const price = Number(body.price ?? 0);
+  const currency = "KWD";
+  const areaSize = body.areaSize ? Number(body.areaSize) : null;
+  const bedrooms = body.bedrooms ? Number(body.bedrooms) : null;
+  const bathrooms = body.bathrooms ? Number(body.bathrooms) : null;
+  const governorateId = body.governorateId ? Number(body.governorateId) : null;
+  const areaId = body.areaId ? Number(body.areaId) : null;
+  const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
+
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
+  const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"];
+
+  const errors: string[] = [];
+  if (titleAr.length < 5) errors.push("العنوان يجب أن يكون 5 أحرف على الأقل");
+  if (!VALID_STATUSES.includes(status)) errors.push("نوع العرض غير صالح");
+  if (!VALID_TYPES.includes(type)) errors.push("نوع العقار غير صالح");
+  if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
+
+  if (errors.length > 0) {
+    res.status(400).json({ error: "بيانات غير صالحة", details: errors });
+    return;
+  }
+
+  const referenceId = `AQ-${Date.now().toString(36).toUpperCase()}`;
+
+  req.log.info({ userId: req.session.userId, officeId: user.officeId, titleAr, status, type, price }, "Creating property");
+
+  try {
+    const [newProperty] = await db
+      .insert(propertiesTable)
+      .values({
+        referenceId,
+        title: titleAr,
+        titleAr,
+        description: descriptionAr,
+        descriptionAr,
+        status,
+        type,
+        price,
+        currency,
+        areaSize,
+        bedrooms,
+        bathrooms,
+        governorateId,
+        areaId,
+        officeId: user.officeId,
+        active: false,
+        approvalStatus: "pending",
+        featured: false,
+      })
+      .returning();
+
+    req.log.info({ propertyId: newProperty.id }, "Property created");
+    res.status(201).json({ property: newProperty });
+  } catch (err) {
+    req.log.error({ err }, "Failed to create property");
+    console.error("Property insert error:", err);
+    res.status(500).json({ error: "فشل إنشاء الإعلان، حاول مرة أخرى" });
+  }
+});
+
+// PUT /api/properties/:id — update an existing property (authenticated owner)
+router.put("/properties/:id", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
+  if (prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح بتعديل هذا الإعلان" }); return; }
+
+  const body = req.body as Record<string, unknown>;
+  const titleAr = String(body.titleAr ?? "").trim();
+  const status = String(body.status ?? "").trim();
+  const type = String(body.type ?? "").trim();
+  const price = Number(body.price ?? 0);
+  const areaSize = body.areaSize ? Number(body.areaSize) : null;
+  const bedrooms = body.bedrooms ? Number(body.bedrooms) : null;
+  const bathrooms = body.bathrooms ? Number(body.bathrooms) : null;
+  const governorateId = body.governorateId ? Number(body.governorateId) : null;
+  const areaId = body.areaId ? Number(body.areaId) : null;
+  const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
+
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
+  const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"];
+
+  const errors: string[] = [];
+  if (titleAr.length < 5) errors.push("العنوان يجب أن يكون 5 أحرف على الأقل");
+  if (!VALID_STATUSES.includes(status)) errors.push("نوع العرض غير صالح");
+  if (!VALID_TYPES.includes(type)) errors.push("نوع العقار غير صالح");
+  if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
+
+  if (errors.length > 0) { res.status(400).json({ error: "بيانات غير صالحة", details: errors }); return; }
+
+  try {
+    const [updated] = await db.update(propertiesTable).set({
+      titleAr, title: titleAr, descriptionAr, description: descriptionAr,
+      status, type, price, areaSize, bedrooms, bathrooms, governorateId, areaId,
+      updatedAt: new Date(),
+    }).where(eq(propertiesTable.id, propId)).returning();
+
+    console.log(`[Properties] Updated property #${propId} by office #${user.officeId}`);
+    res.json({ property: updated });
+  } catch {
+    res.status(500).json({ error: "فشل تحديث الإعلان، حاول مرة أخرى" });
+  }
+});
+
+// DELETE /api/properties/:id — delete property and its images (authenticated owner)
+router.delete("/properties/:id", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
+  if (prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح بحذف هذا الإعلان" }); return; }
+
+  try {
+    await db.delete(propertyImagesTable).where(eq(propertyImagesTable.propertyId, propId));
+    await db.delete(propertiesTable).where(eq(propertiesTable.id, propId));
+    console.log(`[Properties] Deleted property #${propId} by office #${user.officeId}`);
+    res.json({ message: "تم حذف الإعلان بنجاح" });
+  } catch {
+    res.status(500).json({ error: "فشل حذف الإعلان، حاول مرة أخرى" });
+  }
+});
+
+// DELETE /api/properties/:propertyId/images/:imageId — delete single image
+router.delete("/properties/:propertyId/images/:imageId", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+
+  const propId = parseInt(String(req.params.propertyId), 10);
+  const imgId = parseInt(String(req.params.imageId), 10);
+  if (!propId || !imgId) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop || prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [img] = await db.select().from(propertyImagesTable)
+    .where(and(eq(propertyImagesTable.id, imgId), eq(propertyImagesTable.propertyId, propId))).limit(1);
+  if (!img) { res.status(404).json({ error: "الصورة غير موجودة" }); return; }
+
+  await db.delete(propertyImagesTable).where(eq(propertyImagesTable.id, imgId));
+
+  // If deleted was primary, promote the next image
+  if (img.isPrimary) {
+    const [next] = await db.select({ id: propertyImagesTable.id })
+      .from(propertyImagesTable).where(eq(propertyImagesTable.propertyId, propId)).limit(1);
+    if (next) {
+      await db.update(propertyImagesTable).set({ isPrimary: true }).where(eq(propertyImagesTable.id, next.id));
+    }
+  }
+
+  console.log(`[Images] Deleted image #${imgId} from property #${propId}`);
+  res.json({ message: "تم حذف الصورة بنجاح" });
+});
+
+// PUT /api/properties/:propertyId/images/:imageId/primary — set primary image
+router.put("/properties/:propertyId/images/:imageId/primary", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+
+  const propId = parseInt(String(req.params.propertyId), 10);
+  const imgId = parseInt(String(req.params.imageId), 10);
+  if (!propId || !imgId) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop || prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  await db.update(propertyImagesTable).set({ isPrimary: false }).where(eq(propertyImagesTable.propertyId, propId));
+  await db.update(propertyImagesTable).set({ isPrimary: true }).where(eq(propertyImagesTable.id, imgId));
+
+  console.log(`[Images] Set image #${imgId} as primary for property #${propId}`);
+  res.json({ message: "تم تعيين الصورة الرئيسية بنجاح" });
+});
+
+// POST /api/properties/:id/images — save uploaded image objectPath to property_images
+router.post("/properties/:id/images", async (req: Request, res: Response): Promise<void> => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "غير مسجّل الدخول" });
+    return;
+  }
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop || prop.officeId !== user.officeId) {
+    res.status(403).json({ error: "غير مصرح لهذا الإعلان" }); return;
+  }
+
+  const { objectPath, url: directUrl, isPrimary } = req.body as {
+    objectPath?: string;
+    url?: string;
+    isPrimary?: boolean;
+  };
+
+  const url = directUrl ?? (objectPath ? `/api/storage${objectPath}` : null);
+  if (!url || typeof url !== "string") {
+    res.status(400).json({ error: "url أو objectPath مطلوب" }); return;
+  }
+
+  // If this is the first image or explicitly primary, unset others
+  const existingImages = await db.select({ id: propertyImagesTable.id })
+    .from(propertyImagesTable).where(eq(propertyImagesTable.propertyId, propId));
+
+  const shouldBePrimary = isPrimary === true || existingImages.length === 0;
+
+  if (shouldBePrimary) {
+    await db.update(propertyImagesTable)
+      .set({ isPrimary: false })
+      .where(eq(propertyImagesTable.propertyId, propId));
+  }
+
+  const [img] = await db.insert(propertyImagesTable).values({
+    propertyId: propId,
+    url,
+    isPrimary: shouldBePrimary,
+    sortOrder: existingImages.length,
+  }).returning();
+
+  res.status(201).json({ image: img });
+});
+
+export default router;

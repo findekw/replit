@@ -1,0 +1,143 @@
+Create a modern Arabic real estate landing page (RTL) called "Finde".
+
+IMPORTANT:
+- Keep the exact layout structure as shown
+- Do NOT change spacing, sizes, or order
+- Focus on clean UI + responsive for mobile/tablet/desktop
+
+========================
+🎯 HEADER
+========================
+- Right: logo "finde" (use provided image)
+- Left: hamburger menu
+- Clean white background
+
+========================
+🎯 HERO SECTION
+========================
+- Title (bold):
+ابحث عن عقارات بسهولة
+
+- Subtitle:
+كل ما تحتاجه للبحث عن العقار في مكان واحد
+
+- Centered layout
+- Soft light background (#F5F7FB)
+
+========================
+🎯 SEARCH BOX (MAIN FOCUS)
+========================
+Card style:
+- white background
+- rounded corners (16px)
+- soft shadow
+
+Inside:
+
+1) Tabs (top):
+- للإيجار (active - blue)
+- للبيع
+- للبدل
+
+2) Dropdown fields (stacked vertically):
+- نوع العقار
+- المحافظة
+- اختر المحافظة أولاً (disabled until previous selected)
+
+3) Search button:
+- Full width
+- Color: gradient blue (#2F5FD0 → #1D3F8B)
+- Text: بحث
+
+========================
+🎯 PROPERTY TYPE ICONS
+========================
+Title:
+تصفح حسب نوع العقار
+
+Icons grid (5 items):
+- شقق
+- فلل
+- مكاتب
+- محلات
+- أراضي
+
+Design:
+- outlined icons
+- inside rounded boxes
+- light hover effect
+
+========================
+🎯 CTA SECTION (IMPORTANT)
+========================
+Place BELOW icons exactly
+
+Background:
+- dark blue (#3E557A)
+
+Content:
+Title:
+اعرض عقاراتك في مكان واحد
+
+Description:
+اعرض جميع عقاراتك وشاركها برابط واحد بسهولة
+مصمم خصيصاً للمكاتب العقارية
+
+Button:
+ابدأ التجربة المجانية
+
+Button style:
+- outlined white
+- rounded
+- center aligned
+
+========================
+🎯 FOOTER
+========================
+Color:
+- dark navy (#0F2747)
+
+Content:
+- Logo + short text:
+فايند يجمع لك عقارات المكاتب في مكان واحد
+
+Columns:
+- المنصة
+- روابط
+- تواصل معنا
+
+Keep same structure + spacing
+
+========================
+📱 RESPONSIVE
+========================
+Mobile:
+- stack everything vertically
+- keep same order
+- buttons full width
+- icons 2 per row
+
+Tablet:
+- balanced spacing
+
+Desktop:
+- centered content
+- max-width container
+
+========================
+🎨 STYLE
+========================
+- Clean, modern SaaS look
+- Arabic RTL
+- Smooth shadows
+- Soft borders
+- No clutter
+- Focus on search experience
+
+========================
+⚠️ DO NOT:
+========================
+- Do not change layout order
+- Do not copy competitors
+- Do not remove CTA
+- Do not change footer color

@@ -1,0 +1,78 @@
+Refactor and clean up the filter UI for a professional, consistent real estate experience.
+
+1) FIX LAYOUT & CONSISTENCY
+- Ensure all filter elements follow a clear visual hierarchy:
+  - Labels (titles) = smaller, subtle (14px, medium weight)
+  - Values (selected text) = slightly larger (15–16px)
+- All dropdown fields must have:
+  - Same height
+  - Same padding
+  - Same font size
+  - Same border radius
+- Fix inconsistency where value text appears larger or misaligned compared to label
+
+---
+
+2) PROPERTY STATUS (حالة العقار)
+- Convert (الكل / للبيع / للإيجار / للبدل) into uniform chips
+- All chips must:
+  - Have equal height
+  - Same padding
+  - Same font size
+- Layout:
+  - Prefer single row
+  - If not possible → use clean 2x2 grid
+  - NO random wrapping
+- Add proper spacing between chips (gap)
+
+---
+
+3) DROPDOWNS (نوع العقار / المحافظة / المنطقة)
+- Fix alignment:
+  - Text aligned RIGHT
+  - Arrow icon aligned LEFT (RTL correct)
+- Ensure:
+  - Same height for all dropdowns
+  - Same font size
+  - Same internal padding
+- Selected value text must NOT be bigger than other fields
+- Keep visual consistency across all fields
+
+---
+
+4) REMOVE CLUTTER
+- Completely remove:
+  - "عدد الغرف"
+- Remove from main filter:
+  - "التأثيث" (move later to advanced search)
+
+---
+
+5) SPACING & STRUCTURE
+- Add consistent vertical spacing between sections (16–20px)
+- Prevent elements from looking cramped
+- Ensure clean grouping:
+  - حالة العقار
+  - نوع العقار
+  - المحافظة
+  - المنطقة
+
+---
+
+6) MOBILE IMPROVEMENTS
+- Make "تصفية" button clear and visible:
+  - Bigger size
+  - Proper spacing from icons
+- Avoid placing it too close to view toggle icons
+- Improve top bar layout:
+  - Clear separation between sorting (الأحدث) and filtering
+- Make "الأحدث" dropdown more visible (not cramped or hidden)
+
+---
+
+7) GENERAL UI GOAL
+- Clean, minimal, balanced UI
+- Consistent typography
+- No size conflicts between labels and values
+- Clear visual hierarchy
+- Smooth and professional user experience like Property Finder

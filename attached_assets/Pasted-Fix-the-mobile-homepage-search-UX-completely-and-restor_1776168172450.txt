@@ -1,0 +1,74 @@
+Fix the mobile homepage search UX completely and restore all broken search functionality.
+
+GOAL:
+Make the mobile hero search fully functional, clean, and easy to use without broken dropdowns, hidden options, or overlapping elements.
+
+CRITICAL ISSUES TO FIX:
+1. Inner dropdown sections are broken on mobile
+2. Search options overlap or get cut off
+3. Advanced search disappeared
+4. Search form layout is too cramped on mobile
+5. Dropdown menus are not opening correctly
+6. Search UI is visually compressed and functionally unreliable
+
+REQUIREMENTS:
+
+1) MOBILE SEARCH LAYOUT REBUILD
+- Rebuild the hero search box for mobile-first usability
+- Use a stacked vertical layout on mobile instead of compressed multi-column layout
+- Each field must appear on its own row with proper spacing
+- Order:
+  - حالة العقار
+  - نوع العقار
+  - المحافظة
+  - المنطقة
+  - زر البحث
+  - زر / رابط البحث المتقدم
+
+2) DROPDOWN FIX
+- Fix all dropdowns so they open correctly on mobile
+- No clipping
+- No overlap
+- No hidden menus
+- No broken internal sections
+- Ensure dropdown menus render above all other elements
+
+Technical fixes:
+- Remove any overflow:hidden that clips dropdowns
+- Fix z-index layering
+- Ensure dropdown containers are positioned correctly
+- Ensure scrolling inside dropdown works if needed
+
+3) ADVANCED SEARCH
+- Restore advanced search on mobile
+- Show it clearly below the main search form
+- Use a simple text button or secondary button:
+  "البحث المتقدم"
+- It must be visible and clickable
+
+4) DEPENDENCY LOGIC
+- المنطقة stays disabled until المحافظة is selected
+- When المحافظة changes, reset المنطقة
+- All interactions must work properly on mobile
+
+5) MOBILE UX IMPROVEMENTS
+- Add enough spacing between fields (12px–16px)
+- Search button should be full width
+- Inputs should have consistent height
+- Keep layout simple and touch-friendly
+- Do not compress fields side by side on small screens
+
+6) KEEP DESKTOP SAFE
+- Do not break desktop layout
+- Apply these fixes mainly to mobile and tablet breakpoints
+
+7) VISUAL CONSISTENCY
+- Keep the current visual style and branding
+- Improve usability first, not just appearance
+
+8) FINAL RESULT
+The mobile homepage search must:
+- Open all dropdowns correctly
+- Show advanced search again
+- Be easy to use with no overlap
+- Feel clean, stable, and production-ready

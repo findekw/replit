@@ -1,0 +1,166 @@
+Apply the agreed visual design system to the homepage and keep the layout clean, modern, and consistent.
+
+COLOR SYSTEM (must be used consistently):
+- Background / off-white: #F5F7FA
+- Dark navy: #1E2A3B
+- Primary blue: #3B82F6
+- White: #FFFFFF
+- Secondary text: #6B7280
+- Red accent (very limited only): #EF4444
+
+==================================================
+1) HERO SECTION
+==================================================
+
+Update the hero section on BOTH mobile and desktop using the approved color system.
+
+Hero background:
+- Use off-white: #F5F7FA
+- Do NOT use dark blue background here
+
+Hero title:
+- Text:
+  ابحث عن العقار المناسب
+  بسهولة
+- Center align the title
+- Keep it visually centered in the hero area
+- Use dark navy: #1E2A3B
+- Bold and strong
+- Large on desktop
+- Slightly smaller on mobile
+- Keep it in 2 lines on mobile
+- Keep it well balanced and elegant
+
+Hero subtitle:
+- Text:
+  عقارات متنوعة من مكاتب عقارية
+  في مختلف مناطق الكويت
+- Center align subtitle
+- Use secondary text color: #6B7280
+- Medium readable size
+- Slightly smaller than title
+- Balanced spacing under title
+
+Hero spacing:
+- Add comfortable top spacing between header and title
+- Add clear spacing between:
+  - title lines
+  - title and subtitle
+  - subtitle and search box
+- Make the hero feel breathable and premium
+
+==================================================
+2) SEARCH BOX
+==================================================
+
+Keep the search box layout working as it is.
+Do NOT redesign the logic.
+Only improve colors and visual consistency.
+
+Search card:
+- Background: #FFFFFF
+- Border: very light gray or soft blue
+- Soft shadow
+- Rounded corners
+
+Inputs:
+- Background: white
+- Border: light gray
+- Placeholder/text: #6B7280
+- Selected/active state: subtle blue border using #3B82F6
+
+Search button:
+- Background: #3B82F6
+- Text: white
+- Keep strong visibility
+
+==================================================
+3) SECTION AFTER HERO
+==================================================
+
+Section:
+"طريقة أسهل للبحث عن العقار في الكويت"
+
+- Section background: #FFFFFF
+- Section title color: #1E2A3B
+- Subtitle/description color: #6B7280
+
+Feature cards:
+- Background: #FFFFFF
+- Border: very light gray
+- Icons: #3B82F6
+- Titles/text: #1E2A3B or #6B7280
+- Keep spacing clean and balanced
+
+==================================================
+4) PROPERTY CARDS
+==================================================
+
+Property sections background:
+- Use off-white #F5F7FA or white depending on contrast
+- Keep cards readable and premium
+
+Property cards:
+- Background: #FFFFFF
+- Border: subtle
+- Shadow: soft
+- Titles: #1E2A3B
+- Meta text: #6B7280
+- Price/highlight actions: #1E2A3B or #3B82F6
+- Do NOT use random dark blocks unless intentional media overlay
+
+Badges:
+- Use blue for normal badges
+- Use red accent only when really necessary (rare use)
+
+==================================================
+5) CTA SECTION BEFORE FOOTER
+==================================================
+
+CTA section:
+- Background: #1E2A3B
+- Text: white
+- Primary button: white background with navy text OR blue background with white text
+- Keep it elegant and high contrast
+
+==================================================
+6) FOOTER
+==================================================
+
+Footer background:
+- Dark navy: #1E2A3B
+
+Footer text:
+- White for headings
+- Light gray / soft blue for links and secondary text
+
+Keep the approved footer description:
+ابحث عن العقار المناسب بسهولة
+عقارات متنوعة من مكاتب عقارية في مختلف مناطق الكويت
+
+Footer section headings:
+- Slightly larger
+- Bold
+- Right aligned
+
+==================================================
+7) GLOBAL RULES
+==================================================
+
+- Keep all Arabic content clean and visually balanced
+- Center ONLY the hero title and subtitle
+- Keep the rest of the Arabic layout right-aligned where appropriate
+- Maintain strong contrast and consistency
+- Do NOT mix extra colors outside the approved palette
+- Do NOT break current mobile UX
+- Do NOT change working search behavior
+
+==================================================
+8) FINAL CHECK
+==================================================
+
+After applying:
+- Show updated mobile homepage screenshot
+- Show updated desktop homepage screenshot
+- Make sure hero title + subtitle are centered
+- Make sure colors match the approved palette exactly

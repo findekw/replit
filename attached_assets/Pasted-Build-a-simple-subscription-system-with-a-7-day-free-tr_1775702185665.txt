@@ -1,0 +1,156 @@
+Build a simple subscription system with a 7-day free trial for office accounts.
+
+GOAL:
+Keep the product simple:
+- only ONE paid plan
+- 7-day free trial
+- after trial ends, office must subscribe to continue using publishing features
+
+====================================
+1) PLAN STRUCTURE
+====================================
+Create only one plan:
+
+Plan name:
+- "الباقة الأساسية"
+
+Price:
+- 10 د.ك / شهرياً
+
+Included features:
+- صفحة مكتب خاصة
+- نشر الإعلانات
+- عرض الإعلانات داخل المنصة
+- إحصائيات المشاهدات
+- تتبع التفاعل (واتساب / اتصال)
+- العملاء المهتمين
+
+====================================
+2) FREE TRIAL LOGIC
+====================================
+When a new office account is approved:
+- automatically start a free trial for 7 days
+
+Store these fields:
+- subscriptionPlan = "basic"
+- subscriptionStatus = "trial"
+- trialStartedAt
+- trialEndsAt
+- trialDaysLeft
+
+Trial duration:
+- 7 days
+
+====================================
+3) DASHBOARD BANNER
+====================================
+In office dashboard, add a clear banner at the top:
+
+If subscriptionStatus = "trial":
+Show message in Arabic:
+"لديك تجربة مجانية متبقي عليها X أيام"
+
+Add button:
+"اشترك الآن"
+
+If 2 days or less remain:
+show stronger warning style
+
+If subscriptionStatus = "expired":
+show message:
+"انتهت تجربتك المجانية. اشترك الآن لتفعيل إعلاناتك"
+
+====================================
+4) AFTER TRIAL ENDS
+====================================
+When trial ends:
+- set subscriptionStatus = "expired"
+
+Office should NOT be allowed to:
+- add new listings
+- publish new listings
+
+Show blocking message:
+"يجب الاشتراك أولاً لمتابعة نشر الإعلانات"
+
+Important:
+- Do NOT delete old listings
+- Keep old listings in dashboard
+- But mark them as inactive / hidden from public if needed
+
+====================================
+5) SUBSCRIPTION REQUEST FLOW
+====================================
+Add a simple subscription request flow:
+
+When office clicks "اشترك الآن":
+- create subscription request with status = "pending_payment"
+
+Show Arabic confirmation:
+"تم استلام طلب اشتراكك. تواصل معنا لإكمال الدفع"
+
+Add button:
+"تواصل عبر واتساب"
+
+====================================
+6) ADMIN PANEL
+====================================
+Add admin section for subscription management:
+- list offices
+- show:
+  - office name
+  - plan
+  - subscription status
+  - trial end date
+- admin actions:
+  - activate subscription
+  - mark pending payment
+  - mark expired
+
+Statuses:
+- trial
+- pending_payment
+- active
+- expired
+- inactive
+
+====================================
+7) OFFICE DASHBOARD STATUS CARD
+====================================
+Add a clean status card showing:
+- نوع الباقة: الباقة الأساسية
+- حالة الاشتراك
+- تاريخ انتهاء التجربة أو الاشتراك
+- زر "اشترك الآن" if not active
+
+====================================
+8) UX RULES
+====================================
+Keep everything simple:
+- one plan only
+- no coupons
+- no complex billing
+- no multiple plans for now
+- no auto-renew for now
+
+====================================
+9) IMPORTANT RESTRICTIONS
+====================================
+If office is:
+- trial → allowed to use all main features
+- active → allowed
+- expired / inactive → blocked from adding new listings
+
+====================================
+10) ARABIC UI
+====================================
+All labels/messages must be in Arabic and RTL.
+
+GOAL:
+A very simple commercial flow:
+- office registers
+- gets 7-day free trial
+- sees value
+- trial ends
+- must subscribe manually
+- admin activates after payment
