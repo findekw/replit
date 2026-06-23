@@ -1,30 +1,14 @@
 import { Router, type IRouter } from "express";
-import { db, officesTable, usersTable } from "@workspace/db";
+import { db, officesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { requireOffice, getOfficeId } from "../lib/authHelpers";
 
 const router: IRouter = Router();
 
-async function getOfficeIdForUser(userId: number): Promise<number | null> {
-  const [user] = await db
-    .select({ officeId: usersTable.officeId })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  return user?.officeId ?? null;
-}
-
-function requireAuth(req: Request, res: Response, next: () => void): void {
-  if (!req.session?.userId) {
-    res.status(401).json({ error: "يجب تسجيل الدخول" });
-    return;
-  }
-  next();
-}
-
 // GET /api/subscription/status — current office subscription info
-router.get("/subscription/status", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  if (!req.session.userId) { res.status(401).json({ error: "يجب تسجيل الدخول" }); return; }
-  const officeId = await getOfficeIdForUser(req.session.userId);
+router.get("/subscription/status", requireOffice, async (req: Request, res: Response): Promise<void> => {
+  const officeId = await getOfficeId(req);
 
   if (!officeId) {
     res.status(404).json({ error: "لا يوجد مكتب مرتبط بهذا الحساب" });
@@ -77,9 +61,8 @@ router.get("/subscription/status", requireAuth, async (req: Request, res: Respon
 });
 
 // POST /api/subscription/request — office requests to subscribe
-router.post("/subscription/request", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  if (!req.session.userId) { res.status(401).json({ error: "يجب تسجيل الدخول" }); return; }
-  const officeId = await getOfficeIdForUser(req.session.userId);
+router.post("/subscription/request", requireOffice, async (req: Request, res: Response): Promise<void> => {
+  const officeId = await getOfficeId(req);
 
   if (!officeId) {
     res.status(404).json({ error: "لا يوجد مكتب مرتبط بهذا الحساب" });

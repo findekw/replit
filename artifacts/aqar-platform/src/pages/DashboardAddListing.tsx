@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListGovernorates } from "@workspace/api-client-react";
 import { getAreasByGovId } from "@/lib/kuwait-areas";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, CheckCircle, AlertCircle, ArrowRight,
@@ -42,7 +42,7 @@ interface UploadedImage {
 
 export default function DashboardAddListing() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { officeUser: user } = useOfficeAuth();
   const { toast } = useToast();
 
   // Step 1 state: form fields
@@ -80,6 +80,8 @@ export default function DashboardAddListing() {
     if (!status) clientErrors.push("يرجى اختيار نوع العرض");
     if (!type) clientErrors.push("يرجى اختيار نوع العقار");
     if (!price || Number(price) <= 0) clientErrors.push("يرجى إدخال سعر صحيح");
+    if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
+    if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
 
     if (clientErrors.length > 0) { setErrors(clientErrors); return; }
 
@@ -548,7 +550,7 @@ export default function DashboardAddListing() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block">المحافظة</Label>
+                <Label className="mb-1 block">المحافظة <span className="text-destructive">*</span></Label>
                 <LocationCombobox
                   items={(govs ?? []).map((g: any) => ({
                     value: String(g.id),
@@ -562,7 +564,7 @@ export default function DashboardAddListing() {
                 />
               </div>
               <div>
-                <Label className="mb-1 block">المنطقة</Label>
+                <Label className="mb-1 block">المنطقة <span className="text-destructive">*</span></Label>
                 <LocationCombobox
                   items={(areas ?? []).map((a: any) => ({
                     value: String(a.id),

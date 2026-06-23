@@ -13,7 +13,12 @@ import {
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
-const NAVY = "hsl(221,54%,23%)";
+const NAVY = "#1F2A44";
+const BLUE = "#3F5BD8";
+const BODY = "#64748B";
+const BORDER = "#EEF1F5";
+const PAGE_BG = "#F5F7FA";
+const CARD_SHADOW = "0 4px 16px rgba(15,23,42,0.05)";
 
 /* ─── number helpers (English digits only) ─── */
 function fmt(n: number | null | undefined): string {
@@ -77,13 +82,13 @@ function useSort<T>(data: T[], initial: keyof T) {
 /* ─── small KPI card ─── */
 function KpiCard({ label, value, icon: Icon, color, sub }: { label: string; value: string | number; icon: any; color: string; sub?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, padding: "22px 24px", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 16 }}>
+    <div style={{ background: "#fff", borderRadius: 16, padding: "22px 24px", border: `1px solid ${BORDER}`, boxShadow: CARD_SHADOW, display: "flex", alignItems: "center", gap: 16 }}>
       <div style={{ background: color + "15", borderRadius: 14, padding: 12, display: "flex", flexShrink: 0 }}>
         <Icon style={{ width: 22, height: 22, color }} />
       </div>
       <div>
-        <div style={{ fontSize: 28, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4, fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 800, color: NAVY, lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12, color: BODY, marginTop: 4, fontWeight: 600 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{sub}</div>}
       </div>
     </div>
@@ -217,7 +222,7 @@ export default function AdminAnalytics() {
 
   /* ─── error state ─── */
   if (error) return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb", display: "flex", flexDirection: "column" }} dir="rtl">
+    <div style={{ minHeight: "100vh", background: PAGE_BG, display: "flex", flexDirection: "column", fontFamily: "'Cairo', sans-serif" }} dir="rtl">
       <AppHeader loading={false} onRefresh={load} nav={nav} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
         <AlertTriangle style={{ width: 40, height: 40, color: "#dc2626" }} />
@@ -228,11 +233,12 @@ export default function AdminAnalytics() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "inherit" }} dir="rtl">
+    <div className="adm-an-root" style={{ minHeight: "100vh", background: PAGE_BG, fontFamily: "'Cairo', sans-serif" }} dir="rtl">
+      <style>{`.adm-an-root, .adm-an-root * { font-family: 'Cairo', sans-serif; }`}</style>
       <AppHeader loading={loading} onRefresh={load} nav={nav} />
 
       {/* ── tab bar ── */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, overflowX: "auto" }}>
         <div style={{ display: "flex", maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id as any)} style={{
@@ -316,7 +322,7 @@ export default function AdminAnalytics() {
             )}
 
             {/* Office performance table */}
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #EEF1F5", boxShadow: "0 4px 16px rgba(15,23,42,0.05)", overflow: "hidden" }}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Building2 style={{ width: 16, height: 16, color: NAVY }} />
@@ -423,14 +429,14 @@ export default function AdminAnalytics() {
         {tab === "detail" && data && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2C4870" }}>التحليلات التفصيلية</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: NAVY }}>التحليلات التفصيلية</h2>
               <p style={{ color: "#6b7280", fontSize: 13 }}>بيانات مفصّلة لمساعدتك على اتخاذ قرارات مدروسة</p>
             </div>
 
             {/* charts row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
               {chartData.length > 0 && (
-                <div style={{ background: "#fff", borderRadius: 14, padding: 20, border: "1px solid #e5e7eb" }}>
+                <div style={{ background: "#fff", borderRadius: 16, padding: 20, border: "1px solid #EEF1F5", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
                   <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 16 }}>أداء أفضل المكاتب</h3>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -439,7 +445,7 @@ export default function AdminAnalytics() {
                       <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} />
                       <Tooltip contentStyle={{ fontFamily: "inherit", fontSize: 12, borderRadius: 8 }}
                         formatter={(v: any) => v.toLocaleString("en-US")} />
-                      <Bar dataKey="views" name="مشاهدات" fill="#2563eb" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="views" name="مشاهدات" fill={BLUE} radius={[3, 3, 0, 0]} />
                       <Bar dataKey="wa"    name="واتساب"  fill="#22c55e" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -447,7 +453,7 @@ export default function AdminAnalytics() {
               )}
 
               {pieData.length > 0 && (
-                <div style={{ background: "#fff", borderRadius: 14, padding: 20, border: "1px solid #e5e7eb" }}>
+                <div style={{ background: "#fff", borderRadius: 16, padding: 20, border: "1px solid #EEF1F5", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
                   <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 16 }}>توزيع تصنيف المكاتب</h3>
                   <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
                     <PieChart width={160} height={160}>
@@ -507,12 +513,12 @@ export default function AdminAnalytics() {
         {tab === "ads" && data && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2C4870" }}>أداء الإعلانات</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: NAVY }}>أداء الإعلانات</h2>
               <p style={{ color: "#6b7280", fontSize: 13 }}>أفضل الإعلانات وتلك التي تحتاج إلى متابعة</p>
             </div>
 
             {/* top ads */}
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #EEF1F5", boxShadow: "0 4px 16px rgba(15,23,42,0.05)", overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 8 }}>
                 <Award style={{ width: 16, height: 16, color: "#f59e0b" }} />
                 <span style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>أفضل الإعلانات أداءً</span>
@@ -597,7 +603,7 @@ export default function AdminAnalytics() {
         {tab === "subs" && data && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2C4870" }}>صحة الاشتراكات</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: NAVY }}>صحة الاشتراكات</h2>
               <p style={{ color: "#6b7280", fontSize: 13 }}>تتبع دورة حياة الاشتراك ومعرفة من يحتاج متابعة</p>
             </div>
 
@@ -660,14 +666,14 @@ export default function AdminAnalytics() {
         {tab === "insights" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2C4870" }}>توصيات ذكية</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: NAVY }}>توصيات ذكية</h2>
               <p style={{ color: "#6b7280", fontSize: 13 }}>إجراءات موصى بها بناءً على بيانات المنصة — كل توصية تساعدك على قرار واضح</p>
             </div>
 
             {!data ? (
               <div style={{ textAlign: "center", padding: 60, color: "#9ca3af" }}>جارٍ التحميل…</div>
             ) : insights.length === 0 ? (
-              <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 48, textAlign: "center" }}>
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #EEF1F5", boxShadow: "0 4px 16px rgba(15,23,42,0.05)", padding: 48, textAlign: "center" }}>
                 <CheckCircle2 style={{ width: 32, height: 32, color: "#16a34a", margin: "0 auto 12px" }} />
                 <p style={{ color: "#9ca3af" }}>لا توجد توصيات — المنصة تعمل بشكل ممتاز!</p>
               </div>

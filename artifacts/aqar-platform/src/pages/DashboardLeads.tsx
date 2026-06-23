@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Users, MessageCircle, Phone, FileText } from "lucide-react";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 
 const LEAD_STATUSES = ["جديد", "مهتم", "تم التواصل", "غير جاد", "مغلق"];
 
@@ -45,8 +45,8 @@ export default function DashboardLeads() {
   const [filterType, setFilterType] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
-  const officeId = user?.officeId ?? 0;
+  const { officeId: oid, isLoading: authLoading } = useOfficeAuth();
+  const officeId = oid ?? 0;
 
   const params: Record<string, string | number> = { officeId };
   if (filterStatus) params.status = filterStatus;
@@ -86,58 +86,35 @@ export default function DashboardLeads() {
     <DashboardLayout>
       <div dir="rtl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">العملاء المحتملون</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", margin: 0 }}>العملاء المحتملون</h1>
+          <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
             كل تفاعل على عقاراتك أو صفحة مكتبك يُسجَّل هنا تلقائياً
           </p>
         </div>
 
         {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-card border rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Users className="h-4 w-4 text-primary" />
+          {[
+            { label: "إجمالي العملاء", value: totalLeads, icon: Users, fg: "#3F5BD8", bg: "#EEF2FE" },
+            { label: "واتساب", value: waCount, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
+            { label: "اتصالات", value: callCount, icon: Phone, fg: "#3F5BD8", bg: "#EEF2FE" },
+            { label: "استفسارات", value: formCount, icon: FileText, fg: "#7C3AED", bg: "#F5F3FF" },
+          ].map(({ label, value, icon: Icon, fg, bg }) => (
+            <div
+              key={label}
+              style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 18, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}
+            >
+              <div className="flex items-center gap-3 mb-2.5">
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon className="h-4 w-4" style={{ color: fg }} />
+                </div>
+                <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>{label}</span>
               </div>
-              <span className="text-sm text-muted-foreground">إجمالي العملاء</span>
+              <p style={{ fontSize: 26, fontWeight: 800, color: "#1F2A44" }}>
+                {isLoading ? "—" : value}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-foreground">
-              {isLoading ? "—" : totalLeads}
-            </p>
-          </div>
-          <div className="bg-card border rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <span className="text-sm text-muted-foreground">واتساب</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {isLoading ? "—" : waCount}
-            </p>
-          </div>
-          <div className="bg-card border rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Phone className="h-4 w-4 text-blue-600" />
-              </div>
-              <span className="text-sm text-muted-foreground">اتصالات</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {isLoading ? "—" : callCount}
-            </p>
-          </div>
-          <div className="bg-card border rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-purple-600" />
-              </div>
-              <span className="text-sm text-muted-foreground">استفسارات</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {isLoading ? "—" : formCount}
-            </p>
-          </div>
+          ))}
         </div>
 
         {/* Filters */}
@@ -167,7 +144,7 @@ export default function DashboardLeads() {
         </div>
 
         {/* Table */}
-        <div className="bg-card border rounded-2xl overflow-hidden">
+        <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -175,24 +152,26 @@ export default function DashboardLeads() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-24 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-medium">لا يوجد عملاء</p>
-              <p className="text-sm mt-1">
+            <div className="text-center py-24">
+              <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <Users className="h-9 w-9" style={{ color: "#94A3B8" }} />
+              </div>
+              <p style={{ fontSize: 18, fontWeight: 800, color: "#1F2A44" }}>لا يوجد عملاء</p>
+              <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
                 ستظهر هنا نقرات واتساب والاتصال على عقاراتك تلقائياً
               </p>
             </div>
           ) : (
             <>
               {/* Table header */}
-              <div className="hidden lg:grid grid-cols-[2fr_1fr_1fr_1.5fr_1.5fr] gap-4 px-5 py-3 bg-secondary/40 text-xs font-semibold text-muted-foreground border-b">
+              <div className="hidden lg:grid grid-cols-[2fr_1fr_1fr_1.5fr_1.5fr] gap-4 px-5 py-3.5 text-xs font-bold" style={{ background: "#F8FAFC", color: "#64748B", borderBottom: "1px solid #EEF1F5" }}>
                 <span>العقار</span>
                 <span>نوع التفاعل</span>
                 <span>المصدر</span>
                 <span>التاريخ</span>
                 <span>الحالة</span>
               </div>
-              <div className="divide-y">
+              <div className="divide-y" style={{ borderColor: "#EEF1F5" }}>
                 {filtered.map((lead) => {
                   const sourceLabel =
                     SOURCE_LABELS[lead.sourcePage ?? ""] ?? (lead.sourcePage || "—");

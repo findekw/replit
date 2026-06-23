@@ -1,8 +1,14 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import React, { useState, useRef } from "react";
-import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle } from "lucide-react";
-import { LocationCombobox } from "@/components/LocationCombobox";
+import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star } from "lucide-react";
+import { PropertyCard } from "@/components/PropertyCard";
+import { OfficeCard } from "@/components/OfficeCard";
+import {
+  useGetLatestProperties,
+  useGetFeaturedOffices,
+  useGetPlatformStats,
+} from "@workspace/api-client-react";
 
 const TYPES_BY_STATUS: Record<string, string[]> = {
   "للإيجار": ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
@@ -33,35 +39,11 @@ const _AREA_ID: { name: string; id: number; govId: number }[] = [
   {name:"اسطبلات الجهراء",id:133,govId:6},{name:"الجهراء الصناعية",id:134,govId:6},{name:"الجهراء القديمة",id:124,govId:6},{name:"الخويسات",id:137,govId:6},{name:"الصبية",id:132,govId:6},{name:"الصليبية",id:129,govId:6},{name:"الصليبيخات",id:41,govId:6},{name:"العبدلي",id:130,govId:6},{name:"العيون",id:127,govId:6},{name:"القصر",id:43,govId:6},{name:"المطلاع",id:122,govId:6},{name:"النسيم",id:123,govId:6},{name:"النعايم",id:138,govId:6},{name:"النعيم",id:42,govId:6},{name:"النهضة",id:139,govId:6},{name:"الهجن",id:128,govId:6},{name:"الواحة",id:125,govId:6},{name:"امغرة الصناعية",id:126,govId:6},{name:"تيماء",id:136,govId:6},{name:"جنوب سعد العبدالله",id:135,govId:6},{name:"سعد العبدالله",id:44,govId:6},{name:"كبد",id:131,govId:6},
 ];
 
-const FEATURES: { icon: React.ReactNode; label: string; desc: string; iconColor: string; iconBg: string }[] = [
-  {
-    icon: <Building2 size={28} strokeWidth={2} />,
-    label: "إعلانات من مكاتب مباشرة",
-    desc: "جميع الإعلانات من مكاتب عقارية موثوقة ومرخصة",
-    iconColor: "#3F5BD8",
-    iconBg:   "#EEF2FF",
-  },
-  {
-    icon: <Search size={28} strokeWidth={2} />,
-    label: "ابحث بسهولة خلال ثواني",
-    desc: "فلتر حسب النوع والمنطقة والميزانية بخطوة واحدة",
-    iconColor: "#059669",
-    iconBg:   "#ECFDF5",
-  },
-  {
-    icon: <MessageCircle size={28} strokeWidth={2} />,
-    label: "تواصل مباشر بدون وسيط",
-    desc: "تواصل مع المعلن مباشرة عبر واتساب بدون تعقيد",
-    iconColor: "#D97706",
-    iconBg:   "#FEF3C7",
-  },
-  {
-    icon: <MapPin size={28} strokeWidth={2} />,
-    label: "كل مناطق الكويت في مكان واحد",
-    desc: "تصفح جميع المحافظات والمناطق بسهولة",
-    iconColor: "#DC2626",
-    iconBg:   "#FFF1F2",
-  },
+const FEATURES = [
+  { icon: <ShieldCheck size={26} strokeWidth={2} />, label: "مكاتب موثوقة ومرخّصة", desc: "كل الإعلانات من مكاتب عقارية حقيقية تمت مراجعتها", color: "#3F5BD8", bg: "#EEF2FF" },
+  { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: "#059669", bg: "#ECFDF5" },
+  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "كلّم المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: "#D97706", bg: "#FEF3C7" },
+  { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: "#DC2626", bg: "#FFF1F2" },
 ];
 
 export default function Home() {
@@ -74,6 +56,13 @@ export default function Home() {
   const availableTypes  = TYPES_BY_STATUS[status] ?? TYPES_BY_STATUS["للإيجار"];
   const provinces       = Object.keys(AREAS);
   const areasByProvince = province ? AREAS[province] ?? [] : [];
+
+  const { data: latest } = useGetLatestProperties({ limit: 8 } as any);
+  const { data: offices } = useGetFeaturedOffices();
+  const { data: stats } = useGetPlatformStats();
+
+  const latestList = (latest as any[]) ?? [];
+  const officeList = (offices as any[]) ?? [];
 
   function handleStatusChange(s: string) { setStatus(s); setType(""); }
 
@@ -150,527 +139,248 @@ export default function Home() {
   return (
     <MainLayout>
       <style>{`
-        /* ── Design tokens ── */
-        :root {
-          --primary-gradient:  linear-gradient(180deg, #1F2A44 0%, #3F5BD8 100%);
-          --primary-solid:     #3F5BD8;
-          --clr-primary:       #3F5BD8;
-          --clr-primary-light: #2C4BB0;
-          --clr-bg:            #F5F7FA;
-          --clr-surface:       #FFFFFF;
-          --clr-border:        #E5E7EB;
-          --clr-text-main:     #1F2A44;
-          --clr-text-muted:    #0f172a;
-          --sp-section:        40px;
-          --sp-elem:           16px;
-          --radius-card:       14px;
-          --radius-btn:        12px;
-        }
         body { background: #F5F7FA !important; }
+        .fh-wrap { direction: rtl; font-family: 'Cairo', sans-serif; }
 
-        /* ═══════════════════════════════
-           HERO
-        ═══════════════════════════════ */
+        /* ===== HERO ===== */
         .fh-hero {
-          background: #F5F7FA;
-          padding: var(--sp-section) 16px 36px;
+          position: relative;
+          background: linear-gradient(135deg, #1F2A44 0%, #2C3E66 55%, #3F5BD8 100%);
+          padding: 54px 16px 120px;
           text-align: center;
+          overflow: hidden;
         }
-        .fh-container {
-          max-width: 540px;
-          margin: 0 auto;
+        .fh-hero::before {
+          content: ""; position: absolute; inset: 0;
+          background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08) 0, transparent 40%),
+                            radial-gradient(circle at 85% 0%, rgba(255,255,255,0.06) 0, transparent 35%);
+          pointer-events: none;
         }
-        .fh-headline {
-          font-size: 26px;
-          font-weight: 800;
-          color: var(--clr-text-main);
-          margin: 0 0 8px;
-          line-height: 1.45;
-          letter-spacing: -0.3px;
-          font-family: 'Cairo', sans-serif;
+        .fh-hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
+        .fh-eyebrow {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: rgba(255,255,255,0.12); color: #fff;
+          padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+          margin-bottom: 16px; backdrop-filter: blur(4px);
         }
-        .fh-subtitle {
-          font-size: 14px;
-          color: var(--clr-text-muted);
-          margin: 0 0 28px;
-          line-height: 1.7;
-          font-family: 'Cairo', sans-serif;
+        .fh-headline { font-size: 30px; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.4; letter-spacing: -0.4px; }
+        .fh-subtitle { font-size: 15px; color: rgba(255,255,255,0.82); margin: 0 0 28px; line-height: 1.7; }
+
+        /* ===== SEARCH CARD ===== */
+        .fh-card { background:#fff; border-radius:18px; padding:18px; box-shadow:0 18px 50px rgba(15,23,42,0.20); text-align:right; max-width: 560px; margin: 0 auto; }
+        .fh-tabs { display:flex; gap:8px; margin-bottom:14px; }
+        .fh-tab { flex:1; padding:10px 6px; border-radius:11px; border:1.5px solid #E2E8F0; background:#F8FAFC; font-size:14px; font-weight:700; color:#475569; cursor:pointer; transition:all .15s; font-family:inherit; }
+        .fh-tab:hover { border-color:#3F5BD8; color:#3F5BD8; }
+        .fh-tab.active { background:#3F5BD8; color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(63,91,216,0.28); }
+        .fh-fields { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+        .fh-field { width:100%; height:50px; border:1.5px solid #E2E8F0; border-radius:11px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:15px; font-weight:600; color:#1F2A44; cursor:pointer; font-family:inherit; }
+        .fh-field.filled { border-color:#3F5BD8; background:#EEF4FF; }
+        .fh-field:disabled { opacity:.45; cursor:not-allowed; }
+        .fh-field .ph { color:#94A3B8; font-weight:500; }
+        .fh-search-btn { width:100%; height:52px; border:none; border-radius:12px; background:#3F5BD8; color:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px rgba(63,91,216,0.32); display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity .15s; }
+        .fh-search-btn:hover { opacity:.9; }
+        @media (min-width:769px){ .fh-fields{ flex-direction:row; } }
+
+        /* ===== STATS STRIP ===== */
+        .fh-stats { position:relative; z-index:2; margin:-72px auto 0; max-width:760px; padding:0 16px; }
+        .fh-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .fh-stat { background:#fff; border:1px solid #EEF1F5; border-radius:16px; padding:18px 12px; text-align:center; box-shadow:0 6px 20px rgba(15,23,42,0.06); }
+        .fh-stat-num { font-size:24px; font-weight:800; color:#1F2A44; line-height:1; }
+        .fh-stat-lbl { font-size:13px; color:#64748B; margin-top:6px; font-weight:600; }
+
+        /* ===== SECTIONS ===== */
+        .fh-section { max-width:1180px; margin:0 auto; padding:40px 16px 0; }
+        .fh-sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+        .fh-sec-title { font-size:22px; font-weight:800; color:#1F2A44; margin:0; letter-spacing:-0.3px; }
+        .fh-sec-link { font-size:14px; font-weight:700; color:#3F5BD8; display:inline-flex; align-items:center; gap:4px; }
+        .fh-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+        @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3,1fr); } }
+        @media (min-width:1024px){ .fh-grid{ grid-template-columns:repeat(4,1fr); } }
+
+        /* gov chips */
+        .fh-gov-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        @media (min-width:700px){ .fh-gov-grid{ grid-template-columns:repeat(3,1fr); } }
+        @media (min-width:1024px){ .fh-gov-grid{ grid-template-columns:repeat(6,1fr); } }
+        .fh-gov { background:#fff; border:1px solid #EEF1F5; border-radius:14px; padding:18px 10px; text-align:center; cursor:pointer; transition:all .18s; display:flex; flex-direction:column; align-items:center; gap:8px; }
+        .fh-gov:hover { border-color:#C7D2FE; box-shadow:0 8px 22px rgba(15,23,42,0.08); transform:translateY(-2px); }
+        .fh-gov-ic { width:46px; height:46px; border-radius:12px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; color:#3F5BD8; }
+        .fh-gov-name { font-size:14px; font-weight:700; color:#1F2A44; }
+
+        /* features */
+        .fh-feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+        @media (min-width:900px){ .fh-feat-grid{ grid-template-columns:repeat(4,1fr); } }
+        .fh-feat { background:#fff; border:1px solid #EEF1F5; border-radius:16px; padding:22px 18px; text-align:center; }
+        .fh-feat-ic { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+        .fh-feat h3 { font-size:16px; font-weight:800; color:#1F2A44; margin:0 0 6px; }
+        .fh-feat p { font-size:14px; color:#64748B; margin:0; line-height:1.6; }
+
+        /* CTA */
+        .fh-cta { max-width:1100px; margin:48px auto 0; padding:0 16px; }
+        .fh-cta-box { position:relative; overflow:hidden; background:linear-gradient(120deg,#1F2A44,#3F5BD8); border-radius:24px; padding:44px 28px; text-align:center; }
+        .fh-cta-box::after { content:""; position:absolute; left:-40px; bottom:-40px; width:180px; height:180px; background:rgba(255,255,255,0.07); border-radius:50%; }
+        .fh-cta h2 { color:#fff; font-size:26px; font-weight:800; margin:0 0 10px; }
+        .fh-cta p { color:rgba(255,255,255,0.85); font-size:15px; margin:0 0 22px; line-height:1.7; }
+        .fh-cta-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#1F2A44; font-weight:800; font-size:15px; padding:14px 28px; border-radius:999px; text-decoration:none; transition:transform .2s; }
+        .fh-cta-btn:hover { transform:translateY(-2px); }
+
+        @media (min-width:769px){
+          .fh-hero{ padding:72px 24px 130px; }
+          .fh-headline{ font-size:42px; }
+          .fh-subtitle{ font-size:17px; }
+          .fh-stat-num{ font-size:30px; }
         }
 
-        /* ═══════════════════════════════
-           SEARCH CARD
-        ═══════════════════════════════ */
-        .fh-card {
-          background: #FFFFFF;
-          border-radius: 18px;
-          padding: 20px 18px 18px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-          border: 1px solid #E5E7EB;
-          text-align: right;
-        }
-
-        /* Tabs */
-        .fh-tabs {
-          display: flex;
-          gap: 8px;
-          margin-bottom: var(--sp-elem);
-          direction: rtl;
-        }
-        .fh-tab {
-          flex: 1;
-          padding: 9px 6px;
-          border-radius: var(--radius-btn);
-          border: 1.5px solid #94A3B8;
-          background: #F5F7FA;
-          font-size: 14px;
-          font-weight: 600;
-          color: #0f172a;
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-          font-family: 'Cairo', sans-serif;
-          outline: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fh-tab:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
-        .fh-tab.active {
-          background: #3F5BD8;
-          color: #fff;
-          border-color: transparent;
-          font-weight: 700;
-          box-shadow: 0 2px 8px rgba(63,91,216,0.22);
-        }
-
-        /* Mobile field buttons */
-        .fh-mob-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 14px;
-          direction: rtl;
-        }
-        .fh-mob-btn {
-          width: 100%;
-          height: 50px;
-          border: 1.5px solid #94A3B8;
-          border-radius: var(--radius-btn);
-          background: #F5F7FA;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 14px;
-          font-size: 15px;
-          font-weight: 600;
-          color: #0f172a;
-          cursor: pointer;
-          font-family: 'Cairo', sans-serif;
-          text-align: right;
-          transition: border-color 0.15s, background 0.15s;
-          outline: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fh-mob-btn.filled {
-          border-color: var(--clr-primary);
-          color: var(--clr-text-main);
-          background: #EEF4FF;
-        }
-        .fh-mob-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* Desktop combobox fields */
-        .fh-desk-fields {
-          display: none;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 14px;
-          direction: rtl;
-        }
-
-        /* Search button */
-        .fh-search-btn {
-          width: 100%;
-          height: 52px;
-          border: none;
-          border-radius: var(--radius-btn);
-          background: #3F5BD8;
-          color: #fff;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'Cairo', sans-serif;
-          letter-spacing: 0.3px;
-          box-shadow: 0 3px 12px rgba(63,91,216,0.28);
-          transition: opacity 0.15s;
-          outline: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fh-search-btn:hover  { opacity: 0.88; }
-        .fh-search-btn:active { opacity: 0.80; }
-
-        /* ═══════════════════════════════
-           FEATURES SECTION
-        ═══════════════════════════════ */
-        .fh-features-section {
-          background: #F5F7FA;
-          padding: var(--sp-section) 20px;
-          border-top: 1px solid var(--clr-border);
-          border-bottom: 1px solid var(--clr-border);
-        }
-        .fh-features-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--clr-text-main);
-          margin: 0 0 24px;
-          text-align: center;
-          font-family: 'Cairo', sans-serif;
-          line-height: 1.6;
-        }
-        .fh-features-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          max-width: 960px;
-          margin: 0 auto;
-        }
-        .fh-feat-card {
-          background: #FFFFFF;
-          border: 1px solid #E5E7EB;
-          border-radius: 16px;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          cursor: default;
-          user-select: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fh-feat-icon {
-          width: 56px;
-          height: 56px;
-          background: var(--background-section);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--icon-color);
-          flex-shrink: 0;
-        }
-        .fh-feat-label {
-          font-size: 17px;
-          font-weight: 700;
-          color: var(--text-heading);
-          font-family: 'Cairo', sans-serif;
-          line-height: 1.4;
-          margin: 12px 0 0;
-          text-align: center;
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .fh-feat-desc {
-          font-size: 15px;
-          font-weight: 400;
-          color: #0f172a;
-          font-family: 'Cairo', sans-serif;
-          text-align: center;
-          line-height: 1.6;
-          margin: 6px 0 0;
-        }
-
-        @media (max-width: 600px) {
-          .fh-features-grid {
-            grid-template-columns: 1fr;
-            gap: 10px;
-            max-width: 100%;
-          }
-          .fh-feat-card {
-            padding: 14px;
-          }
-          .fh-feat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-          }
-          .fh-feat-icon svg {
-            width: 24px;
-            height: 24px;
-          }
-          .fh-feat-label {
-            font-size: 15px;
-            margin-top: 10px;
-          }
-          .fh-feat-desc {
-            font-size: 14px;
-            color: #0f172a;
-            line-height: 1.5;
-            margin-top: 4px;
-          }
-        }
-
-        /* ═══════════════════════════════
-           CTA SECTION
-        ═══════════════════════════════ */
-        .fh-cta-section {
-          margin: 40px 16px 24px;
-          background: transparent;
-          direction: rtl;
-        }
-        .fh-cta-box {
-          background: #F5F7FA;
-          border-radius: 20px;
-          padding: 28px 20px;
-          text-align: center;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-          border: 1px solid #E5E7EB;
-          max-width: 100%;
-        }
-        .fh-cta-title {
-          font-size: 22px;
-          font-weight: 700;
-          color: #1F2A44;
-          margin: 0 0 10px;
-          line-height: 1.4;
-          font-family: 'Cairo', sans-serif;
-        }
-        .fh-cta-desc {
-          font-size: 14px;
-          color: #0f172a;
-          margin: 0 0 20px;
-          line-height: 1.75;
-          font-family: 'Cairo', sans-serif;
-        }
-        .fh-cta-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 12px 24px;
-          border-radius: 999px;
-          border: none;
-          background: #3F5BD8;
-          color: #fff;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: 'Cairo', sans-serif;
-          transition: all 0.25s ease;
-          outline: none;
-          text-decoration: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fh-cta-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        .fh-cta-btn:active { transform: scale(0.97); }
-
-        /* ═══════════════════════════════
-           SHEET PANEL (bottom on mobile, centered dialog on desktop)
-        ═══════════════════════════════ */
-        .fh-sheet-wrapper {
-          position: fixed; inset: 0; z-index: 9999;
-          display: flex; flex-direction: column; justify-content: flex-end;
-        }
-        .fh-sheet-panel {
-          position: relative; background: #fff;
-          border-radius: 22px 22px 0 0; height: 80vh;
-          display: flex; flex-direction: column;
-          box-shadow: 0 -8px 40px rgba(0,0,0,0.16);
-        }
-        @media (min-width: 769px) {
-          .fh-sheet-wrapper {
-            justify-content: center; align-items: center;
-          }
-          .fh-sheet-panel {
-            border-radius: 20px; height: auto; max-height: 70vh;
-            width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.20);
-          }
-          .fh-sheet-handle { display: none; }
-        }
-
-        /* ═══════════════════════════════
-           SHEET ITEMS
-        ═══════════════════════════════ */
-        .fh-sheet-item {
-          width: 100%; display: flex; align-items: center; justify-content: space-between;
-          padding: 16px 20px; border: none; border-bottom: 1px solid var(--clr-bg);
-          cursor: pointer; font-size: 15px; font-weight: 400; color: #1E293B;
-          background: transparent; text-align: right; outline: none;
-          -webkit-tap-highlight-color: transparent;
-          font-family: 'Cairo', sans-serif;
-        }
-        .fh-sheet-item:active { background: #F1F5F9; }
-        .fh-sheet-item.sel { background: #EEF4FF; color: var(--clr-primary); font-weight: 600; }
-
-        /* ═══════════════════════════════
-           RESPONSIVE
-        ═══════════════════════════════ */
-        @media (min-width: 769px) {
-          .fh-hero      { padding: 56px 24px 48px; }
-          .fh-headline  { font-size: 32px; }
-          .fh-subtitle  { font-size: 15px; margin-bottom: 32px; }
-          .fh-card      { padding: 28px 26px 24px; }
-          .fh-features-section { padding: var(--sp-section) 24px; }
-          .fh-features-title   { font-size: 18px; margin-bottom: 28px; }
-          .fh-features-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            max-width: 960px;
-          }
-          .fh-cta-section { margin: 48px auto 28px; max-width: 700px; }
-          .fh-cta-box     { padding: 36px 28px; }
-          .fh-cta-title   { font-size: 26px; }
-          .fh-cta-desc    { font-size: 15px; }
-        }
-
-        @media (min-width: 1024px) {
-          .fh-container   { max-width: 580px; }
-          .fh-headline    { font-size: 34px; }
-          .fh-cta-section { max-width: 900px; }
-          .fh-cta-box     { padding: 44px 40px; }
-          .fh-cta-title   { font-size: 30px; }
-          .fh-cta-desc    { font-size: 16px; }
-        }
+        /* sheet */
+        .fh-sheet-wrap { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; justify-content:flex-end; }
+        .fh-sheet { position:relative; background:#fff; border-radius:22px 22px 0 0; height:80vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+        @media (min-width:769px){ .fh-sheet-wrap{ justify-content:center; align-items:center; } .fh-sheet{ border-radius:20px; height:auto; max-height:70vh; width:420px; } .fh-sheet-handle{ display:none; } }
+        .fh-sheet-item { width:100%; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border:none; border-bottom:1px solid #F1F5F9; cursor:pointer; font-size:15px; color:#1E293B; background:transparent; text-align:right; font-family:inherit; }
+        .fh-sheet-item:active { background:#F1F5F9; }
+        .fh-sheet-item.sel { background:#EEF4FF; color:#3F5BD8; font-weight:700; }
       `}</style>
 
-      {/* ═══════════════════════════════
-          HERO + SEARCH
-      ═══════════════════════════════ */}
-      <section className="fh-hero" dir="rtl">
-        <div className="fh-container">
-          <h1 className="fh-headline">ابحث عن عقارك بسهولة</h1>
-          <p className="fh-subtitle">كل ما تحتاجه للبحث عن العقار في مكان واحد</p>
+      <div className="fh-wrap">
+        {/* ===== HERO + SEARCH ===== */}
+        <section className="fh-hero">
+          <div className="fh-hero-inner">
+            <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
+            <h1 className="fh-headline">لاقِ عقارك من مكاتب موثوقة</h1>
+            <p className="fh-subtitle">آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد</p>
 
-          <div className="fh-card">
-            {/* Tabs */}
-            <div className="fh-tabs">
-              {["للإيجار", "للبيع", "للبدل"].map(s => (
-                <button
-                  key={s}
-                  className={`fh-tab${status === s ? " active" : ""}`}
-                  onClick={() => handleStatusChange(s)}
-                >
-                  {s}
+            <div className="fh-card">
+              <div className="fh-tabs">
+                {["للإيجار", "للبيع", "للبدل"].map(s => (
+                  <button key={s} className={`fh-tab${status === s ? " active" : ""}`} onClick={() => handleStatusChange(s)}>{s}</button>
+                ))}
+              </div>
+              <div className="fh-fields">
+                <button className={`fh-field${type ? " filled" : ""}`} onClick={() => openSheet("type")}>
+                  <span className={type ? "" : "ph"}>{type || "نوع العقار"}</span>
+                  <ChevronDown size={17} color={type ? "#3F5BD8" : "#94A3B8"} />
                 </button>
-              ))}
+                <button className={`fh-field${province ? " filled" : ""}`} onClick={() => openSheet("gov")}>
+                  <span className={province ? "" : "ph"}>{province || "المحافظة"}</span>
+                  <ChevronDown size={17} color={province ? "#3F5BD8" : "#94A3B8"} />
+                </button>
+                <button className={`fh-field${area ? " filled" : ""}`} onClick={() => { if (province) openSheet("area"); }} disabled={!province}>
+                  <span className={area ? "" : "ph"}>{area || (province ? "المنطقة" : "اختر المحافظة")}</span>
+                  <ChevronDown size={17} color={area ? "#3F5BD8" : "#94A3B8"} />
+                </button>
+              </div>
+              <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
             </div>
+          </div>
+        </section>
 
-            {/* Mobile fields */}
-            <div className="fh-mob-fields">
-              <button className={`fh-mob-btn${type ? " filled" : ""}`} onClick={() => openSheet("type")}>
-                <span>{type || "نوع العقار"}</span>
-                <ChevronDown size={17} color={type ? "#054A91" : "#94A3B8"} />
-              </button>
-              <button className={`fh-mob-btn${province ? " filled" : ""}`} onClick={() => openSheet("gov")}>
-                <span>{province || "المحافظة"}</span>
-                <ChevronDown size={17} color={province ? "#054A91" : "#94A3B8"} />
-              </button>
-              <button
-                className={`fh-mob-btn${area ? " filled" : ""}`}
-                onClick={() => { if (province) openSheet("area"); }}
-                disabled={!province}
-              >
-                <span>{area || (province ? "المنطقة" : "اختر المحافظة أولاً")}</span>
-                <ChevronDown size={17} color={area ? "#054A91" : "#94A3B8"} />
-              </button>
-            </div>
-
-            <button className="fh-search-btn" onClick={handleSearch}>
-              ابحث الآن
-            </button>
+        {/* ===== STATS ===== */}
+        <div className="fh-stats">
+          <div className="fh-stats-grid">
+            <div className="fh-stat"><div className="fh-stat-num">{(stats?.totalProperties ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">عقار معروض</div></div>
+            <div className="fh-stat"><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب موثوق</div></div>
+            <div className="fh-stat"><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
           </div>
         </div>
-      </section>
 
-      {/* ═══════════════════════════════
-          FEATURES
-      ═══════════════════════════════ */}
-      <section className="fh-features-section" dir="rtl">
-        <p className="fh-features-title">كل ما تحتاجه للبحث عن العقار في مكان واحد</p>
-        <div className="fh-features-grid">
-          {FEATURES.map(item => (
-            <div key={item.label} className="fh-feat-card">
-              <div className="fh-feat-icon" style={{ background: item.iconBg, color: item.iconColor }}>{item.icon}</div>
-              <p className="fh-feat-label">{item.label}</p>
-              <p className="fh-feat-desc">{item.desc}</p>
+        {/* ===== LATEST PROPERTIES ===== */}
+        {latestList.length > 0 && (
+          <section className="fh-section">
+            <div className="fh-sec-head">
+              <h2 className="fh-sec-title">أحدث العقارات</h2>
+              <Link href="/properties" className="fh-sec-link">عرض الكل <ArrowLeft size={15} /></Link>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="fh-grid">
+              {latestList.slice(0, 8).map((p: any) => <PropertyCard key={p.id} property={p} />)}
+            </div>
+          </section>
+        )}
 
-      {/* ═══════════════════════════════
-          CTA
-      ═══════════════════════════════ */}
-      <section className="fh-cta-section">
-        <div className="fh-cta-box">
-          <h2 className="fh-cta-title">اعرض عقاراتك في مكان واحد</h2>
-          <p className="fh-cta-desc">شارك جميع عقاراتك برابط واحد بسهولة</p>
-          <a href="/plans" className="fh-cta-btn">
-            ابدأ التجربة المجانية
-            <ArrowLeft size={16} />
-          </a>
-        </div>
-      </section>
+        {/* ===== BROWSE BY GOVERNORATE ===== */}
+        <section className="fh-section">
+          <div className="fh-sec-head"><h2 className="fh-sec-title">تصفّح حسب المحافظة</h2></div>
+          <div className="fh-gov-grid">
+            {Object.entries(GOV_ID).map(([name, id]) => (
+              <Link key={id} href={`/properties?governorateId=${id}`} className="fh-gov">
+                <div className="fh-gov-ic"><MapPin size={22} /></div>
+                <div className="fh-gov-name">{name}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
 
-      {/* ═══════════════════════════════
-          MOBILE BOTTOM SHEET
-      ═══════════════════════════════ */}
+        {/* ===== WHY FINDE ===== */}
+        <section className="fh-section">
+          <div className="fh-sec-head"><h2 className="fh-sec-title">ليه فايند؟</h2></div>
+          <div className="fh-feat-grid">
+            {FEATURES.map(f => (
+              <div key={f.label} className="fh-feat">
+                <div className="fh-feat-ic" style={{ background: f.bg, color: f.color }}>{f.icon}</div>
+                <h3>{f.label}</h3>
+                <p>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== TRUSTED OFFICES ===== */}
+        {officeList.length > 0 && (
+          <section className="fh-section">
+            <div className="fh-sec-head">
+              <h2 className="fh-sec-title">مكاتب موثوقة</h2>
+              <Link href="/offices" className="fh-sec-link">كل المكاتب <ArrowLeft size={15} /></Link>
+            </div>
+            <div className="fh-grid">
+              {officeList.slice(0, 4).map((o: any) => <OfficeCard key={o.id} office={o} />)}
+            </div>
+          </section>
+        )}
+
+        {/* ===== OFFICE CTA ===== */}
+        <section className="fh-cta">
+          <div className="fh-cta-box">
+            <h2>عندك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
+            <p>سجّل مكتبك مجانًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ تستقبل العملاء مباشرة.</p>
+            <Link href="/register" className="fh-cta-btn">أضف مكتبك مجانًا <ArrowLeft size={16} /></Link>
+          </div>
+        </section>
+
+        <div style={{ height: 48 }} />
+      </div>
+
+      {/* ===== SHEET ===== */}
       {sheetOpen && (
-        <div className="fh-sheet-wrapper">
+        <div className="fh-sheet-wrap">
           <div onClick={closeSheet} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.50)" }} />
-          <div dir="rtl" className="fh-sheet-panel">
+          <div dir="rtl" className="fh-sheet">
             <div className="fh-sheet-handle" style={{ width: 40, height: 4, background: "#E2E8F0", borderRadius: 2, margin: "14px auto 0", flexShrink: 0 }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 10px", borderBottom: "1px solid #F1F5F9", flexShrink: 0 }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#07223D", fontFamily: "'Cairo', sans-serif" }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#1F2A44", fontFamily: "'Cairo', sans-serif" }}>
                 {sheetOpen === "type" ? "نوع العقار" : sheetOpen === "gov" ? "المحافظة" : "المنطقة"}
               </h3>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {!sheetSearchVisible && (
-                  <button onClick={showSheetSearch} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "#F1F5F9", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Search size={15} color="#64748B" />
-                  </button>
+                  <button onClick={showSheetSearch} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "#F1F5F9", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Search size={15} color="#64748B" /></button>
                 )}
-                <button onClick={closeSheet} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "#F1F5F9", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <X size={16} color="#64748B" />
-                </button>
+                <button onClick={closeSheet} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "#F1F5F9", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} color="#64748B" /></button>
               </div>
             </div>
             {sheetSearchVisible && (
               <div style={{ padding: "10px 16px 6px", flexShrink: 0, borderBottom: "1px solid #F1F5F9" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#F1F5F9", borderRadius: 12, padding: "0 12px" }}>
-                  <Search size={15} color="#94A3B8" style={{ flexShrink: 0 }} />
-                  <input
-                    ref={sheetInputRef}
-                    type="text" inputMode="search"
-                    value={sheetQuery} onChange={e => setSheetQuery(e.target.value)}
-                    placeholder="ابحث..." dir="rtl" lang="ar"
-                    autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
-                    style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, padding: "10px 0", fontFamily: "'Cairo', sans-serif", color: "#0F172A" }}
-                  />
-                  {sheetQuery && (
-                    <button onClick={() => setSheetQuery("")} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}>
-                      <X size={14} color="#94A3B8" />
-                    </button>
-                  )}
+                  <Search size={15} color="#94A3B8" />
+                  <input ref={sheetInputRef} type="text" inputMode="search" value={sheetQuery} onChange={e => setSheetQuery(e.target.value)} placeholder="ابحث..." dir="rtl"
+                    style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, padding: "10px 0", fontFamily: "'Cairo', sans-serif", color: "#0F172A" }} />
+                  {sheetQuery && <button onClick={() => setSheetQuery("")} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={14} color="#94A3B8" /></button>}
                 </div>
               </div>
             )}
             <div style={{ overflowY: "auto", flex: 1 }}>
               {filteredSheetItems.map(item => (
-                <button
-                  key={item.value}
-                  className={`fh-sheet-item${item.value === currentSheetValue ? " sel" : ""}`}
-                  onClick={() => handleSheetSelect(item.value)}
-                >
+                <button key={item.value} className={`fh-sheet-item${item.value === currentSheetValue ? " sel" : ""}`} onClick={() => handleSheetSelect(item.value)}>
                   <span>{item.label}</span>
-                  {item.value === currentSheetValue && <Check size={16} color="#1E3A8A" />}
+                  {item.value === currentSheetValue && <Check size={16} color="#3F5BD8" />}
                 </button>
               ))}
-              {filteredSheetItems.length === 0 && (
-                <p style={{ textAlign: "center", color: "#94A3B8", padding: "32px 20px", fontFamily: "'Cairo', sans-serif", fontSize: 14 }}>
-                  لا توجد نتائج
-                </p>
-              )}
+              {filteredSheetItems.length === 0 && <p style={{ textAlign: "center", color: "#94A3B8", padding: "32px 20px", fontFamily: "'Cairo', sans-serif", fontSize: 14 }}>لا توجد نتائج</p>}
             </div>
           </div>
         </div>

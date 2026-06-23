@@ -1,7 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { db, usersTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { db, adminsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 const rawPort = process.env["PORT"];
@@ -18,43 +18,29 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-async function ensureSessionTable() {
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS user_sessions (
-      sid varchar NOT NULL,
-      sess json NOT NULL,
-      expire timestamp(6) NOT NULL,
-      CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
-    )
-  `);
-  await db.execute(sql`
-    CREATE INDEX IF NOT EXISTS idx_session_expire ON user_sessions (expire)
-  `);
-}
-
+// Seed / sync the default platform administrator in the dedicated admins table.
 async function ensureAdmin() {
   const email = "admin@aqar.kw";
   const password = "Admin@12345";
   const passwordHash = await bcrypt.hash(password, 12);
 
   const [existing] = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.email, email))
+    .select({ id: adminsTable.id })
+    .from(adminsTable)
+    .where(eq(adminsTable.email, email))
     .limit(1);
 
   if (existing) {
     await db
-      .update(usersTable)
-      .set({ passwordHash, role: "admin", status: "active" })
-      .where(eq(usersTable.email, email));
+      .update(adminsTable)
+      .set({ passwordHash, status: "active" })
+      .where(eq(adminsTable.email, email));
     logger.info("Admin password synced");
   } else {
-    await db.insert(usersTable).values({
+    await db.insert(adminsTable).values({
       name: "مدير النظام",
       email,
       passwordHash,
-      role: "admin",
       status: "active",
     });
     logger.info("Admin user created");
@@ -68,12 +54,6 @@ app.listen(port, async (err) => {
   }
 
   logger.info({ port }, "Server listening");
-
-  try {
-    await ensureSessionTable();
-  } catch (e) {
-    logger.error({ err: e }, "Failed to create sessions table");
-  }
 
   try {
     await ensureAdmin();

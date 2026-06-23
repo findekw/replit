@@ -1,6 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, propertiesTable, propertyImagesTable, officesTable, governoratesTable, areasTable, usersTable } from "@workspace/db";
+import { db, propertiesTable, propertyImagesTable, officesTable, governoratesTable, areasTable } from "@workspace/db";
 import { eq, and, desc, asc, sql, count, gte, lte, inArray } from "drizzle-orm";
+import { requireOfficeId, getOfficeId } from "../lib/authHelpers";
+import { getSessionId } from "../lib/session";
 import {
   ListPropertiesQueryParams,
   ListPropertiesResponse,
@@ -14,6 +16,19 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+// Returns an Arabic error string if the area does not belong to the governorate,
+// or null if the pair is valid. Both ids are expected to be non-null here.
+async function validateAreaInGovernorate(governorateId: number, areaId: number): Promise<string | null> {
+  const [area] = await db
+    .select({ governorateId: areasTable.governorateId })
+    .from(areasTable)
+    .where(eq(areasTable.id, areaId))
+    .limit(1);
+  if (!area) return "المنطقة المختارة غير موجودة";
+  if (area.governorateId !== governorateId) return "المنطقة المختارة لا تتبع المحافظة المحددة";
+  return null;
+}
 
 function normalizeImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -273,20 +288,12 @@ router.get("/properties/:id", async (req, res): Promise<void> => {
   }
 
   // Count views only for real external visitors.
-  // Skip if: (1) viewer is the property owner, (2) viewer is admin.
+  // Skip if: (1) viewer is the property owner (office), (2) viewer is admin.
   let shouldCountView = true;
-  const sessionUserId = (req as any).session?.userId as number | undefined;
-  if (sessionUserId) {
-    const [viewer] = await db
-      .select({ officeId: usersTable.officeId, role: usersTable.role })
-      .from(usersTable)
-      .where(eq(usersTable.id, sessionUserId))
-      .limit(1);
-    if (viewer) {
-      const isOwner = viewer.officeId !== null && viewer.officeId === row.property.officeId;
-      const isAdmin = viewer.role === "admin";
-      if (isOwner || isAdmin) shouldCountView = false;
-    }
+  const isAdminViewer = getSessionId(req, "admin") !== null;
+  const viewerOfficeId = await getOfficeId(req);
+  if (isAdminViewer || (viewerOfficeId !== null && viewerOfficeId === row.property.officeId)) {
+    shouldCountView = false;
   }
 
   if (shouldCountView) {
@@ -408,17 +415,8 @@ router.get("/properties/:id/similar", async (req, res): Promise<void> => {
 });
 
 router.post("/properties", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) {
-    res.status(401).json({ error: "غير مسجّل الدخول" });
-    return;
-  }
-
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-
-  if (!user || !user.officeId) {
-    res.status(403).json({ error: "يجب أن تكون مكتب عقاري لإضافة إعلانات" });
-    return;
-  }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const body = req.body as Record<string, unknown>;
   const titleAr = String(body.titleAr ?? "").trim();
@@ -441,15 +439,25 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   if (!VALID_STATUSES.includes(status)) errors.push("نوع العرض غير صالح");
   if (!VALID_TYPES.includes(type)) errors.push("نوع العقار غير صالح");
   if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
+  if (!governorateId) errors.push("يرجى اختيار المحافظة");
+  if (!areaId) errors.push("يرجى اختيار المنطقة");
 
   if (errors.length > 0) {
     res.status(400).json({ error: "بيانات غير صالحة", details: errors });
     return;
   }
 
-  const referenceId = `AQ-${Date.now().toString(36).toUpperCase()}`;
+  // Verify the area actually belongs to the chosen governorate (defends against
+  // tampered requests saving e.g. an area under the wrong governorate).
+  const areaErr = await validateAreaInGovernorate(governorateId!, areaId!);
+  if (areaErr) {
+    res.status(400).json({ error: "بيانات غير صالحة", details: [areaErr] });
+    return;
+  }
 
-  req.log.info({ userId: req.session.userId, officeId: user.officeId, titleAr, status, type, price }, "Creating property");
+  const referenceId = `FN-${Date.now().toString(36).toUpperCase()}`;
+
+  req.log.info({ officeId, titleAr, status, type, price }, "Creating property");
 
   try {
     const [newProperty] = await db
@@ -469,7 +477,7 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
         bathrooms,
         governorateId,
         areaId,
-        officeId: user.officeId,
+        officeId,
         active: false,
         approvalStatus: "pending",
         featured: false,
@@ -487,17 +495,15 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
 
 // PUT /api/properties/:id — update an existing property (authenticated owner)
 router.put("/properties/:id", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const propId = parseInt(String(req.params.id), 10);
   if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
-
   const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
   if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
-  if (prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح بتعديل هذا الإعلان" }); return; }
+  if (prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح بتعديل هذا الإعلان" }); return; }
 
   const body = req.body as Record<string, unknown>;
   const titleAr = String(body.titleAr ?? "").trim();
@@ -519,8 +525,13 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   if (!VALID_STATUSES.includes(status)) errors.push("نوع العرض غير صالح");
   if (!VALID_TYPES.includes(type)) errors.push("نوع العقار غير صالح");
   if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
+  if (!governorateId) errors.push("يرجى اختيار المحافظة");
+  if (!areaId) errors.push("يرجى اختيار المنطقة");
 
   if (errors.length > 0) { res.status(400).json({ error: "بيانات غير صالحة", details: errors }); return; }
+
+  const areaErr = await validateAreaInGovernorate(governorateId!, areaId!);
+  if (areaErr) { res.status(400).json({ error: "بيانات غير صالحة", details: [areaErr] }); return; }
 
   try {
     const [updated] = await db.update(propertiesTable).set({
@@ -529,7 +540,7 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
       updatedAt: new Date(),
     }).where(eq(propertiesTable.id, propId)).returning();
 
-    console.log(`[Properties] Updated property #${propId} by office #${user.officeId}`);
+    console.log(`[Properties] Updated property #${propId} by office #${officeId}`);
     res.json({ property: updated });
   } catch {
     res.status(500).json({ error: "فشل تحديث الإعلان، حاول مرة أخرى" });
@@ -538,22 +549,20 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
 
 // DELETE /api/properties/:id — delete property and its images (authenticated owner)
 router.delete("/properties/:id", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const propId = parseInt(String(req.params.id), 10);
   if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
-
   const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
   if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
-  if (prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح بحذف هذا الإعلان" }); return; }
+  if (prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح بحذف هذا الإعلان" }); return; }
 
   try {
     await db.delete(propertyImagesTable).where(eq(propertyImagesTable.propertyId, propId));
     await db.delete(propertiesTable).where(eq(propertiesTable.id, propId));
-    console.log(`[Properties] Deleted property #${propId} by office #${user.officeId}`);
+    console.log(`[Properties] Deleted property #${propId} by office #${officeId}`);
     res.json({ message: "تم حذف الإعلان بنجاح" });
   } catch {
     res.status(500).json({ error: "فشل حذف الإعلان، حاول مرة أخرى" });
@@ -562,17 +571,15 @@ router.delete("/properties/:id", async (req: Request, res: Response): Promise<vo
 
 // DELETE /api/properties/:propertyId/images/:imageId — delete single image
 router.delete("/properties/:propertyId/images/:imageId", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const propId = parseInt(String(req.params.propertyId), 10);
   const imgId = parseInt(String(req.params.imageId), 10);
   if (!propId || !imgId) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
-
   const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
-  if (!prop || prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+  if (!prop || prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
   const [img] = await db.select().from(propertyImagesTable)
     .where(and(eq(propertyImagesTable.id, imgId), eq(propertyImagesTable.propertyId, propId))).limit(1);
@@ -595,17 +602,15 @@ router.delete("/properties/:propertyId/images/:imageId", async (req: Request, re
 
 // PUT /api/properties/:propertyId/images/:imageId/primary — set primary image
 router.put("/properties/:propertyId/images/:imageId/primary", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const propId = parseInt(String(req.params.propertyId), 10);
   const imgId = parseInt(String(req.params.imageId), 10);
   if (!propId || !imgId) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
-
   const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
-  if (!prop || prop.officeId !== user.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+  if (!prop || prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
   await db.update(propertyImagesTable).set({ isPrimary: false }).where(eq(propertyImagesTable.propertyId, propId));
   await db.update(propertyImagesTable).set({ isPrimary: true }).where(eq(propertyImagesTable.id, imgId));
@@ -616,19 +621,14 @@ router.put("/properties/:propertyId/images/:imageId/primary", async (req: Reques
 
 // POST /api/properties/:id/images — save uploaded image objectPath to property_images
 router.post("/properties/:id/images", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) {
-    res.status(401).json({ error: "غير مسجّل الدخول" });
-    return;
-  }
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
 
   const propId = parseInt(String(req.params.id), 10);
   if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
-
   const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
-  if (!prop || prop.officeId !== user.officeId) {
+  if (!prop || prop.officeId !== officeId) {
     res.status(403).json({ error: "غير مصرح لهذا الإعلان" }); return;
   }
 

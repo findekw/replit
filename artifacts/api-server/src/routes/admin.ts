@@ -1,42 +1,31 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable } from "@workspace/db";
+import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { requireAdmin } from "../lib/authHelpers";
 
 const router: IRouter = Router();
-
-function requireAdmin(req: Request, res: Response, next: () => void): void {
-  if (!req.session?.userId) {
-    res.status(401).json({ error: "غير مسجّل الدخول" });
-    return;
-  }
-  if (req.session?.userRole !== "admin") {
-    res.status(403).json({ error: "غير مصرح لك بالوصول إلى هذه الصفحة" });
-    return;
-  }
-  next();
-}
 
 // GET /api/admin/pending-offices
 router.get("/admin/pending-offices", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
     const pendingUsers = await db
       .select({
-        userId: usersTable.id,
-        userName: usersTable.name,
-        userEmail: usersTable.email,
-        userStatus: usersTable.status,
+        userId: officeUsersTable.id,
+        userName: officeUsersTable.name,
+        userEmail: officeUsersTable.email,
+        userStatus: officeUsersTable.status,
         officeId: officesTable.id,
         officeName: officesTable.nameAr,
         officeSlug: officesTable.slug,
         officePhone: officesTable.phone,
         officeActive: officesTable.active,
-        createdAt: usersTable.createdAt,
+        createdAt: officeUsersTable.createdAt,
       })
-      .from(usersTable)
-      .innerJoin(officesTable, eq(usersTable.officeId, officesTable.id))
-      .where(eq(usersTable.status, "pending"))
-      .orderBy(usersTable.createdAt);
+      .from(officeUsersTable)
+      .innerJoin(officesTable, eq(officeUsersTable.officeId, officesTable.id))
+      .where(eq(officeUsersTable.status, "pending"))
+      .orderBy(officeUsersTable.createdAt);
 
     res.json({ offices: pendingUsers });
   } catch {
@@ -61,7 +50,7 @@ router.post("/admin/offices/:id/approve", requireAdmin, async (req: Request, res
       trialStartedAt,
       trialEndsAt,
     }).where(eq(officesTable.id, officeId));
-    await db.update(usersTable).set({ status: "active" }).where(eq(usersTable.officeId, officeId));
+    await db.update(officeUsersTable).set({ status: "active" }).where(eq(officeUsersTable.officeId, officeId));
     res.json({ message: "تم تفعيل المكتب وبدأت التجربة المجانية (7 أيام)" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
@@ -77,7 +66,7 @@ router.post("/admin/offices/:id/reject", requireAdmin, async (req: Request, res:
   }
   try {
     await db.update(officesTable).set({ active: false }).where(eq(officesTable.id, officeId));
-    await db.update(usersTable).set({ status: "rejected" }).where(eq(usersTable.officeId, officeId));
+    await db.update(officeUsersTable).set({ status: "rejected" }).where(eq(officeUsersTable.officeId, officeId));
     res.json({ message: "تم رفض طلب المكتب" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
@@ -167,18 +156,18 @@ router.get("/admin/all-offices", requireAdmin, async (_req: Request, res: Respon
   try {
     const all = await db
       .select({
-        userId: usersTable.id,
-        userName: usersTable.name,
-        userEmail: usersTable.email,
-        userStatus: usersTable.status,
+        userId: officeUsersTable.id,
+        userName: officeUsersTable.name,
+        userEmail: officeUsersTable.email,
+        userStatus: officeUsersTable.status,
         officeId: officesTable.id,
         officeName: officesTable.nameAr,
         officeActive: officesTable.active,
-        createdAt: usersTable.createdAt,
+        createdAt: officeUsersTable.createdAt,
       })
-      .from(usersTable)
-      .innerJoin(officesTable, eq(usersTable.officeId, officesTable.id))
-      .orderBy(usersTable.createdAt);
+      .from(officeUsersTable)
+      .innerJoin(officesTable, eq(officeUsersTable.officeId, officesTable.id))
+      .orderBy(officeUsersTable.createdAt);
 
     res.json({ offices: all });
   } catch {
@@ -199,10 +188,10 @@ router.get("/admin/subscriptions", requireAdmin, async (_req: Request, res: Resp
         subscriptionStatus: officesTable.subscriptionStatus,
         trialStartedAt: officesTable.trialStartedAt,
         trialEndsAt: officesTable.trialEndsAt,
-        userEmail: usersTable.email,
+        userEmail: officeUsersTable.email,
       })
       .from(officesTable)
-      .leftJoin(usersTable, eq(usersTable.officeId, officesTable.id))
+      .leftJoin(officeUsersTable, eq(officeUsersTable.officeId, officesTable.id))
       .orderBy(desc(officesTable.createdAt));
 
     const now = new Date();

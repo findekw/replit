@@ -16,8 +16,10 @@ import DashboardLeads from "@/pages/DashboardLeads";
 import DashboardAnalytics from "@/pages/DashboardAnalytics";
 import DashboardAddListing from "@/pages/DashboardAddListing";
 import DashboardEditListing from "@/pages/DashboardEditListing";
+import DashboardLanding from "@/pages/DashboardLanding";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import AdminLogin from "@/pages/AdminLogin";
 import Admin from "@/pages/Admin";
 import AdminAnalytics from "@/pages/AdminAnalytics";
 import OfficePage from "@/pages/OfficePage";
@@ -62,8 +64,12 @@ function Router() {
       <Route path="/dashboard/listings/:id/edit" component={DashboardEditListing} />
       <Route path="/dashboard/leads" component={DashboardLeads} />
       <Route path="/dashboard/analytics" component={DashboardAnalytics} />
+      <Route path="/dashboard/landing" component={DashboardLanding} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/office/login" component={Login} />
+      <Route path="/office/register" component={Register} />
+      <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={Admin} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/terms" component={Terms} />

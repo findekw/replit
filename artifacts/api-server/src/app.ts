@@ -1,6 +1,6 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import express, { type Express } from "express";
 import cors from "cors";
-import cookieSession from "cookie-session";
+import cookieParser from "cookie-parser";
 import { pinoHttp } from "pino-http";
 import path from "path";
 import router from "./routes";
@@ -74,45 +74,12 @@ if (!sessionSecret) {
   throw new Error("SESSION_SECRET environment variable is required");
 }
 
-const isProduction = process.env.NODE_ENV === "production";
-
-// ── Cookie-based sessions ────────────────────────────────────────────────────
-// Stores session data (userId, userRole) in a signed cookie — no database
-// connection required. Works reliably in Vercel Lambda and all serverless
-// environments. Cookie size is tiny (< 200 bytes) for our use case.
-app.use(
-  cookieSession({
-    name: "aqar.sid",
-    secret: sessionSecret,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-  }),
-);
-
-// Compatibility shim: cookie-session auto-saves on response and doesn't expose
-// .save() / .destroy() / .id — add them so existing route handlers work unchanged.
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  if (req.session) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const s = req.session as any;
-    if (typeof s.save !== "function") {
-      s.save = (cb: (err?: unknown) => void) => cb();
-    }
-    if (typeof s.destroy !== "function") {
-      s.destroy = (cb: (err?: unknown) => void) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (req as any).session = null;
-        cb();
-      };
-    }
-    if (s.id === undefined) {
-      s.id = undefined; // placeholder so req.session.id doesn't throw
-    }
-  }
-  next();
-});
+// ── Per-role signed cookies ──────────────────────────────────────────────────
+// Identity is split across three independent signed cookies (finde_admin,
+// finde_office, finde_user) so the same browser can hold several access levels
+// at once. cookie-parser verifies the signatures using SESSION_SECRET. See
+// lib/session.ts for the read/write/clear helpers.
+app.use(cookieParser(sessionSecret));
 
 app.use("/api/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 app.use("/api", router);

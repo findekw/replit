@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { trackInteraction } from "@/lib/trackInteraction";
-import MainLayout from "@/components/layout/MainLayout";
+import { PropertyCard } from "@/components/PropertyCard";
+import type { Property as ApiProperty } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Phone, MessageCircle, MapPin, Building2,
-  Bed, Bath, Square,
+  ShieldCheck, Star, Mail,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 
@@ -30,6 +31,99 @@ interface OfficeData {
   active: boolean;
   totalListings: number;
   activeListings: number;
+  landingTemplate?: string | null;
+}
+
+/* ═══════════════════════════════════════════
+   THEMES — applied via CSS variables on the root
+═══════════════════════════════════════════ */
+type ThemeKey = "classic" | "dark" | "minimal";
+
+interface ThemeVars {
+  heroBg: string;
+  heroText: string;
+  heroNameText: string;
+  accent: string;
+  accentHover: string;
+  accentContrast: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
+  scrim: string;
+  logoBorder: string;
+  heroBorder: string;
+  nameShadow: string;
+}
+
+const THEMES: Record<ThemeKey, ThemeVars> = {
+  classic: {
+    heroBg: "linear-gradient(135deg,#1F2A44 0%,#3F5BD8 100%)",
+    heroText: "#ffffff",
+    heroNameText: "#ffffff",
+    accent: "#3F5BD8",
+    accentHover: "#3550c4",
+    accentContrast: "#ffffff",
+    badgeBg: "rgba(255,255,255,0.16)",
+    badgeBorder: "rgba(255,255,255,0.22)",
+    badgeText: "#ffffff",
+    scrim: "linear-gradient(180deg, rgba(31,42,68,0.55) 0%, rgba(31,42,68,0.78) 100%)",
+    logoBorder: "#ffffff",
+    heroBorder: "none",
+    nameShadow: "0 2px 12px rgba(0,0,0,0.35)",
+  },
+  dark: {
+    heroBg: "linear-gradient(135deg,#0B1220 0%,#1A2238 100%)",
+    heroText: "#ffffff",
+    heroNameText: "#ffffff",
+    accent: "#C9A227",
+    accentHover: "#b08e1f",
+    accentContrast: "#1F2A44",
+    badgeBg: "rgba(201,162,39,0.16)",
+    badgeBorder: "rgba(201,162,39,0.45)",
+    badgeText: "#ffffff",
+    scrim: "linear-gradient(180deg, rgba(11,18,32,0.60) 0%, rgba(11,18,32,0.85) 100%)",
+    logoBorder: "#C9A227",
+    heroBorder: "none",
+    nameShadow: "0 2px 12px rgba(0,0,0,0.45)",
+  },
+  minimal: {
+    heroBg: "#FFFFFF",
+    heroText: "#1F2A44",
+    heroNameText: "#1F2A44",
+    accent: "#0E9F6E",
+    accentHover: "#0c8a5f",
+    accentContrast: "#ffffff",
+    badgeBg: "#F1F5F9",
+    badgeBorder: "#E2E8F0",
+    badgeText: "#1F2A44",
+    scrim: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.75) 100%)",
+    logoBorder: "#E2E8F0",
+    heroBorder: "1px solid #E2E8F0",
+    nameShadow: "none",
+  },
+};
+
+function resolveTheme(t: string | null | undefined): ThemeKey {
+  if (t === "dark" || t === "minimal") return t;
+  return "classic";
+}
+
+function themeVars(theme: ThemeVars): React.CSSProperties {
+  return {
+    ["--op-hero-bg" as any]: theme.heroBg,
+    ["--op-hero-text" as any]: theme.heroText,
+    ["--op-hero-name-text" as any]: theme.heroNameText,
+    ["--op-accent" as any]: theme.accent,
+    ["--op-accent-hover" as any]: theme.accentHover,
+    ["--op-accent-contrast" as any]: theme.accentContrast,
+    ["--op-badge-bg" as any]: theme.badgeBg,
+    ["--op-badge-border" as any]: theme.badgeBorder,
+    ["--op-badge-text" as any]: theme.badgeText,
+    ["--op-hero-scrim" as any]: theme.scrim,
+    ["--op-logo-border" as any]: theme.logoBorder,
+    ["--op-hero-border" as any]: theme.heroBorder,
+    ["--op-name-shadow" as any]: theme.nameShadow,
+  };
 }
 
 interface Property {
@@ -56,277 +150,120 @@ interface Property {
 
 const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل"] as const;
 
-const STATUS_META: Record<string, { color: string; dot: string }> = {
-  "للإيجار": { color: "bg-blue-500",   dot: "bg-blue-400" },
-  "للبيع":   { color: "bg-emerald-500", dot: "bg-emerald-400" },
-  "للبدل":   { color: "bg-orange-500",  dot: "bg-orange-400" },
-};
-
 /* ═══════════════════════════════════════════
-   PROPERTY CARD
+   STYLES — scoped with `op-` prefix
 ═══════════════════════════════════════════ */
-function OfficePropertyCard({ property }: { property: Property }) {
-  const locationText = [property.governorateName, property.areaName].filter(Boolean).join("، ");
-  const meta = STATUS_META[property.status] ?? { color: "bg-gray-500", dot: "bg-gray-400" };
-  const priceLabel =
-    property.status === "للإيجار"
-      ? `${property.price.toLocaleString("en-US")} KWD / شهرياً`
-      : `${property.price.toLocaleString("en-US")} KWD`;
+const STYLES = `
+.op-root { font-family: 'Cairo', sans-serif; background: #F5F7FA; min-height: 100vh; }
+.op-root * { box-sizing: border-box; }
 
-  const hasSpecs = property.bedrooms != null || property.bathrooms != null || property.area != null;
-
-  return (
-    <Link href={`${BASE}/properties/${property.id}`} className="block group focus:outline-none">
-      <article
-        className="bg-white rounded-2xl overflow-hidden border border-gray-100 transition-all duration-200 ease-out"
-        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)";
-          (e.currentTarget as HTMLElement).style.borderColor = "#E0E7FF";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
-          (e.currentTarget as HTMLElement).style.borderColor = "";
-        }}
-      >
-        {/* ── Image ── */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: "16/10" }}>
-          {property.primaryImage ? (
-            <img
-              src={property.primaryImage}
-              alt={property.titleAr}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-full h-full flex flex-col items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg, #1F2A44 0%, #3F5BD8 100%)" }}
-            >
-              <Building2 className="h-10 w-10 text-white/30" />
-              <span className="text-white/40 text-xs font-medium">{property.type}</span>
-            </div>
-          )}
-
-          {/* Badges */}
-          <div className="absolute top-3 right-3 flex gap-1.5 flex-wrap">
-            <span className={`${meta.color} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm`}>
-              {property.status}
-            </span>
-            {property.featured && (
-              <span
-                className="text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm"
-                style={{ background: "#3F5BD8" }}
-              >
-                مميز ★
-              </span>
-            )}
-          </div>
-
-          {/* Price gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent pt-10 pb-3 px-4">
-            <p className="text-white font-black text-base tracking-tight leading-none">{priceLabel}</p>
-          </div>
-        </div>
-
-        {/* ── Body ── */}
-        <div className="p-4">
-          {/* Type tag */}
-          <span className="inline-block text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-            {property.type}
-          </span>
-
-          {/* Title */}
-          <h3
-            className="font-bold text-gray-900 text-[15px] leading-snug line-clamp-1 mb-2 transition-colors duration-150 group-hover:text-[#1F2A44]"
-          >
-            {property.titleAr}
-          </h3>
-
-          {/* Location */}
-          {locationText && (
-            <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
-              <MapPin className="w-3 h-3 flex-shrink-0 text-gray-400" />
-              <span className="truncate">{locationText}</span>
-            </div>
-          )}
-
-          {/* Specs */}
-          {hasSpecs && (
-            <div className="flex items-center gap-4 pt-3 border-t border-gray-50">
-              {property.bedrooms != null && (
-                <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <Bed className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="font-semibold text-gray-800">{property.bedrooms}</span>
-                  <span>غرف</span>
-                </span>
-              )}
-              {property.bathrooms != null && (
-                <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <Bath className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="font-semibold text-gray-800">{property.bathrooms}</span>
-                  <span>حمام</span>
-                </span>
-              )}
-              {property.area != null && (
-                <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <Square className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="font-semibold text-gray-800">{property.area}</span>
-                  <span>م²</span>
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </article>
-    </Link>
-  );
+/* ── HERO ── */
+.op-hero { position: relative; width: 100%; overflow: hidden; border-bottom: var(--op-hero-border, none); }
+.op-hero-bg { position: absolute; inset: 0; background: var(--op-hero-bg, linear-gradient(135deg,#1F2A44,#3F5BD8)); }
+.op-hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+.op-hero-scrim { position: absolute; inset: 0; background: var(--op-hero-scrim, linear-gradient(180deg, rgba(31,42,68,0.55) 0%, rgba(31,42,68,0.78) 100%)); }
+.op-hero-inner {
+  position: relative; max-width: 1120px; margin: 0 auto;
+  padding: 64px 20px 40px; display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap;
 }
-
-/* ═══════════════════════════════════════════
-   OFFICE SIDEBAR CARD
-═══════════════════════════════════════════ */
-function OfficeSidebarCard({
-  office,
-  onWhatsApp,
-  onCall,
-  hasPhone,
-  hasWA,
-  hideCta = false,
-}: {
-  office: OfficeData;
-  onWhatsApp: () => void;
-  onCall: () => void;
-  hasPhone: boolean;
-  hasWA: boolean;
-  hideCta?: boolean;
-}) {
-  return (
-    <div
-      className="bg-white rounded-2xl overflow-hidden"
-      style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.07)", border: "1px solid rgba(0,0,0,0.06)" }}
-    >
-      {/* Accent top stripe */}
-      <div
-        className="h-1"
-        style={{ background: "linear-gradient(90deg, #1F2A44 0%, #3F5BD8 100%)" }}
-      />
-
-      <div className="p-5">
-        {/* ── Logo + name + status ── */}
-        <div className="flex items-start gap-3.5 mb-4">
-          <div className="flex-shrink-0">
-            {office.logo ? (
-              <img
-                src={office.logo}
-                alt={office.nameAr}
-                className="w-14 h-14 rounded-xl object-cover"
-                style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}
-              />
-            ) : (
-              <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, #1F2A44 0%, #3F5BD8 100%)",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                }}
-              >
-                <Building2 className="h-7 w-7 text-white" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0 pt-0.5">
-            <h1 className="font-black text-gray-900 text-base leading-tight truncate">
-              {office.nameAr}
-            </h1>
-          </div>
-        </div>
-
-        {/* ── Description ── */}
-        {office.descriptionAr && (
-          <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">
-            {office.descriptionAr}
-          </p>
-        )}
-
-        {/* ── CTA buttons ── */}
-        {!hideCta && <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {hasWA && (
-            <button
-              onClick={onWhatsApp}
-              style={{
-                width: "100%",
-                height: "44px",
-                borderRadius: "10px",
-                border: "none",
-                background: "#22c55e",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#16a34a"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#22c55e"; }}
-            >
-              <MessageCircle style={{ width: 18, height: 18, flexShrink: 0 }} />
-              واتساب
-            </button>
-          )}
-          {hasPhone && (
-            <button
-              onClick={onCall}
-              style={{
-                width: "100%",
-                height: "44px",
-                borderRadius: "10px",
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                color: "#374151",
-                fontWeight: 600,
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f9fafb"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
-            >
-              <Phone style={{ width: 18, height: 18, flexShrink: 0 }} />
-              اتصال
-            </button>
-          )}
-        </div>}
-
-      </div>
-    </div>
-  );
+.op-logo-tile {
+  width: 112px; height: 112px; border-radius: 22px; background: #fff;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 12px 32px rgba(15,23,42,0.30); overflow: hidden; border: 4px solid var(--op-logo-border, #fff);
 }
-
-/* ─── Skeleton sidebar ─── */
-function SidebarSkeleton() {
-  return (
-    <div className="bg-white rounded-2xl p-5 space-y-4" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.07)" }}>
-      <div className="flex gap-3">
-        <Skeleton className="w-14 h-14 rounded-xl flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4 rounded-lg" />
-          <Skeleton className="h-3.5 w-1/2 rounded-lg" />
-        </div>
-      </div>
-      <Skeleton className="h-14 rounded-xl" />
-      <Skeleton className="h-11 rounded-xl" />
-      <Skeleton className="h-11 rounded-xl" />
-    </div>
-  );
+.op-logo-tile img { width: 100%; height: 100%; object-fit: cover; }
+.op-hero-text { flex: 1; min-width: 220px; color: var(--op-hero-text, #fff); }
+.op-hero-name { font-size: clamp(24px, 4vw, 36px); font-weight: 800; line-height: 1.15; margin: 0 0 12px; color: var(--op-hero-name-text, #ffffff) !important; text-shadow: var(--op-name-shadow, 0 2px 12px rgba(0,0,0,0.35)); }
+.op-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.op-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px;
+  border-radius: 999px; font-size: 13px; font-weight: 700;
+  background: var(--op-badge-bg, rgba(255,255,255,0.16)); color: var(--op-badge-text, #fff); backdrop-filter: blur(6px);
+  border: 1px solid var(--op-badge-border, rgba(255,255,255,0.22));
 }
+.op-badge-verified { background: rgba(37,211,102,0.20); border-color: rgba(37,211,102,0.45); }
+.op-badge-featured { background: var(--op-badge-bg, rgba(63,91,216,0.30)); border-color: var(--op-badge-border, rgba(255,255,255,0.30)); }
+
+/* ── CONTACT BAR ── */
+.op-contactbar {
+  max-width: 1120px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 5;
+}
+.op-contactbar-card {
+  background: #fff; border: 1px solid #EEF1F5; border-radius: 18px;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.06); padding: 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.op-cta {
+  height: 50px; padding: 0 22px; border-radius: 12px; border: none;
+  font-weight: 700; font-size: 15px; cursor: pointer; flex: 1; min-width: 150px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: 'Cairo', sans-serif; transition: filter .15s, background .15s;
+}
+.op-cta-wa { background: #25D366; color: #fff; }
+.op-cta-wa:hover { background: #1ebe5a; }
+.op-cta-call { background: var(--op-accent, #3F5BD8); color: var(--op-accent-contrast, #fff); }
+.op-cta-call:hover { background: var(--op-accent-hover, #3550c4); }
+.op-iconbtns { display: flex; gap: 10px; }
+.op-iconbtn {
+  width: 50px; height: 50px; border-radius: 12px; border: 1px solid #E2E8F0;
+  background: #fff; color: #1F2A44; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.op-iconbtn:hover { background: #F5F7FA; border-color: var(--op-accent, #3F5BD8); color: var(--op-accent, #3F5BD8); }
+
+/* ── LAYOUT ── */
+.op-main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 56px; }
+
+.op-card {
+  background: #fff; border: 1px solid #EEF1F5; border-radius: 18px;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.06);
+}
+.op-section-title { font-size: 19px; font-weight: 800; color: #1F2A44; margin: 0; }
+
+/* ── STATS ── */
+.op-stats { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
+.op-stat {
+  flex: 1; min-width: 150px; padding: 18px 20px; border-radius: 16px; background: #fff;
+  border: 1px solid #EEF1F5; box-shadow: 0 6px 20px rgba(15,23,42,0.06);
+}
+.op-stat-num { font-size: 28px; font-weight: 800; color: #1F2A44; line-height: 1; }
+.op-stat-label { font-size: 13px; color: #64748B; margin-top: 7px; font-weight: 600; }
+
+/* ── ABOUT ── */
+.op-about { padding: 22px 24px; margin-bottom: 24px; }
+.op-about p { color: #64748B; line-height: 1.9; font-size: 15px; margin: 12px 0 0; }
+
+/* ── TABS ── */
+.op-listings-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.op-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.op-tab {
+  padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s;
+  background: #fff; color: #64748B; border: 1px solid #E2E8F0;
+}
+.op-tab:hover { border-color: var(--op-accent, #3F5BD8); color: var(--op-accent, #3F5BD8); }
+.op-tab-active { background: #1F2A44; color: #fff; border-color: #1F2A44; }
+.op-tab-active:hover { color: #fff; }
+
+/* ── GRID ── */
+.op-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+@media (min-width: 900px) { .op-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.op-empty { text-align: center; padding: 70px 20px; }
+.op-empty p { color: #64748B; font-weight: 700; font-size: 16px; margin: 14px 0 0; }
+.op-empty span { color: #94a3b8; font-size: 14px; display: block; margin-top: 6px; }
+
+.op-pagination { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 32px; }
+.op-page-info { font-size: 14px; color: #64748B; font-weight: 600; }
+
+/* ── FOOTER ── */
+.op-footer { text-align: center; padding: 30px 20px 40px; color: #94a3b8; font-size: 14px; }
+.op-footer a { color: var(--op-accent, #3F5BD8); font-weight: 700; text-decoration: none; }
+.op-footer a:hover { text-decoration: underline; }
+`;
 
 /* ═══════════════════════════════════════════
    MAIN PAGE
@@ -393,275 +330,203 @@ export default function OfficePage() {
   const hasPhone = !!office?.phone;
   const hasWA = !!(office?.whatsapp || office?.phone);
 
+  const themeKey = resolveTheme(office?.landingTemplate);
+  const theme = THEMES[themeKey];
+  const rootThemeStyle = themeVars(theme);
+
+  /* ── Not found ── */
   if (notFound) {
     return (
-      <MainLayout>
-        <div dir="rtl" className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-          <Building2 className="h-16 w-16 text-gray-300 mb-4" />
-          <h1 className="text-2xl font-bold mb-2">الصفحة غير موجودة</h1>
-          <p className="text-gray-500 mb-6">لم يتم العثور على هذا المكتب على المنصة</p>
-          <Button onClick={() => navigate("/offices")}>تصفح جميع المكاتب</Button>
-        </div>
-      </MainLayout>
+      <div dir="rtl" className="op-root" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 16px" }}>
+        <style>{STYLES}</style>
+        <Building2 className="h-16 w-16 text-gray-300 mb-4" />
+        <h1 className="text-2xl font-bold mb-2" style={{ color: "#1F2A44" }}>الصفحة غير موجودة</h1>
+        <p className="text-gray-500 mb-6">لم يتم العثور على هذا المكتب على المنصة</p>
+        <Button onClick={() => navigate("/offices")}>تصفح جميع المكاتب</Button>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div dir="rtl" style={{ minHeight: "100vh", background: "#F5F7FA" }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div dir="rtl" className="op-root" style={rootThemeStyle}>
+      <style>{STYLES}</style>
 
-          {/* ════════════════════════════════════════════
-              TWO-COLUMN GRID
-              Desktop: [listings 1fr] [sidebar 300px]
-              Mobile:  stacked (sidebar first, then listings)
-          ════════════════════════════════════════════ */}
-
-          {/* Mobile sidebar (above listings — no CTA, those are in sticky bar) */}
-          <div className="lg:hidden mb-5">
-            {loadingOffice ? (
-              <SidebarSkeleton />
-            ) : office ? (
-              <OfficeSidebarCard
-                office={office}
-                onWhatsApp={handleWhatsApp}
-                onCall={handleCall}
-                hasPhone={hasPhone}
-                hasWA={hasWA}
-                hideCta={true}
-              />
-            ) : null}
-          </div>
-
-          {/* Desktop: true CSS grid — no empty gap */}
-          <div
-            className="hidden lg:grid gap-6 items-start"
-            style={{ gridTemplateColumns: "1fr 300px" }}
-          >
-            {/* ── Listings panel ── */}
-            <div
-              className="bg-white rounded-2xl overflow-hidden"
-              style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.07)", border: "1px solid rgba(0,0,0,0.06)" }}
-            >
-              {/* Panel header */}
-              <div
-                className="flex items-center justify-between px-6 py-4"
-                style={{ borderBottom: "1px solid #f0f0f0" }}
-              >
-                <div>
-                  <h2 className="text-base font-black text-gray-900">إعلانات المكتب</h2>
-                  {office && (
-                    <p className="text-xs text-gray-400 mt-0.5">{office.activeListings} عقار متاح</p>
-                  )}
-                </div>
-                {/* Filter tabs */}
-                <div className="flex gap-1.5">
-                  {STATUS_TABS.map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
-                      style={
-                        activeTab === tab
-                          ? { background: "#1F2A44", color: "#fff", border: "1px solid transparent" }
-                          : { background: "#f8f8f8", color: "#666", border: "1px solid #e5e5e5" }
-                      }
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Grid */}
-              <div className="p-6">
-                {loadingProps || loadingOffice ? (
-                  <div className="grid grid-cols-2 gap-5">
-                    {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
-                  </div>
-                ) : properties.length === 0 ? (
-                  <div className="text-center py-20">
-                    <Building2 className="h-14 w-14 mx-auto mb-3 text-gray-200" />
-                    <p className="font-semibold text-gray-500 text-base">
-                      {activeTab === "الكل" ? "لا توجد إعلانات منشورة حالياً" : `لا توجد إعلانات ${activeTab}`}
-                    </p>
-                    <p className="text-sm text-gray-400 mt-1.5">سيتم نشر الإعلانات قريباً</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-5">
-                      {properties.map((p) => (
-                        <OfficePropertyCard key={p.id} property={p} />
-                      ))}
-                    </div>
-                    {totalPages > 1 && (
-                      <div className="flex justify-center items-center gap-3 mt-8">
-                        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="gap-1">
-                          <ChevronRight className="h-4 w-4" />السابق
-                        </Button>
-                        <span className="text-sm text-gray-400">{page} / {totalPages}</span>
-                        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="gap-1">
-                          التالي<ChevronLeft className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ── Sticky sidebar ── */}
-            <div style={{ position: "sticky", top: "80px" }}>
-              {loadingOffice ? (
-                <SidebarSkeleton />
-              ) : office ? (
-                <OfficeSidebarCard
-                  office={office}
-                  onWhatsApp={handleWhatsApp}
-                  onCall={handleCall}
-                  hasPhone={hasPhone}
-                  hasWA={hasWA}
-                />
-              ) : null}
-            </div>
-          </div>
-
-          {/* Mobile: listings panel (below sidebar) */}
-          <div className="lg:hidden">
-            <div
-              className="bg-white rounded-2xl overflow-hidden"
-              style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.07)", border: "1px solid rgba(0,0,0,0.06)" }}
-            >
-              {/* Panel header */}
-              <div className="flex flex-col gap-3 px-5 py-4" style={{ borderBottom: "1px solid #f0f0f0" }}>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-black text-gray-900">إعلانات المكتب</h2>
-                  {office && (
-                    <span className="text-xs text-gray-400">{office.activeListings} عقار</span>
-                  )}
-                </div>
-                {/* Filter tabs — scrollable row */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1">
-                  {STATUS_TABS.map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
-                      style={
-                        activeTab === tab
-                          ? { background: "#1F2A44", color: "#fff", border: "1px solid transparent" }
-                          : { background: "#f8f8f8", color: "#666", border: "1px solid #e5e5e5" }
-                      }
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-4">
-                {loadingProps || loadingOffice ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-64 rounded-2xl" />)}
-                  </div>
-                ) : properties.length === 0 ? (
-                  <div className="text-center py-14">
-                    <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-200" />
-                    <p className="font-semibold text-gray-500">
-                      {activeTab === "الكل" ? "لا توجد إعلانات منشورة حالياً" : `لا توجد إعلانات ${activeTab}`}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 gap-4">
-                      {properties.map((p) => (
-                        <OfficePropertyCard key={p.id} property={p} />
-                      ))}
-                    </div>
-                    {totalPages > 1 && (
-                      <div className="flex justify-center items-center gap-3 mt-6">
-                        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="gap-1">
-                          <ChevronRight className="h-4 w-4" />السابق
-                        </Button>
-                        <span className="text-sm text-gray-400">{page} / {totalPages}</span>
-                        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="gap-1">
-                          التالي<ChevronLeft className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
+      {/* ════════ COVER HERO ════════ */}
+      <section className="op-hero">
+        <div className="op-hero-bg">
+          {office?.coverImage && <img src={office.coverImage} alt={office.nameAr} />}
         </div>
-      </div>
+        <div className="op-hero-scrim" />
+        <div className="op-hero-inner">
+          {/* Logo tile */}
+          {loadingOffice ? (
+            <Skeleton className="op-logo-tile" />
+          ) : (
+            <div className="op-logo-tile">
+              {office?.logo ? (
+                <img src={office.logo} alt={office.nameAr} />
+              ) : (
+                <Building2 className="h-12 w-12" style={{ color: "#1F2A44" }} />
+              )}
+            </div>
+          )}
 
-      {/* ── Mobile sticky bottom bar ── */}
+          {/* Name + badges */}
+          <div className="op-hero-text">
+            {loadingOffice ? (
+              <Skeleton className="h-9 w-64 rounded-lg" style={{ marginBottom: 12 }} />
+            ) : (
+              <h1 className="op-hero-name">{office?.nameAr}</h1>
+            )}
+            {office && (
+              <div className="op-badges">
+                {office.verified && (
+                  <span className="op-badge op-badge-verified">
+                    <ShieldCheck style={{ width: 16, height: 16 }} /> موثّق
+                  </span>
+                )}
+                {office.featured && (
+                  <span className="op-badge op-badge-featured">
+                    <Star style={{ width: 16, height: 16 }} /> مميز
+                  </span>
+                )}
+                {office.governorateName && (
+                  <span className="op-badge">
+                    <MapPin style={{ width: 16, height: 16 }} /> {office.governorateName}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ CONTACT BAR ════════ */}
+      {office && (hasWA || hasPhone || office.email) && (
+        <div className="op-contactbar">
+          <div className="op-contactbar-card">
+            {hasWA && (
+              <button className="op-cta op-cta-wa" onClick={handleWhatsApp}>
+                <MessageCircle style={{ width: 20, height: 20 }} /> واتساب
+              </button>
+            )}
+            {hasPhone && (
+              <button className="op-cta op-cta-call" onClick={handleCall}>
+                <Phone style={{ width: 20, height: 20 }} /> اتصال
+              </button>
+            )}
+            {office.email && (
+              <div className="op-iconbtns">
+                <a className="op-iconbtn" href={`mailto:${office.email}`} aria-label="البريد الإلكتروني" title="البريد الإلكتروني">
+                  <Mail style={{ width: 20, height: 20 }} />
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <main className="op-main">
+        {/* ════════ STATS ════════ */}
+        {office && (
+          <div className="op-stats">
+            <div className="op-stat">
+              <div className="op-stat-num">{office.activeListings}</div>
+              <div className="op-stat-label">عقار متاح</div>
+            </div>
+            <div className="op-stat">
+              <div className="op-stat-num">{office.totalListings}</div>
+              <div className="op-stat-label">إجمالي العقارات</div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════ ABOUT ════════ */}
+        {office?.descriptionAr && (
+          <div className="op-card op-about">
+            <h2 className="op-section-title">نبذة عن المكتب</h2>
+            <p>{office.descriptionAr}</p>
+          </div>
+        )}
+
+        {/* ════════ LISTINGS ════════ */}
+        <div className="op-listings-head">
+          <h2 className="op-section-title">عقارات المكتب</h2>
+          <div className="op-tabs">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`op-tab ${activeTab === tab ? "op-tab-active" : ""}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loadingProps || loadingOffice ? (
+          <div className="op-grid">
+            {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="op-card op-empty">
+            <Building2 className="h-14 w-14 mx-auto text-gray-200" />
+            <p>{activeTab === "الكل" ? "لا توجد عقارات منشورة حالياً" : `لا توجد عقارات ${activeTab}`}</p>
+            <span>سيتم نشر العقارات قريباً</span>
+          </div>
+        ) : (
+          <>
+            <div className="op-grid">
+              {properties.map((p) => (
+                <PropertyCard key={p.id} property={p as unknown as ApiProperty} />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="op-pagination">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="gap-1">
+                  <ChevronRight className="h-4 w-4" /> السابق
+                </Button>
+                <span className="op-page-info">{page} / {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="gap-1">
+                  التالي <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* ════════ FOOTER ════════ */}
+      <footer className="op-footer">
+        مدعوم من <Link href="/">فايند</Link>
+      </footer>
+
+      {/* ── Mobile sticky bottom contact bar ── */}
       {office && (hasWA || hasPhone) && (
         <div
           className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex gap-3 px-4 py-3"
           style={{
             background: "rgba(255,255,255,0.96)",
             backdropFilter: "blur(10px)",
-            borderTop: "1px solid rgba(0,0,0,0.08)",
-            boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+            borderTop: "1px solid #EEF1F5",
+            boxShadow: "0 -4px 20px rgba(15,23,42,0.08)",
+            fontFamily: "'Cairo', sans-serif",
           }}
         >
           {hasWA && (
-            <button
-              onClick={handleWhatsApp}
-              style={{
-                flex: 1,
-                height: "48px",
-                borderRadius: "12px",
-                border: "none",
-                background: "#22c55e",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "15px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-              }}
-            >
-              <MessageCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
-              واتساب
+            <button className="op-cta op-cta-wa" onClick={handleWhatsApp} style={{ height: 48 }}>
+              <MessageCircle style={{ width: 20, height: 20 }} /> واتساب
             </button>
           )}
           {hasPhone && (
-            <button
-              onClick={handleCall}
-              style={{
-                flex: 1,
-                height: "48px",
-                borderRadius: "12px",
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                color: "#374151",
-                fontWeight: 700,
-                fontSize: "15px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-              }}
-            >
-              <Phone style={{ width: 20, height: 20, flexShrink: 0 }} />
-              اتصال
+            <button className="op-cta op-cta-call" onClick={handleCall} style={{ height: 48 }}>
+              <Phone style={{ width: 20, height: 20 }} /> اتصال
             </button>
           )}
         </div>
       )}
-
-      {/* Spacer so last card isn't hidden behind sticky bar on mobile */}
-      {office && (hasWA || hasPhone) && (
-        <div className="lg:hidden h-20" />
-      )}
-    </MainLayout>
+      {office && (hasWA || hasPhone) && <div className="lg:hidden" style={{ height: 80 }} />}
+    </div>
   );
 }

@@ -10,7 +10,7 @@ import {
   Plus, Copy, Check, ExternalLink, Camera, Loader2, Edit2,
   Clock, Crown, AlertTriangle, CheckCircle2, Save, X, Lock
 } from "lucide-react";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_DOMAIN } from "@/lib/utils";
 
@@ -133,9 +133,9 @@ function ViewField({ label, value, mono }: { label: string; value: string; mono?
 }
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { officeId: oid, officeUser: user, isLoading: authLoading } = useOfficeAuth();
   const { toast } = useToast();
-  const officeId = user?.officeId ?? 0;
+  const officeId = oid ?? 0;
 
   const [officeNameAr, setOfficeNameAr] = useState<string>("");
   const [officeSlug, setOfficeSlug] = useState<string | null>(null);
@@ -343,17 +343,17 @@ export default function Dashboard() {
   const isLoading = authLoading || statsLoading;
 
   const statCards = stats ? [
-    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, color: "text-primary" },
-    { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, color: "text-blue-600" },
-    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, color: "text-blue-600" },
-    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, color: "text-blue-600" },
-    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, color: "text-purple-600" },
-    { label: "عملاء جدد", value: stats.newLeads, icon: Users, color: "text-orange-500" },
-    { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, color: "text-green-500" },
-    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, color: "text-blue-500" },
+    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#3F5BD8", bg: "#EEF2FE" },
+    { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", bg: "#ECFDF5" },
+    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#D97706", bg: "#FFFBEB" },
+    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#3F5BD8", bg: "#EEF2FE" },
+    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#7C3AED", bg: "#F5F3FF" },
+    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#D97706", bg: "#FFFBEB" },
+    { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
+    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#3F5BD8", bg: "#EEF2FE" },
   ] : [];
 
-  if (!authLoading && !user?.officeId) {
+  if (!authLoading && !oid) {
     return (
       <DashboardLayout>
         <div dir="rtl" className="flex flex-col items-center justify-center py-24 text-center">
@@ -438,17 +438,39 @@ export default function Dashboard() {
 
         {renderSubscriptionBanner()}
 
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
-            <p className="mt-0.5" style={{ fontSize: 15, color: "#0f172a" }}>مرحباً، {officeNameAr || user?.name || "بك"}</p>
+        {/* Page header — welcome */}
+        <div
+          className="mb-6"
+          style={{
+            background: "linear-gradient(120deg,#1F2A44 0%,#2A3958 55%,#3F5BD8 130%)",
+            borderRadius: 20, padding: "24px 26px", color: "#fff",
+            boxShadow: "0 10px 30px rgba(31,42,68,0.18)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 16, flexWrap: "wrap", position: "relative", overflow: "hidden",
+          }}
+        >
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#A9B8DC", margin: 0 }}>لوحة تحكم المكتب</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: "4px 0 0", lineHeight: 1.25 }}>
+              أهلاً، {officeNameAr || user?.name || "بك"} 👋
+            </h1>
+            <p style={{ fontSize: 14, color: "#C3CEE2", margin: "6px 0 0" }}>
+              تابع أداء إعلاناتك وعملائك من مكان واحد
+            </p>
           </div>
           <Link href="/dashboard/listings/new">
-            <Button className="gap-2 h-10 px-5" data-testid="button-add-listing-dashboard">
-              <Plus className="h-4 w-4" />إضافة إعلان
+            <Button
+              className="gap-2 h-11 px-6 rounded-xl font-bold"
+              style={{ background: "#fff", color: "#1F2A44", position: "relative", zIndex: 1 }}
+              data-testid="button-add-listing-dashboard"
+            >
+              <Plus className="h-4 w-4" />إضافة إعلان جديد
             </Button>
           </Link>
+          <div style={{
+            position: "absolute", insetInlineStart: -40, top: -60, width: 220, height: 220,
+            borderRadius: "50%", background: "rgba(63,91,216,0.25)", filter: "blur(10px)",
+          }} />
         </div>
 
         {/* ─── Office Profile Card ─── */}
@@ -900,23 +922,47 @@ export default function Dashboard() {
         )}
 
         {/* ─── Stats Grid ─── */}
+        <div className="flex items-center gap-2 mb-3 mt-1">
+          <TrendingUp className="h-4 w-4" style={{ color: "#3F5BD8" }} />
+          <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>نظرة سريعة على الأداء</h2>
+        </div>
         {isLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
             {statCards.length === 0 ? (
-              <div className="col-span-2 lg:col-span-4 bg-card border rounded-xl p-8 text-center">
-                <Building className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p style={{ fontSize: 15, color: "#0f172a" }}>لا توجد إحصائيات بعد. ابدأ بإضافة إعلانك الأول!</p>
+              <div
+                className="col-span-2 lg:col-span-4 text-center"
+                style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 32, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}
+              >
+                <Building className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
+                <p style={{ fontSize: 15, color: "#64748B" }}>لا توجد إحصائيات بعد. ابدأ بإضافة إعلانك الأول!</p>
               </div>
             ) : (
-              statCards.map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="bg-card border rounded-xl p-4" data-testid={`stat-${label}`}>
-                  <Icon className={`h-5 w-5 mb-2 ${color}`} />
-                  <div className="text-2xl font-bold text-foreground">{value.toLocaleString("en-US")}</div>
-                  <div className="text-xs" style={{ color: "#0f172a" }}>{label}</div>
+              statCards.map(({ label, value, icon: Icon, fg, bg }) => (
+                <div
+                  key={label}
+                  data-testid={`stat-${label}`}
+                  style={{
+                    background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16,
+                    padding: 18, boxShadow: "0 4px 16px rgba(15,23,42,0.05)",
+                    display: "flex", flexDirection: "column", gap: 12,
+                  }}
+                >
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 12, background: bg,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Icon className="h-5 w-5" style={{ color: fg }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: "#1F2A44", lineHeight: 1 }}>
+                      {value.toLocaleString("en-US")}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#64748B", marginTop: 5, fontWeight: 600 }}>{label}</div>
+                  </div>
                 </div>
               ))
             )}
@@ -927,26 +973,36 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Recent Leads */}
-          <div className="bg-card border rounded-2xl p-5">
+          <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 22, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-bold text-base">أحدث العملاء</h2>
-              <Link href="/dashboard/leads" className="text-sm text-primary hover:underline">عرض الكل</Link>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 32, height: 32, borderRadius: 10, background: "#F5F3FF", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <Users className="h-4 w-4" style={{ color: "#7C3AED" }} />
+                </span>
+                <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>أحدث العملاء</h2>
+              </div>
+              <Link href="/dashboard/leads" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
             </div>
             {isLoading ? (
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
             ) : (stats?.recentLeads ?? []).length === 0 ? (
               <div className="text-center py-8">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p style={{ fontSize: 15, color: "#0f172a" }}>لا توجد عملاء حتى الآن</p>
-                <p className="mt-1" style={{ fontSize: 13, color: "#0f172a" }}>ستظهر هنا طلبات العملاء على عقاراتك</p>
+                <Users className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
+                <p style={{ fontSize: 15, color: "#1F2A44", fontWeight: 700 }}>لا توجد عملاء حتى الآن</p>
+                <p className="mt-1" style={{ fontSize: 13, color: "#64748B" }}>ستظهر هنا طلبات العملاء على عقاراتك</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {(stats?.recentLeads ?? []).map(lead => (
-                  <div key={lead.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg" data-testid={`lead-${lead.id}`}>
-                    <div>
-                      <div className="font-medium text-sm">{lead.customerName}</div>
-                      <div className="text-xs" style={{ color: "#0f172a" }}>{lead.phone}</div>
+                  <div
+                    key={lead.id}
+                    className="flex items-center justify-between p-3 rounded-xl"
+                    style={{ background: "#F8FAFC", border: "1px solid #EEF1F5" }}
+                    data-testid={`lead-${lead.id}`}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div className="font-bold text-sm" style={{ color: "#1F2A44" }}>{lead.customerName}</div>
+                      <div className="text-xs" style={{ color: "#64748B", direction: "ltr", textAlign: "right" }}>{lead.phone}</div>
                     </div>
                     <Badge className={LEAD_STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-700"}>{lead.status}</Badge>
                   </div>
@@ -956,17 +1012,22 @@ export default function Dashboard() {
           </div>
 
           {/* Top Properties */}
-          <div className="bg-card border rounded-2xl p-5">
+          <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 22, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-bold text-base">الإعلانات الأكثر مشاهدة</h2>
-              <Link href="/dashboard/listings" className="text-sm text-primary hover:underline">عرض الكل</Link>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 32, height: 32, borderRadius: 10, background: "#EEF2FE", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <TrendingUp className="h-4 w-4" style={{ color: "#3F5BD8" }} />
+                </span>
+                <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>الإعلانات الأكثر مشاهدة</h2>
+              </div>
+              <Link href="/dashboard/listings" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
             </div>
             {isLoading ? (
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
             ) : (stats?.topProperties ?? []).length === 0 ? (
               <div className="text-center py-8">
-                <Building className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p style={{ fontSize: 15, color: "#0f172a" }}>لا توجد إعلانات حتى الآن</p>
+                <Building className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
+                <p style={{ fontSize: 15, color: "#1F2A44", fontWeight: 700 }}>لا توجد إعلانات حتى الآن</p>
                 <Link href="/dashboard/listings/new">
                   <Button variant="outline" size="sm" className="mt-3 gap-2">
                     <Plus className="h-4 w-4" />إضافة إعلان
@@ -974,21 +1035,29 @@ export default function Dashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {(stats?.topProperties ?? []).map(p => (
-                  <div key={p.id} className="flex items-center gap-3 p-3 bg-secondary rounded-lg" data-testid={`top-prop-${p.id}`}>
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 p-2.5 rounded-xl"
+                    style={{ background: "#F8FAFC", border: "1px solid #EEF1F5" }}
+                    data-testid={`top-prop-${p.id}`}
+                  >
                     {p.primaryImage ? (
                       <img src={p.primaryImage} alt={p.titleAr} className="w-14 h-12 rounded-lg object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-14 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        <Building className="h-4 w-4 text-muted-foreground" />
+                      <div className="w-14 h-12 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#EEF1F5" }}>
+                        <Building className="h-4 w-4" style={{ color: "#94A3B8" }} />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{p.titleAr}</div>
-                      <div className="text-xs" style={{ color: "#0f172a" }}>{p.price.toLocaleString("en-US")} KWD</div>
+                      <div className="text-sm font-bold truncate" style={{ color: "#1F2A44" }}>{p.titleAr}</div>
+                      <div className="text-xs" style={{ color: "#3F5BD8", fontWeight: 700 }}>{p.price.toLocaleString("en-US")} KWD</div>
                     </div>
-                    <div className="text-xs flex items-center gap-1" style={{ color: "#0f172a" }}>
+                    <div
+                      className="text-xs flex items-center gap-1 flex-shrink-0"
+                      style={{ color: "#64748B", fontWeight: 700, background: "#fff", border: "1px solid #EEF1F5", padding: "4px 9px", borderRadius: 999 }}
+                    >
                       <Eye className="h-3 w-3" />{p.views}
                     </div>
                   </div>

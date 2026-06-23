@@ -8,7 +8,7 @@ import {
   Loader2, Link2, Check, X, Home,
 } from "lucide-react";
 import { authApi } from "@/lib/auth";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 
 type Role = "user" | "office";
 type FormState = "idle" | "loading" | "success" | "error";
@@ -188,7 +188,7 @@ function FieldError({ msg }: { msg?: string }) {
 
 export default function Register() {
   const [, navigate] = useLocation();
-  const { refetch } = useAuth();
+  const { refetch } = useOfficeAuth();
 
   const [role] = useState<Role>("office");
   const [name, setName] = useState("");
@@ -262,14 +262,14 @@ export default function Register() {
     setFormState("loading");
     const fullPhone = "965" + phone.trim();
     try {
-      const result = await authApi.register({
-        name: name.trim(), email: email.trim(), phone: fullPhone, password, role,
-        ...(role === "office" && slug ? { slug } : {}),
+      const result = await authApi.office.register({
+        name: name.trim(), email: email.trim(), phone: fullPhone, password,
+        ...(slug ? { slug } : {}),
       });
       await refetch();
       setFormState("success");
       setMessage(result.message);
-      setTimeout(() => navigate(role === "office" ? "/dashboard" : "/"), 2000);
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err: any) {
       setFormState("error");
       if (err?.details?.length) {

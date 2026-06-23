@@ -48,6 +48,7 @@ export const officesTable = pgTable("offices", {
   trialStartedAt: timestamp("trial_started_at", { withTimezone: true }),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   slugEdits: integer("slug_edits").notNull().default(0),
+  landingTemplate: text("landing_template").notNull().default("classic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

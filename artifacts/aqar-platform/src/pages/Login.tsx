@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, AlertCircle, Loader2, Home } from "lucide-react";
 import { authApi } from "@/lib/auth";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 
 export default function Login() {
   const [, navigate] = useLocation();
-  const { refetch } = useAuth();
+  const { refetch } = useOfficeAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,15 +33,9 @@ export default function Login() {
     setError("");
 
     try {
-      const result = await authApi.login({ email: email.trim(), password });
+      await authApi.office.login({ email: email.trim(), password });
       await refetch();
-      if (result.user.role === "admin") {
-        navigate("/admin");
-      } else if (result.user.role === "office") {
-        navigate("/dashboard");
-      } else {
-        navigate("/");
-      }
+      navigate("/dashboard");
     } catch (err: any) {
       setError(err?.error ?? "حدث خطأ غير متوقع، حاول مرة أخرى");
     } finally {

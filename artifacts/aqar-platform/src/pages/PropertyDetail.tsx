@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useGetProperty, useGetSimilarProperties } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
 
@@ -14,15 +12,114 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const STATUS_COLORS: Record<string, string> = {
-  "للإيجار": "bg-blue-100 text-blue-800",
-  "للبيع": "bg-blue-100 text-blue-800",
-  "للبدل": "bg-orange-100 text-orange-800",
+  "للإيجار": "#4f6fad",
+  "للبيع": "#3F5BD8",
+  "للبدل": "#f97316",
 };
 
 function buildWhatsAppUrl(whatsapp: string, title: string, propertyUrl: string) {
   const msg = `السلام عليكم،\nاستفسار عن هذا الإعلان:\n\n${title}\n\nFinde:\n${propertyUrl}`;
   return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
 }
+
+const styles = `
+.pd-page { background: #F5F7FA; min-height: 100vh; font-family: 'Cairo', sans-serif; }
+.pd-container { max-width: 1200px; margin: 0 auto; padding: 20px 16px 96px; }
+.pd-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748B; margin-bottom: 16px; flex-wrap: wrap; }
+.pd-breadcrumb a { color: #64748B; text-decoration: none; transition: color .15s; display: inline-flex; align-items: center; gap: 4px; }
+.pd-breadcrumb a:hover { color: #3F5BD8; }
+.pd-breadcrumb .pd-bc-sep { color: #CBD5E1; }
+.pd-breadcrumb .pd-bc-current { color: #1F2A44; font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.pd-searchnav { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #EEF1F5; border-radius: 14px; padding: 8px 12px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15,23,42,0.04); }
+.pd-navbtn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #E2E8F0; color: #1F2A44; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
+.pd-navbtn:hover:not(:disabled) { border-color: #3F5BD8; color: #3F5BD8; }
+.pd-navbtn:disabled { opacity: .4; cursor: not-allowed; }
+.pd-navcount { font-size: 13px; color: #64748B; font-weight: 600; }
+
+.pd-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 1024px) { .pd-grid { grid-template-columns: 1fr 360px; align-items: start; } }
+
+.pd-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
+
+/* Gallery */
+.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #1F2A44; aspect-ratio: 16/10; }
+.pd-gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd-gallery-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1F2A44 0%, #2d3c5e 100%); }
+.pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
+.pd-gnav:hover { background: rgba(15,23,42,0.8); }
+.pd-gnav-prev { right: 14px; }
+.pd-gnav-next { left: 14px; }
+.pd-gcount { position: absolute; bottom: 14px; left: 14px; background: rgba(15,23,42,0.6); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; backdrop-filter: blur(4px); }
+.pd-badges { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; }
+.pd-badge { color: #fff; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; box-shadow: 0 2px 8px rgba(15,23,42,0.2); }
+.pd-badge-featured { background: #f59e0b; }
+
+.pd-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
+.pd-thumb { flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #1F2A44; transition: border-color .15s; }
+.pd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd-thumb.active { border-color: #3F5BD8; }
+
+/* Header card */
+.pd-head { padding: 24px; }
+.pd-head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.pd-price { font-size: 30px; font-weight: 900; color: #1F2A44; white-space: nowrap; line-height: 1.1; }
+.pd-price .pd-cur { font-size: 18px; font-weight: 700; color: #3F5BD8; margin-right: 4px; }
+.pd-price-sub { font-size: 13px; color: #64748B; font-weight: 600; }
+.pd-title { font-size: 22px; font-weight: 800; color: #1F2A44; margin: 14px 0 8px; line-height: 1.4; }
+.pd-loc { display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 14px; }
+.pd-ref { font-size: 12px; color: #94A3B8; margin-top: 10px; }
+
+.pd-specs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #EEF1F5; }
+.pd-spec { display: flex; align-items: center; gap: 7px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 9px 14px; font-size: 14px; font-weight: 600; color: #1F2A44; }
+.pd-spec svg { color: #3F5BD8; }
+
+.pd-sec { padding: 24px; }
+.pd-sec-title { font-size: 18px; font-weight: 800; color: #1F2A44; margin: 0 0 14px; }
+.pd-desc { color: #475569; line-height: 2; font-size: 15px; white-space: pre-line; }
+
+.pd-amen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 640px) { .pd-amen { grid-template-columns: 1fr 1fr 1fr; } }
+.pd-amen-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1F2A44; font-weight: 500; }
+.pd-amen-check { width: 22px; height: 22px; border-radius: 7px; background: rgba(5,150,105,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pd-amen-check svg { color: #059669; }
+
+/* Sidebar / office */
+.pd-side { display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 1024px) { .pd-side { position: sticky; top: 20px; } }
+.pd-office { padding: 20px; }
+.pd-office-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.pd-office-logo { width: 54px; height: 54px; border-radius: 14px; object-fit: cover; border: 1px solid #EEF1F5; flex-shrink: 0; }
+.pd-office-logo-ph { width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #1F2A44 0%, #2d3c5e 100%); }
+.pd-office-name { font-size: 16px; font-weight: 800; color: #1F2A44; }
+.pd-office-gov { font-size: 12px; color: #64748B; margin-top: 2px; }
+.pd-office-link { display: block; text-align: center; font-size: 13px; color: #3F5BD8; font-weight: 700; text-decoration: none; padding: 10px; border-radius: 10px; transition: background .15s; }
+.pd-office-link:hover { background: #F5F7FA; }
+
+.pd-cta { width: 100%; height: 50px; border-radius: 12px; border: none; font-weight: 700; font-size: 15px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .15s; }
+.pd-cta-wa { background: #25D366; color: #fff; }
+.pd-cta-wa:hover { background: #1eb858; }
+.pd-cta-call { background: #fff; color: #1F2A44; border: 1.5px solid #1F2A44; }
+.pd-cta-call:hover { background: #1F2A44; color: #fff; }
+.pd-cta-stack { display: flex; flex-direction: column; gap: 10px; }
+
+.pd-share { display: flex; gap: 10px; }
+.pd-share-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 1px solid #E2E8F0; color: #475569; border-radius: 12px; padding: 11px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
+.pd-share-btn:hover { border-color: #3F5BD8; color: #3F5BD8; }
+.pd-share-icon { flex: 0 0 auto; width: 46px; }
+
+/* Similar */
+.pd-similar { margin-top: 8px; }
+.pd-similar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (min-width: 768px) { .pd-similar-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+/* Mobile sticky contact bar */
+.pd-mobilebar { display: none; }
+@media (max-width: 1023px) {
+  .pd-mobilebar { display: flex; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: #fff; border-top: 1px solid #EEF1F5; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 20px rgba(15,23,42,0.08); }
+}
+.pd-mobilebar .pd-cta { height: 48px; }
+`;
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
@@ -51,27 +148,17 @@ export default function PropertyDetail() {
   });
 
   const [imgIndex, setImgIndex] = useState(0);
-  const [showFloatingBtn, setShowFloatingBtn] = useState(false);
-  const officeCardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = officeCardRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setShowFloatingBtn(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [property]);
 
   if (isLoading) {
     return (
       <MainLayout>
-        <div dir="rtl" className="container mx-auto px-4 py-10 space-y-6">
-          <Skeleton className="h-96 rounded-2xl" />
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-32 rounded-xl" />
+        <style>{styles}</style>
+        <div dir="rtl" className="pd-page">
+          <div className="pd-container space-y-6">
+            <Skeleton className="rounded-2xl" style={{ height: 400 }} />
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-32 rounded-xl" />
+          </div>
         </div>
       </MainLayout>
     );
@@ -80,8 +167,11 @@ export default function PropertyDetail() {
   if (!property) {
     return (
       <MainLayout>
-        <div dir="rtl" className="container mx-auto px-4 py-24 text-center text-muted-foreground">
-          <p className="text-2xl">العقار غير موجود</p>
+        <style>{styles}</style>
+        <div dir="rtl" className="pd-page">
+          <div className="pd-container" style={{ textAlign: "center", padding: "96px 16px", color: "#64748B" }}>
+            <p style={{ fontSize: 24 }}>العقار غير موجود</p>
+          </div>
         </div>
       </MainLayout>
     );
@@ -94,354 +184,235 @@ export default function PropertyDetail() {
     : [];
 
   const propertyUrl = typeof window !== "undefined" ? window.location.href : "";
+  const statusColor = STATUS_COLORS[property.status] ?? "#64748B";
+
+  const handleWhatsApp = () => {
+    trackInteraction(property.officeId!, property.id, "whatsapp", "property_page");
+    window.open(buildWhatsAppUrl(property.office!.whatsapp!, property.titleAr, propertyUrl), "_blank");
+  };
+  const handleCall = () => {
+    trackInteraction(property.officeId!, property.id, "call", "property_page");
+    window.open(`tel:${property.office!.phone}`, "_blank");
+  };
 
   return (
     <MainLayout>
-      <div dir="rtl" className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="text-sm text-muted-foreground mb-4 flex items-center gap-2">
-          <a href="/properties" className="hover:text-primary">العقارات</a>
-          <span>/</span>
-          <span>{property.titleAr}</span>
-        </div>
+      <style>{styles}</style>
+      <div dir="rtl" className="pd-page">
+        <div className="pd-container">
+          {/* Breadcrumb */}
+          <nav className="pd-breadcrumb">
+            <a href={`${BASE}/`}><Home size={14} /> الرئيسية</a>
+            <span className="pd-bc-sep">/</span>
+            <a href="/properties">العقارات</a>
+            <span className="pd-bc-sep">/</span>
+            <span className="pd-bc-current">{property.titleAr}</span>
+          </nav>
 
-        {/* Search navigation */}
-        {hasSearchContext && (
-          <div className="flex items-center justify-between bg-card border rounded-xl px-4 py-2.5 mb-6">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!prevId}
-              onClick={() => prevId && navigate(`/properties/${prevId}`)}
-            >
-              <ChevronRight className="h-4 w-4 ml-1" />
-              السابق
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {currentIndex + 1} / {searchIds.length}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!nextId}
-              onClick={() => nextId && navigate(`/properties/${nextId}`)}
-            >
-              التالي
-              <ChevronLeft className="h-4 w-4 mr-1" />
-            </Button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Gallery */}
-            <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video">
-              {images.length > 0 ? (
-                <>
-                  <img
-                    src={images[imgIndex]}
-                    alt={property.titleAr}
-                    className="w-full h-full object-cover"
-                    data-testid="property-image"
-                  />
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
-                        onClick={() => setImgIndex((i) => (i - 1 + images.length) % images.length)}
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
-                      <button
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
-                        onClick={() => setImgIndex((i) => (i + 1) % images.length)}
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </button>
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-                        {images.map((_, i) => (
-                          <button
-                            key={i}
-                            className={`w-2 h-2 rounded-full ${i === imgIndex ? "bg-white" : "bg-white/50"}`}
-                            onClick={() => setImgIndex(i)}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">لا توجد صور</div>
-              )}
-              {/* Status + Featured badges */}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Badge className={STATUS_COLORS[property.status] ?? "bg-gray-100 text-gray-800"}>
-                  {property.status}
-                </Badge>
-                {property.featured && (
-                  <Badge className="bg-accent text-accent-foreground">مميز</Badge>
-                )}
-              </div>
+          {/* Search navigation */}
+          {hasSearchContext && (
+            <div className="pd-searchnav">
+              <button className="pd-navbtn" disabled={!prevId} onClick={() => prevId && navigate(`/properties/${prevId}`)}>
+                <ChevronRight size={16} />
+                السابق
+              </button>
+              <span className="pd-navcount">{currentIndex + 1} / {searchIds.length}</span>
+              <button className="pd-navbtn" disabled={!nextId} onClick={() => nextId && navigate(`/properties/${nextId}`)}>
+                التالي
+                <ChevronLeft size={16} />
+              </button>
             </div>
+          )}
 
-            {/* Title & Price */}
-            <div className="bg-card border rounded-2xl p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-1">{property.titleAr}</h1>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <MapPin className="h-4 w-4" />
-                    <span>{[property.governorateName, property.areaName].filter(Boolean).join(" - ")}</span>
-                  </div>
-                </div>
-                <div className="text-left shrink-0">
-                  <div className="text-3xl font-black text-primary whitespace-nowrap" data-testid="property-price">
-                    {property.price.toLocaleString("en-US")} د.ك
-                  </div>
-                  {property.status === "للإيجار" && (
-                    <span className="text-sm text-muted-foreground">/ شهرياً</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="text-xs text-muted-foreground mb-4">رقم المرجع: {property.referenceId}</div>
-
-              {/* Property facts */}
-              <div className="grid grid-cols-3 gap-4 py-4 border-y">
-                {property.bedrooms != null && (
-                  <div className="flex items-center gap-2">
-                    <Bed className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{property.bedrooms} غرف نوم</span>
-                  </div>
-                )}
-                {property.bathrooms != null && (
-                  <div className="flex items-center gap-2">
-                    <Bath className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{property.bathrooms} حمامات</span>
-                  </div>
-                )}
-                {property.area != null && (
-                  <div className="flex items-center gap-2">
-                    <Square className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{property.area} م²</span>
-                  </div>
-                )}
-                {property.furnished && (
-                  <div className="flex items-center gap-2 col-span-3">
-                    <Check className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{property.furnished}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Description */}
-            {property.descriptionAr && (
-              <div className="bg-card border rounded-2xl p-6">
-                <h2 className="font-bold text-lg mb-3">وصف العقار</h2>
-                <p className="text-muted-foreground leading-relaxed">{property.descriptionAr}</p>
-              </div>
-            )}
-
-            {/* Amenities */}
-            {property.amenities && property.amenities.length > 0 && (
-              <div className="bg-card border rounded-2xl p-6">
-                <h2 className="font-bold text-lg mb-4">المميزات والخدمات</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {property.amenities.map((amenity, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#3F5BD8]" />
-                      <span className="text-sm">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* المعلن — Advertiser block */}
-            {property.office && (
-              <a href={`${BASE}/${property.office.slug}`} className="block group">
-                <div
-                  className="rounded-2xl p-4 transition-all duration-200 cursor-pointer"
-                  style={{ background: "#f9fafb", border: "1px solid #f0f0f0" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
-                >
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">المعلن</p>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      {property.office.logo ? (
-                        <img
-                          src={property.office.logo}
-                          alt={property.office.nameAr}
-                          className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
-                          style={{ border: "1px solid rgba(0,0,0,0.08)" }}
-                        />
-                      ) : (
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg, hsl(221,54%,22%) 0%, hsl(221,54%,36%) 100%)" }}
-                        >
-                          <Building2 className="h-5 w-5 text-white" />
-                        </div>
-                      )}
-                      <span className="font-bold text-gray-900 truncate group-hover:text-[hsl(221,54%,28%)] transition-colors">
-                        {property.office.nameAr}
-                      </span>
-                    </div>
-                    <ChevronLeft className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  </div>
-                </div>
-              </a>
-            )}
-
-            {/* Similar — shown only when user did not come from search */}
-            {!hasSearchContext && (similar ?? []).length > 0 && (
+          <div className="pd-grid">
+            {/* Main column */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {/* Gallery */}
               <div>
-                <h2 className="font-bold text-xl mb-4">عقارات مشابهة</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {(similar ?? []).map((p) => (
-                    <PropertyCard key={p.id} property={p} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right: Sidebar */}
-          <div className="space-y-5">
-            {/* Office Card */}
-            {property.office && (
-              <div ref={officeCardRef} className="bg-card border rounded-2xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  {property.office.logo ? (
-                    <img src={property.office.logo} alt={property.office.nameAr} className="w-12 h-12 rounded-full object-cover border" />
+                <div className="pd-gallery">
+                  {images.length > 0 ? (
+                    <>
+                      <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image" />
+                      {images.length > 1 && (
+                        <>
+                          <button className="pd-gnav pd-gnav-prev" aria-label="السابق"
+                            onClick={() => setImgIndex((i) => (i - 1 + images.length) % images.length)}>
+                            <ChevronRight size={20} />
+                          </button>
+                          <button className="pd-gnav pd-gnav-next" aria-label="التالي"
+                            onClick={() => setImgIndex((i) => (i + 1) % images.length)}>
+                            <ChevronLeft size={20} />
+                          </button>
+                          <div className="pd-gcount">{imgIndex + 1} / {images.length}</div>
+                        </>
+                      )}
+                    </>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                      {property.office.nameAr.charAt(0)}
+                    <div className="pd-gallery-ph">
+                      <Building2 size={64} color="rgba(255,255,255,0.35)" />
                     </div>
                   )}
-                  <div>
-                    <div className="font-bold text-foreground">{property.office.nameAr}</div>
-                    {property.office.governorateName && (
-                      <div className="text-xs text-muted-foreground mt-0.5">{property.office.governorateName}</div>
-                    )}
+                  <div className="pd-badges">
+                    <span className="pd-badge" style={{ background: statusColor }}>{property.status}</span>
+                    {property.featured && <span className="pd-badge pd-badge-featured">مميز</span>}
                   </div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {property.office.whatsapp && (
-                    <button
-                      onClick={() => {
-                        trackInteraction(property.officeId!, property.id, "whatsapp", "property_page");
-                        window.open(buildWhatsAppUrl(property.office!.whatsapp!, property.titleAr, propertyUrl), "_blank");
-                      }}
-                      data-testid="button-whatsapp"
-                      style={{
-                        width: "100%",
-                        height: "44px",
-                        borderRadius: "10px",
-                        border: "none",
-                        background: "#22c55e",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#16a34a"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#22c55e"; }}
-                    >
-                      <MessageCircle style={{ width: 18, height: 18, flexShrink: 0 }} />
-                      واتساب
-                    </button>
-                  )}
-                  {property.office.phone && (
-                    <button
-                      onClick={() => {
-                        trackInteraction(property.officeId!, property.id, "call", "property_page");
-                        window.open(`tel:${property.office!.phone}`, "_blank");
-                      }}
-                      data-testid="button-call"
-                      style={{
-                        width: "100%",
-                        height: "44px",
-                        borderRadius: "10px",
-                        border: "1px solid #e5e7eb",
-                        background: "#fff",
-                        color: "#374151",
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f9fafb"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
-                    >
-                      <Phone style={{ width: 18, height: 18, flexShrink: 0 }} />
-                      اتصال
-                    </button>
-                  )}
-                  <a href={`/${property.office.slug}`}>
-                    <Button variant="ghost" className="w-full text-sm text-muted-foreground">
-                      عرض صفحة المكتب
-                    </Button>
-                  </a>
-                </div>
+                {images.length > 1 && (
+                  <div className="pd-thumbs">
+                    {images.map((src, i) => (
+                      <button key={i} className={`pd-thumb${i === imgIndex ? " active" : ""}`} onClick={() => setImgIndex(i)} aria-label={`صورة ${i + 1}`}>
+                        <img src={src} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Share */}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => navigator.share?.({ url: window.location.href, title: property.titleAr })}
-                data-testid="button-share"
-              >
-                <Share2 className="h-4 w-4 ml-2" />
-                مشاركة
-              </Button>
-              <Button variant="outline" size="icon" data-testid="button-report">
-                <Flag className="h-4 w-4" />
-              </Button>
+              {/* Header: price, title, location, specs */}
+              <div className="pd-card pd-head">
+                <div className="pd-head-top">
+                  <div style={{ minWidth: 0 }}>
+                    <span className="pd-badge" style={{ background: statusColor, display: "inline-block" }}>{property.status}</span>
+                    {property.type && <span style={{ marginRight: 8, fontSize: 13, fontWeight: 600, color: "#64748B" }}>{property.type}</span>}
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <div className="pd-price" data-testid="property-price">
+                      {property.price.toLocaleString("en-US")}<span className="pd-cur">د.ك</span>
+                    </div>
+                    {property.status === "للإيجار" && <span className="pd-price-sub">/ شهرياً</span>}
+                  </div>
+                </div>
+
+                <h1 className="pd-title">{property.titleAr}</h1>
+                <div className="pd-loc">
+                  <MapPin size={16} color="#3F5BD8" />
+                  <span>{[property.governorateName, property.areaName].filter(Boolean).join("، ")}</span>
+                </div>
+
+                <div className="pd-specs">
+                  {property.bedrooms != null && (
+                    <div className="pd-spec"><Bed size={17} /> {property.bedrooms} غرف</div>
+                  )}
+                  {property.bathrooms != null && (
+                    <div className="pd-spec"><Bath size={17} /> {property.bathrooms} حمامات</div>
+                  )}
+                  {property.area != null && (
+                    <div className="pd-spec"><Square size={17} /> {property.area} م²</div>
+                  )}
+                  {property.type && (
+                    <div className="pd-spec"><Home size={17} /> {property.type}</div>
+                  )}
+                  {property.furnished && (
+                    <div className="pd-spec"><Check size={17} /> {property.furnished}</div>
+                  )}
+                </div>
+
+                {property.referenceId && (
+                  <div className="pd-ref">رقم المرجع: {property.referenceId}</div>
+                )}
+              </div>
+
+              {/* Description */}
+              {property.descriptionAr && (
+                <div className="pd-card pd-sec">
+                  <h2 className="pd-sec-title">الوصف</h2>
+                  <p className="pd-desc">{property.descriptionAr}</p>
+                </div>
+              )}
+
+              {/* Amenities */}
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="pd-card pd-sec">
+                  <h2 className="pd-sec-title">المميزات</h2>
+                  <div className="pd-amen">
+                    {property.amenities.map((amenity, i) => (
+                      <div key={i} className="pd-amen-item">
+                        <span className="pd-amen-check"><Check size={14} /></span>
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Similar — only when not in search context */}
+              {!hasSearchContext && (similar ?? []).length > 0 && (
+                <div className="pd-similar">
+                  <h2 className="pd-sec-title">عقارات مشابهة</h2>
+                  <div className="pd-similar-grid">
+                    {(similar ?? []).map((p) => (
+                      <PropertyCard key={p.id} property={p} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="pd-side">
+              {property.office && (
+                <div className="pd-card pd-office">
+                  <a href={`/${property.office.slug}`} style={{ textDecoration: "none" }}>
+                    <div className="pd-office-head">
+                      {property.office.logo ? (
+                        <img src={property.office.logo} alt={property.office.nameAr} className="pd-office-logo" />
+                      ) : (
+                        <div className="pd-office-logo-ph"><Building2 size={26} color="#fff" /></div>
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <div className="pd-office-name">{property.office.nameAr}</div>
+                        {property.office.governorateName && (
+                          <div className="pd-office-gov">{property.office.governorateName}</div>
+                        )}
+                      </div>
+                    </div>
+                  </a>
+
+                  <div className="pd-cta-stack">
+                    {property.office.phone && (
+                      <button className="pd-cta pd-cta-call" data-testid="button-call" onClick={handleCall}>
+                        <Phone size={18} /> اتصال
+                      </button>
+                    )}
+                    {property.office.whatsapp && (
+                      <button className="pd-cta pd-cta-wa" data-testid="button-whatsapp" onClick={handleWhatsApp}>
+                        <MessageCircle size={18} /> واتساب
+                      </button>
+                    )}
+                    <a href={`/${property.office.slug}`} className="pd-office-link">عرض كل عقارات المكتب</a>
+                  </div>
+                </div>
+              )}
+
+              {/* Share */}
+              <div className="pd-share">
+                <button className="pd-share-btn" data-testid="button-share"
+                  onClick={() => navigator.share?.({ url: window.location.href, title: property.titleAr })}>
+                  <Share2 size={16} /> مشاركة
+                </button>
+                <button className="pd-share-btn pd-share-icon" data-testid="button-report" aria-label="إبلاغ">
+                  <Flag size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Floating contact button — mobile only, appears when office card scrolls out of view */}
-      {property.office?.whatsapp && showFloatingBtn && (
-        <button
-          className="lg:hidden fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl"
-          style={{ background: "#25D366" }}
-          onClick={() => {
-            trackInteraction(property.officeId!, property.id, "whatsapp", "property_page");
-            window.open(buildWhatsAppUrl(property.office!.whatsapp!, property.titleAr, propertyUrl), "_blank");
-          }}
-          aria-label="تواصل عبر واتساب"
-        >
-          <MessageCircle className="h-6 w-6 text-white" />
-        </button>
-      )}
-      {property.office?.phone && !property.office?.whatsapp && showFloatingBtn && (
-        <button
-          className="lg:hidden fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl"
-          style={{ background: "#1F2A44" }}
-          onClick={() => {
-            trackInteraction(property.officeId!, property.id, "call", "property_page");
-            window.open(`tel:${property.office!.phone}`, "_blank");
-          }}
-          aria-label="اتصال"
-        >
-          <Phone className="h-6 w-6 text-white" />
-        </button>
+      {/* Mobile sticky contact bar */}
+      {property.office && (property.office.phone || property.office.whatsapp) && (
+        <div className="pd-mobilebar" dir="rtl">
+          {property.office.phone && (
+            <button className="pd-cta pd-cta-call" style={{ flex: 1 }} onClick={handleCall} aria-label="اتصال">
+              <Phone size={18} /> اتصال
+            </button>
+          )}
+          {property.office.whatsapp && (
+            <button className="pd-cta pd-cta-wa" style={{ flex: 1 }} onClick={handleWhatsApp} aria-label="واتساب">
+              <MessageCircle size={18} /> واتساب
+            </button>
+          )}
+        </div>
       )}
     </MainLayout>
   );

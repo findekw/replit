@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import MainLayout from "@/components/layout/MainLayout";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 import { MessageCircle, Shield } from "lucide-react";
 
 const BLUE     = "#1F2A44";
@@ -19,13 +19,11 @@ const FEATURE_CARDS = [
 ];
 
 export default function Plans() {
-  const { user } = useAuth();
+  const { officeId } = useOfficeAuth();
   const [, navigate] = useLocation();
 
   function handleCTA() {
-    if (!user) {
-      navigate("/register");
-    } else if (user.role === "office") {
+    if (officeId) {
       navigate("/dashboard");
     } else {
       navigate("/register");

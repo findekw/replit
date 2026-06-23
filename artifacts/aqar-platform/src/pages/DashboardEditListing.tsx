@@ -95,6 +95,8 @@ export default function DashboardEditListing() {
     if (!status) clientErrors.push("يرجى اختيار نوع العرض");
     if (!type) clientErrors.push("يرجى اختيار نوع العقار");
     if (!price || Number(price) <= 0) clientErrors.push("يرجى إدخال سعر صحيح");
+    if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
+    if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
 
     if (clientErrors.length > 0) { setErrors(clientErrors); return; }
     setErrors([]);
@@ -337,7 +339,7 @@ export default function DashboardEditListing() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block">المحافظة</Label>
+                <Label className="mb-1 block">المحافظة <span className="text-destructive">*</span></Label>
                 <LocationCombobox
                   items={(govs ?? []).map((g: any) => ({ value: String(g.id), label: g.nameAr.replace("محافظة ", "") }))}
                   value={governorateId}
@@ -348,7 +350,7 @@ export default function DashboardEditListing() {
                 />
               </div>
               <div>
-                <Label className="mb-1 block">المنطقة</Label>
+                <Label className="mb-1 block">المنطقة <span className="text-destructive">*</span></Label>
                 <LocationCombobox
                   items={(areas ?? []).map((a: any) => ({ value: String(a.id), label: a.nameAr }))}
                   value={areaId}

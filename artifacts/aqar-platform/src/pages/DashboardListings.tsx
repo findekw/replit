@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/lib/AuthContext";
+import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -14,15 +14,15 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const STATUS_COLORS: Record<string, string> = {
-  "للإيجار": "bg-blue-100 text-blue-800",
-  "للبيع": "bg-blue-100 text-blue-800",
-  "للبدل": "bg-orange-100 text-orange-800",
+  "للإيجار": "bg-blue-50 text-blue-700 border border-blue-100",
+  "للبيع": "bg-emerald-50 text-emerald-700 border border-emerald-100",
+  "للبدل": "bg-amber-50 text-amber-700 border border-amber-100",
 };
 
 export default function DashboardListings() {
   const [page, setPage] = useState(1);
-  const { user, isLoading: authLoading } = useAuth();
-  const officeId = user?.officeId ?? 0;
+  const { officeId: oid, isLoading: authLoading } = useOfficeAuth();
+  const officeId = oid ?? 0;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -82,28 +82,33 @@ export default function DashboardListings() {
   return (
     <DashboardLayout>
       <div dir="rtl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-foreground">إعلاناتي</h1>
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", margin: 0 }}>إعلاناتي</h1>
+            <p style={{ fontSize: 14, color: "#64748B", margin: "4px 0 0" }}>إدارة كل عقاراتك المعروضة على المنصة</p>
+          </div>
           <Link href="/dashboard/listings/new">
-            <Button className="gap-2" data-testid="button-add-listing">
+            <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#3F5BD8" }} data-testid="button-add-listing">
               <Plus className="h-4 w-4" />
               إضافة إعلان
             </Button>
           </Link>
         </div>
 
-        <div className="bg-card border rounded-2xl overflow-hidden">
+        <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
           {isLoading ? (
             <div className="p-6 space-y-4">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
             </div>
           ) : properties.length === 0 ? (
-            <div className="text-center py-24 text-muted-foreground">
-              <Building className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-medium">لا توجد إعلانات حتى الآن</p>
-              <p className="text-sm mb-6">أضف أول إعلان لمكتبك لبدء جذب العملاء</p>
+            <div className="text-center py-24">
+              <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <Building className="h-9 w-9" style={{ color: "#94A3B8" }} />
+              </div>
+              <p style={{ fontSize: 18, fontWeight: 800, color: "#1F2A44" }}>لا توجد إعلانات حتى الآن</p>
+              <p style={{ fontSize: 14, color: "#64748B", marginBottom: 22 }}>أضف أول إعلان لمكتبك لبدء جذب العملاء</p>
               <Link href="/dashboard/listings/new">
-                <Button className="gap-2">
+                <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#3F5BD8" }}>
                   <Plus className="h-4 w-4" />
                   إضافة إعلان
                 </Button>
@@ -113,32 +118,32 @@ export default function DashboardListings() {
             <>
               <table className="w-full">
                 <thead>
-                  <tr className="bg-secondary text-sm">
-                    <th className="text-right p-4 font-medium text-muted-foreground">العقار</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground hidden md:table-cell">الحالة</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground hidden md:table-cell">السعر</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground hidden lg:table-cell">المشاهدات</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground">إجراءات</th>
+                  <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #EEF1F5" }}>
+                    <th className="text-right p-4" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>العقار</th>
+                    <th className="text-right p-4 hidden md:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>الحالة</th>
+                    <th className="text-right p-4 hidden md:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>السعر</th>
+                    <th className="text-right p-4 hidden lg:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>المشاهدات</th>
+                    <th className="text-right p-4" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>إجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y" style={{ borderColor: "#EEF1F5" }}>
                   {properties.map((p) => (
-                    <tr key={p.id} className="hover:bg-secondary/50 transition-colors" data-testid={`listing-row-${p.id}`}>
+                    <tr key={p.id} className="transition-colors" style={{ }} onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")} onMouseLeave={e => (e.currentTarget.style.background = "")} data-testid={`listing-row-${p.id}`}>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           {p.primaryImage ? (
-                            <img src={p.primaryImage} alt={p.titleAr} className="w-12 h-10 rounded-lg object-cover flex-shrink-0" />
+                            <img src={p.primaryImage} alt={p.titleAr} className="w-14 h-12 rounded-xl object-cover flex-shrink-0" style={{ border: "1px solid #EEF1F5" }} />
                           ) : (
-                            <div className="w-12 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                              <Building className="h-4 w-4 text-muted-foreground" />
+                            <div className="w-14 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#F5F7FA" }}>
+                              <Building className="h-4 w-4" style={{ color: "#94A3B8" }} />
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-sm line-clamp-1">{p.titleAr}</div>
-                            <div className="text-xs text-muted-foreground">{p.referenceId}</div>
+                            <div className="font-bold text-sm line-clamp-1" style={{ color: "#1F2A44" }}>{p.titleAr}</div>
+                            <div className="text-xs" style={{ color: "#94A3B8" }}>{p.referenceId}</div>
                             <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                               {/* Mobile-only: show status and price */}
-                              <span className="text-xs text-muted-foreground md:hidden">{p.status} · {p.price.toLocaleString("en-US")} KWD</span>
+                              <span className="text-xs md:hidden" style={{ color: "#64748B" }}>{p.status} · {p.price.toLocaleString("en-US")} KWD</span>
                               {p.featured && (
                                 <Badge className="text-xs bg-accent/10 text-accent">
                                   <Star className="h-2 w-2 ml-1" />
@@ -159,12 +164,12 @@ export default function DashboardListings() {
                           {p.status}
                         </Badge>
                       </td>
-                      <td className="p-4 hidden md:table-cell text-sm font-medium">
+                      <td className="p-4 hidden md:table-cell text-sm font-bold" style={{ color: "#3F5BD8" }}>
                         {p.price.toLocaleString("en-US")} KWD
                       </td>
                       <td className="p-4 hidden lg:table-cell">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Eye className="h-3 w-3" />
+                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "#64748B", fontWeight: 600 }}>
+                          <Eye className="h-3.5 w-3.5" />
                           {p.views}
                         </div>
                       </td>
@@ -201,10 +206,10 @@ export default function DashboardListings() {
                 </tbody>
               </table>
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 p-4 border-t">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>السابق</Button>
-                  <span className="px-3 py-1 text-sm text-muted-foreground">{page} / {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>التالي</Button>
+                <div className="flex justify-center items-center gap-2 p-4" style={{ borderTop: "1px solid #EEF1F5" }}>
+                  <Button variant="outline" size="sm" className="rounded-xl font-semibold" disabled={page <= 1} onClick={() => setPage(page - 1)}>السابق</Button>
+                  <span className="px-4 py-1.5 text-sm font-bold rounded-xl" style={{ color: "#1F2A44", background: "#F5F7FA" }}>{page} / {totalPages}</span>
+                  <Button variant="outline" size="sm" className="rounded-xl font-semibold" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>التالي</Button>
                 </div>
               )}
             </>

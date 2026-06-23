@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/lib/AuthContext";
+import { useAdminAuth, useOfficeAuth } from "@/lib/AuthContext";
 import { Shield, Menu, X, Instagram, Mail } from "lucide-react";
 
 const XIcon = () => (
@@ -23,7 +23,9 @@ const HEADER_TEXT = "#0f172a";
 
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { admin, isLoading: aL } = useAdminAuth();
+  const { officeId, isLoading: oL } = useOfficeAuth();
+  const isLoading = aL || oL;
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -99,7 +101,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           {/* Auth */}
           {!isLoading && (
             <>
-              {user?.role === "admin" ? (
+              {admin ? (
                 <Link
                   href="/admin"
                   className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-base font-medium transition-colors hover:bg-black/5"
@@ -108,7 +110,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <Shield className="h-4 w-4" style={{ color: HEADER_TEXT, opacity: 0.5 }} />
                   لوحة الإدارة
                 </Link>
-              ) : user?.role === "office" ? (
+              ) : officeId ? (
                 <Link
                   href="/dashboard"
                   className="mt-1 px-4 py-3.5 rounded-xl text-base font-bold text-center text-white transition-colors"
@@ -116,16 +118,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 >
                   لوحة التحكم
                 </Link>
-              ) : user ? (
-                <span className="px-4 py-3 text-sm" style={{ color: HEADER_TEXT, opacity: 0.45 }}>{user.name}</span>
               ) : (
                 <div className="flex flex-col gap-2.5 pt-1">
                   <Link
-                    href="/login"
+                    href="/register"
                     className="register-btn text-base font-semibold text-center transition-all"
-                    style={{ borderRadius: 10, padding: "14px 20px", width: "100%", maxWidth: "100%", display: "block", fontSize: 16 }}
+                    style={{ borderRadius: 10, padding: "14px 20px", width: "100%", display: "block", fontSize: 16 }}
                   >
-                    تسجيل الدخول
+                    أضف مكتبك مجانًا
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="text-base font-semibold text-center"
+                    style={{ borderRadius: 10, padding: "12px 20px", width: "100%", display: "block", border: "1.5px solid #e4e6ea", color: HEADER_TEXT }}
+                  >
+                    دخول المكاتب
                   </Link>
                 </div>
               )}
@@ -199,38 +206,41 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-50" style={{ background: HEADER_BG, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }} dir="rtl">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
+        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between relative">
 
-          <Link href="/" className="md:static absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto" style={{ lineHeight: 0, background: "transparent" }}>
-            <img
-              src="/logo.png"
-              alt="Finde"
-              className="site-logo"
-            />
-          </Link>
+          {/* Right cluster: logo + nav */}
+          <div className="flex items-center gap-9 h-full">
+            <Link href="/" className="md:static absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto" style={{ lineHeight: 0, background: "transparent" }}>
+              <img
+                src="/logo.png"
+                alt="Finde"
+                className="site-logo"
+              />
+            </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex gap-1 items-end h-full">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`text-sm px-4 py-2 transition-all duration-200 relative text-[#0f172a] ${
-                  location === href
-                    ? "font-semibold after:absolute after:bottom-0 after:right-0 after:left-0 after:h-[2.5px] after:rounded-t-full after:bg-[#3F5BD8]"
-                    : "font-medium after:absolute after:bottom-0 after:right-0 after:left-0 after:h-[2.5px] after:rounded-t-full after:bg-[#3F5BD8] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:origin-center"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
+            {/* Desktop nav */}
+            <nav className="hidden md:flex gap-1 items-center h-full">
+              {navLinks.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`text-[15px] px-4 h-full flex items-center transition-all duration-200 relative ${
+                    location === href
+                      ? "font-bold text-[#1F2A44] after:absolute after:bottom-0 after:right-3 after:left-3 after:h-[3px] after:rounded-t-full after:bg-[#3F5BD8]"
+                      : "font-semibold text-[#475569] hover:text-[#1F2A44]"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           {/* Desktop auth */}
-          <div className="hidden md:flex gap-3 items-center">
+          <div className="hidden md:flex gap-2.5 items-center">
             {!isLoading && (
               <>
-                {user?.role === "admin" ? (
+                {admin ? (
                   <Link
                     href="/admin"
                     className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:text-[#0f172a] hover:bg-slate-200 transition-all duration-200"
@@ -238,7 +248,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     <Shield className="h-3.5 w-3.5" />
                     لوحة الإدارة
                   </Link>
-                ) : user?.role === "office" ? (
+                ) : officeId ? (
                   <Link
                     href="/dashboard"
                     className="text-sm font-bold text-white px-4 py-2 rounded-lg transition-all duration-200 hover:opacity-90"
@@ -246,16 +256,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   >
                     لوحة التحكم
                   </Link>
-                ) : user ? (
-                  <span className="text-sm font-medium text-slate-600">{user.name}</span>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="text-sm font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-200 hover:opacity-90"
-                    style={{ background: ACCENT }}
-                  >
-                    تسجيل الدخول
-                  </Link>
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-sm font-semibold px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-slate-100"
+                      style={{ color: HEADER_TEXT, border: "1.5px solid #e4e6ea" }}
+                    >
+                      دخول المكاتب
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="text-sm font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-200 hover:opacity-90"
+                      style={{ background: ACCENT }}
+                    >
+                      أضف مكتبك مجانًا
+                    </Link>
+                  </>
                 )}
               </>
             )}

@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, officesTable, propertiesTable, propertyImagesTable, governoratesTable, areasTable, subscriptionPlansTable, leadsTable, usersTable } from "@workspace/db";
+import { db, officesTable, propertiesTable, propertyImagesTable, governoratesTable, areasTable, subscriptionPlansTable, leadsTable } from "@workspace/db";
 import { eq, and, desc, sql, count, inArray } from "drizzle-orm";
+import { getOfficeId } from "../lib/authHelpers";
 import {
   ListOfficesQueryParams,
   ListOfficesResponse,
@@ -52,9 +53,12 @@ function buildOfficeObject(o: typeof officesTable.$inferSelect, extras: {
     activeListings: extras.activeListings ?? 0,
     planName: extras.planName ?? null,
     slugEdits: o.slugEdits ?? 0,
+    landingTemplate: (o as { landingTemplate?: string }).landingTemplate ?? "classic",
     createdAt: o.createdAt.toISOString(),
   };
 }
+
+const LANDING_TEMPLATES = ["classic", "dark", "minimal"];
 
 router.get("/offices", async (req, res): Promise<void> => {
   const parsed = ListOfficesQueryParams.safeParse(req.query);
@@ -283,11 +287,16 @@ router.get("/offices/:id", async (req, res): Promise<void> => {
     activeListings: Number(listingCount?.active ?? 0),
   });
 
-  res.json(GetOfficeResponse.parse({
-    ...officeBase,
-    totalViews: row.office.totalViews,
-    totalLeads: Number(leadCount?.total ?? 0),
-  }));
+  res.json({
+    ...GetOfficeResponse.parse({
+      ...officeBase,
+      totalViews: row.office.totalViews,
+      totalLeads: Number(leadCount?.total ?? 0),
+    }),
+    // landingTemplate isn't part of the generated zod response schema yet, so
+    // re-attach it after parse (the parse strips unknown keys).
+    landingTemplate: officeBase.landingTemplate,
+  });
 });
 
 router.get("/offices/:id/properties", async (req, res): Promise<void> => {
@@ -308,11 +317,9 @@ router.get("/offices/:id/properties", async (req, res): Promise<void> => {
   const limit = Number(qParams.data.limit ?? 12);
   const offset = (page - 1) * limit;
 
-  // If the session user owns this office, show all listings (including inactive/pending)
-  const sessionUser = (req as any).session?.userId
-    ? await db.select({ officeId: usersTable.officeId }).from(usersTable).where(eq(usersTable.id, (req as any).session.userId)).limit(1).then(r => r[0])
-    : null;
-  const isOwner = sessionUser?.officeId === officeId;
+  // If the logged-in office owns this office, show all listings (including inactive/pending)
+  const viewerOfficeId = await getOfficeId(req);
+  const isOwner = viewerOfficeId !== null && viewerOfficeId === officeId;
 
   const whereClause = isOwner
     ? eq(propertiesTable.officeId, officeId)
@@ -460,15 +467,12 @@ router.get("/offices/:id/stats", async (req, res): Promise<void> => {
 
 // PUT /api/offices/:id/logo — update office logo (authenticated office owner)
 router.put("/offices/:id/logo", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
-
   const officeId = parseInt(String(req.params.id), 10);
   if (!officeId) { res.status(400).json({ error: "معرّف المكتب غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId || user.officeId !== officeId) {
-    res.status(403).json({ error: "غير مصرح" }); return;
-  }
+  const myOfficeId = await getOfficeId(req);
+  if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
+  if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
   // Logo is uploaded via the local-disk endpoint (/api/uploads/images),
   // which returns a relative URL like "/api/uploads/<filename>". Store it as-is.
@@ -484,18 +488,15 @@ router.put("/offices/:id/logo", async (req: Request, res: Response): Promise<voi
 
 // PUT /api/offices/:id/profile — update name, slug, phone, whatsapp (authenticated owner)
 router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<void> => {
-  if (!req.session?.userId) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
-
   const officeId = parseInt(String(req.params.id), 10);
   if (!officeId) { res.status(400).json({ error: "معرّف المكتب غير صالح" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
-  if (!user?.officeId || user.officeId !== officeId) {
-    res.status(403).json({ error: "غير مصرح" }); return;
-  }
+  const myOfficeId = await getOfficeId(req);
+  if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
+  if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
-  const { nameAr, slug, phone, whatsapp, officeDescription } = req.body as {
-    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string;
+  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate } = req.body as {
+    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string;
   };
 
   // Fetch current office to check slugEdits
@@ -528,6 +529,9 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
     const trimmed = officeDescription.trim().slice(0, 250);
     updates.descriptionAr = trimmed || null;
     updates.description = trimmed || null;
+  }
+  if (landingTemplate !== undefined && LANDING_TEMPLATES.includes(landingTemplate)) {
+    updates.landingTemplate = landingTemplate;
   }
 
   // Slug update — validate format and enforce 2-edit limit
