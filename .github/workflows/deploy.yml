@@ -1,10 +1,15 @@
 name: Deploy to VPS
 
-# Auto-deploy on every push to main. The server pulls the latest code,
-# rebuilds the containers, and runs DB migrations.
+# Optional CI-based deploy. DISABLED by default (manual trigger only) because it
+# needs SSH secrets. Primary auto-deploy runs ON the server via the
+# finde-deploy.timer systemd unit (polls git every minute — no secrets needed).
+#
+# To enable push-triggered deploys: add repo secrets SSH_HOST, SSH_USER, SSH_KEY
+# (private key matching the server's authorized_keys), then uncomment the `push:`
+# trigger below.
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 concurrency:

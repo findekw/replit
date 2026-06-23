@@ -1,0 +1,8 @@
+[Unit]
+Description=finde auto-deploy (git poll + rebuild)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/finde/scripts/auto-deploy.sh

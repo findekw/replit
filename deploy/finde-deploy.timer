@@ -1,0 +1,10 @@
+[Unit]
+Description=Run finde auto-deploy every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=finde-deploy.service
+
+[Install]
+WantedBy=timers.target
