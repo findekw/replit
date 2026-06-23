@@ -17,12 +17,17 @@ const COOKIE_NAMES: Record<Role, string> = {
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function cookieOptions() {
-  const isProduction = process.env.NODE_ENV === "production";
+  // Only mark cookies Secure when the site is actually served over HTTPS.
+  // Set COOKIE_SECURE=true once a TLS domain is configured. Until then (e.g.
+  // plain-HTTP IP deployment) a Secure cookie would never be sent back by the
+  // browser, silently breaking every login — so default to NOT secure +
+  // SameSite=Lax (same-origin SPA + API, so Lax is sufficient).
+  const secure = process.env.COOKIE_SECURE === "true";
   return {
     httpOnly: true,
     signed: true as const,
-    secure: isProduction,
-    sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+    secure,
+    sameSite: (secure ? "none" : "lax") as "none" | "lax",
     maxAge: MAX_AGE_MS,
     path: "/",
   };
