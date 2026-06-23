@@ -7,7 +7,7 @@ WORKDIR /app
 # Install all workspace deps (dev deps kept so drizzle-kit is available for db push,
 # and externalized runtime deps like @google-cloud/* / pg are present at runtime).
 COPY . .
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Build the API bundle -> artifacts/api-server/dist/index.mjs
 RUN pnpm --filter @workspace/api-server build
