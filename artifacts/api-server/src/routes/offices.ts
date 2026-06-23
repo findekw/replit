@@ -486,6 +486,25 @@ router.put("/offices/:id/logo", async (req: Request, res: Response): Promise<voi
   res.json({ logo: url });
 });
 
+// PUT /api/offices/:id/cover — update office cover image (authenticated owner)
+router.put("/offices/:id/cover", async (req: Request, res: Response): Promise<void> => {
+  const officeId = parseInt(String(req.params.id), 10);
+  if (!officeId) { res.status(400).json({ error: "معرّف المكتب غير صالح" }); return; }
+
+  const myOfficeId = await getOfficeId(req);
+  if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
+  if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  const { url } = req.body as { url?: string };
+  if (!url || typeof url !== "string" || !url.startsWith("/api/uploads/")) {
+    res.status(400).json({ error: "url مطلوب" }); return;
+  }
+
+  await db.update(officesTable).set({ coverImage: url }).where(eq(officesTable.id, officeId));
+
+  res.json({ coverImage: url });
+});
+
 // PUT /api/offices/:id/profile — update name, slug, phone, whatsapp (authenticated owner)
 router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<void> => {
   const officeId = parseInt(String(req.params.id), 10);

@@ -158,6 +158,9 @@ export default function Dashboard() {
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoUploading, setLogoUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [officeCover, setOfficeCover] = useState<string | null>(null);
 
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
@@ -181,7 +184,7 @@ export default function Dashboard() {
     if (!officeId) return;
     fetch(`${BASE}/api/offices/${officeId}`, { credentials: "include" })
       .then(r => r.json())
-      .then((data: { slug?: string; logo?: string; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null }) => {
+      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null }) => {
         const name = data.nameAr ?? "";
         const slug = data.slug ?? "";
         const rawPhone = data.phone ?? "";
@@ -193,6 +196,7 @@ export default function Dashboard() {
         setOfficeNameAr(name);
         setOfficeSlug(slug || null);
         setOfficeLogo(data.logo ?? null);
+        setOfficeCover(data.coverImage ?? null);
         setSlugEdits(edits);
         setDraftNameAr(name);
         setDraftSlug(slug);
@@ -247,6 +251,32 @@ export default function Dashboard() {
       toast({ title: "تم تحديث شعار المكتب بنجاح" });
     } finally {
       setLogoUploading(false);
+    }
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !officeId) return;
+    setCoverUploading(true);
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const uploadRes = await fetch(`${BASE}/api/uploads/images`, {
+        method: "POST", credentials: "include", body: form,
+      });
+      if (!uploadRes.ok) { toast({ title: "فشل رفع الغلاف", variant: "destructive" }); return; }
+      const { url } = await uploadRes.json();
+      const res = await fetch(`${BASE}/api/offices/${officeId}/cover`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        credentials: "include", body: JSON.stringify({ url }),
+      });
+      if (!res.ok) { toast({ title: "فشل حفظ الغلاف", variant: "destructive" }); return; }
+      const data = await res.json();
+      setOfficeCover(data.coverImage);
+      toast({ title: "تم تحديث صورة الغلاف بنجاح" });
+    } finally {
+      setCoverUploading(false);
     }
   }
 
@@ -514,6 +544,25 @@ export default function Dashboard() {
 
           {/* ── Body ── */}
           <div style={{ padding: "24px 22px", display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* Cover banner */}
+            <div
+              onClick={() => coverInputRef.current?.click()}
+              title="تغيير صورة الغلاف"
+              style={{
+                position: "relative", height: 132, borderRadius: 14, cursor: "pointer", overflow: "hidden",
+                background: officeCover ? "#0b1220" : `linear-gradient(135deg, ${NAVY}, #3F5BD8)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: "1px solid #EEF1F5",
+              }}
+            >
+              {officeCover && <img src={officeCover} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+              <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, color: "#fff", background: "rgba(0,0,0,0.35)", padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 700 }}>
+                {coverUploading ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Camera style={{ width: 15, height: 15 }} />}
+                {officeCover ? "تغيير صورة الغلاف" : "أضف صورة غلاف لصفحتك"}
+              </div>
+              <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverUpload} />
+            </div>
 
             {/* Logo + Name row */}
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
