@@ -606,10 +606,10 @@ export default function Dashboard() {
               <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverUpload} />
             </div>
 
-            {/* Logo + Name row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: -52, position: "relative", zIndex: 1, paddingInlineStart: 8 }}>
+            {/* Logo + Name row — only the LOGO overlaps the dark cover; the name sits on white for contrast */}
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginTop: 14, position: "relative", zIndex: 1, paddingInlineStart: 8 }}>
               {/* Logo circle */}
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ flexShrink: 0, marginTop: -64 }}>
                 <div
                   style={{
                     width: 76, height: 76, borderRadius: "50%", overflow: "hidden",
