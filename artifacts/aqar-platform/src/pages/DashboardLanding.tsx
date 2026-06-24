@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
-type TemplateKey = "classic" | "dark" | "minimal";
+type TemplateKey = "modern" | "luxury" | "minimal" | "classic";
 
 interface TemplateMeta {
   key: TemplateKey;
@@ -25,40 +25,51 @@ interface TemplateMeta {
 
 const TEMPLATES: TemplateMeta[] = [
   {
-    key: "classic",
-    name: "كلاسيك",
-    description: "تدرّج أزرق احترافي — الشكل الافتراضي للمنصة.",
-    heroBg: "linear-gradient(135deg,#1F2A44 0%,#3F5BD8 100%)",
+    key: "modern",
+    name: "مودرن",
+    description: "تصميم عصري جريء بواجهة متدرّجة وبطاقة تواصل بارزة — الأكثر شيوعًا.",
+    heroBg: "linear-gradient(135deg,#16203a 0%,#243056 45%,#3F5BD8 120%)",
     accent: "#3F5BD8",
     accentContrast: "#ffffff",
     logoDot: "#ffffff",
     lineColor: "rgba(255,255,255,0.55)",
   },
   {
-    key: "dark",
-    name: "داكن فاخر",
-    description: "خلفية داكنة مع لمسة ذهبية — إحساس فخم وأنيق.",
-    heroBg: "linear-gradient(135deg,#0B1220 0%,#1A2238 100%)",
+    key: "luxury",
+    name: "فخم",
+    description: "خلفية داكنة ولمسات ذهبية بأسلوب تحريري راقٍ — للمكاتب المميّزة.",
+    heroBg: "linear-gradient(160deg,#0B0F1A 0%,#16203a 100%)",
     accent: "#C9A227",
     accentContrast: "#1F2A44",
     logoDot: "#C9A227",
-    lineColor: "rgba(255,255,255,0.45)",
+    lineColor: "rgba(255,255,255,0.4)",
   },
   {
     key: "minimal",
     name: "مينيمال",
-    description: "خلفية بيضاء نظيفة بلمسة خضراء — بسيط وأنيق.",
+    description: "أبيض نظيف وتصميم تيبوغرافي بسيط بلمسة خضراء — أنيق وهادئ.",
     heroBg: "#FFFFFF",
     accent: "#0E9F6E",
     accentContrast: "#ffffff",
-    logoDot: "#0E9F6E",
+    logoDot: "#0F172A",
     lineColor: "#CBD5E1",
+  },
+  {
+    key: "classic",
+    name: "كلاسيك",
+    description: "تصميم مؤسسي بعمودين ولوحة تواصل جانبية — موثوق ومنظّم.",
+    heroBg: "linear-gradient(180deg,#1F2A44 0%,#1F2A44 70%,#3F5BD8 70%,#3F5BD8 100%)",
+    accent: "#3F5BD8",
+    accentContrast: "#ffffff",
+    logoDot: "#ffffff",
+    lineColor: "rgba(255,255,255,0.55)",
   },
 ];
 
 function resolveTemplate(t: unknown): TemplateKey {
-  if (t === "dark" || t === "minimal") return t;
-  return "classic";
+  if (t === "dark") return "luxury";
+  if (t === "luxury" || t === "minimal" || t === "classic") return t;
+  return "modern";
 }
 
 /* Mini visual preview of a theme's hero */
@@ -123,7 +134,7 @@ export default function DashboardLanding() {
     query: { enabled: officeId > 0 },
   } as any);
 
-  const [selected, setSelected] = useState<TemplateKey>("classic");
+  const [selected, setSelected] = useState<TemplateKey>("modern");
   const [saving, setSaving] = useState(false);
 
   const currentTemplate = resolveTemplate((office as any)?.landingTemplate);

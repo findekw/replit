@@ -58,7 +58,7 @@ function buildOfficeObject(o: typeof officesTable.$inferSelect, extras: {
   };
 }
 
-const LANDING_TEMPLATES = ["classic", "dark", "minimal"];
+const LANDING_TEMPLATES = ["modern", "luxury", "minimal", "classic"];
 
 router.get("/offices", async (req, res): Promise<void> => {
   const parsed = ListOfficesQueryParams.safeParse(req.query);

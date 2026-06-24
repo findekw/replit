@@ -373,14 +373,14 @@ export default function Dashboard() {
   const isLoading = authLoading || statsLoading;
 
   const statCards = stats ? [
-    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#3F5BD8", bg: "#EEF2FE" },
-    { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", bg: "#ECFDF5" },
-    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#D97706", bg: "#FFFBEB" },
-    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#3F5BD8", bg: "#EEF2FE" },
-    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#7C3AED", bg: "#F5F3FF" },
-    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#D97706", bg: "#FFFBEB" },
-    { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
-    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#3F5BD8", bg: "#EEF2FE" },
+    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
+    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#D97706", g2: "#F59E0B", bg: "#FFFBEB" },
+    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#7C3AED", g2: "#9061F9", bg: "#F5F3FF" },
+    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#D97706", g2: "#F59E0B", bg: "#FFFBEB" },
+    { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
+    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
   ] : [];
 
   if (!authLoading && !oid) {
@@ -472,51 +472,71 @@ export default function Dashboard() {
         <div
           className="mb-6"
           style={{
-            background: "linear-gradient(120deg,#1F2A44 0%,#2A3958 55%,#3F5BD8 130%)",
-            borderRadius: 20, padding: "24px 26px", color: "#fff",
-            boxShadow: "0 10px 30px rgba(31,42,68,0.18)",
+            background: "linear-gradient(120deg,#1A2238 0%,#26345A 52%,#3F5BD8 135%)",
+            borderRadius: 22, padding: "28px 30px", color: "#fff",
+            boxShadow: "0 16px 40px rgba(31,42,68,0.26)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 16, flexWrap: "wrap", position: "relative", overflow: "hidden",
           }}
         >
+          {/* decorative grid sheen */}
+          <div style={{
+            position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none",
+            background: "radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,0.10), transparent 55%)",
+          }} />
           <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#A9B8DC", margin: 0 }}>لوحة تحكم المكتب</p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: "4px 0 0", lineHeight: 1.25 }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 12, fontWeight: 700, color: "#BFD0F2",
+              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.16)",
+              padding: "4px 12px", borderRadius: 999, margin: 0,
+            }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ADE80", boxShadow: "0 0 0 3px rgba(74,222,128,0.25)" }} />
+              لوحة تحكم المكتب
+            </span>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: "12px 0 0", lineHeight: 1.22, letterSpacing: "-0.01em" }}>
               أهلاً، {officeNameAr || user?.name || "بك"} 👋
             </h1>
-            <p style={{ fontSize: 14, color: "#C3CEE2", margin: "6px 0 0" }}>
+            <p style={{ fontSize: 14.5, color: "#C3CEE2", margin: "8px 0 0" }}>
               تابع أداء إعلاناتك وعملائك من مكان واحد
             </p>
           </div>
-          <Link href="/dashboard/listings/new">
+          <Link href="/dashboard/listings/new" style={{ position: "relative", zIndex: 1 }}>
             <Button
-              className="gap-2 h-11 px-6 rounded-xl font-bold"
-              style={{ background: "#fff", color: "#1F2A44", position: "relative", zIndex: 1 }}
+              className="gap-2 h-12 px-7 rounded-2xl font-bold"
+              style={{ background: "#fff", color: "#1F2A44", boxShadow: "0 10px 24px rgba(0,0,0,0.22)" }}
               data-testid="button-add-listing-dashboard"
             >
-              <Plus className="h-4 w-4" />إضافة إعلان جديد
+              <Plus className="h-[18px] w-[18px]" />إضافة إعلان جديد
             </Button>
           </Link>
           <div style={{
-            position: "absolute", insetInlineStart: -40, top: -60, width: 220, height: 220,
-            borderRadius: "50%", background: "rgba(63,91,216,0.25)", filter: "blur(10px)",
+            position: "absolute", insetInlineStart: -50, top: -70, width: 240, height: 240,
+            borderRadius: "50%", background: "rgba(63,91,216,0.32)", filter: "blur(18px)", pointerEvents: "none",
+          }} />
+          <div style={{
+            position: "absolute", insetInlineEnd: 120, bottom: -90, width: 200, height: 200,
+            borderRadius: "50%", background: "rgba(124,58,237,0.22)", filter: "blur(28px)", pointerEvents: "none",
           }} />
         </div>
 
         {/* ─── Office Profile Card ─── */}
         <div style={{
-          background: "#fff", border: "1px solid #e5e7eb",
+          background: "#fff", border: "1px solid #EAEEF5",
           borderRadius: 20, marginBottom: 24,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+          boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
           overflow: "hidden",
         }}>
 
           {/* ── Top bar ── */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "12px 22px", borderBottom: "1px solid #f0f0f0", background: "#fafafa",
+            padding: "14px 22px", borderBottom: "1px solid #F0F2F7", background: "#FAFBFE",
           }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", letterSpacing: "0.03em" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 700, color: "#1F2A44", letterSpacing: "0.02em" }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#EEF2FE" }}>
+                <Building style={{ width: 14, height: 14, color: "#3F5BD8" }} />
+              </span>
               ملف المكتب العقاري
             </span>
             {!editMode ? (
@@ -545,69 +565,95 @@ export default function Dashboard() {
           {/* ── Body ── */}
           <div style={{ padding: "24px 22px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* Cover banner */}
+            {/* Cover banner — real cover-photo editor */}
             <div
               onClick={() => coverInputRef.current?.click()}
               title="تغيير صورة الغلاف"
+              className="dsh-cover"
               style={{
-                position: "relative", height: 132, borderRadius: 14, cursor: "pointer", overflow: "hidden",
-                background: officeCover ? "#0b1220" : `linear-gradient(135deg, ${NAVY}, #3F5BD8)`,
+                position: "relative", height: 150, borderRadius: 16, cursor: "pointer", overflow: "hidden",
+                background: officeCover ? "#0b1220" : `linear-gradient(135deg, ${NAVY} 0%, #2E3E66 50%, #3F5BD8 100%)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                border: "1px solid #EEF1F5",
+                border: "1px solid #EAEEF5", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04)",
               }}
             >
+              <style>{`
+                .dsh-cover .dsh-cover-pill { transition:transform .18s, background .18s; }
+                .dsh-cover:hover .dsh-cover-pill { transform:translateY(-1px); background:rgba(0,0,0,0.5); }
+                .dsh-cover:hover .dsh-cover-overlay { opacity:1; }
+              `}</style>
               {officeCover && <img src={officeCover} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-              <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, color: "#fff", background: "rgba(0,0,0,0.35)", padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 700 }}>
+              {/* gradient overlay for legibility */}
+              <div className="dsh-cover-overlay" style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.42) 100%)",
+                opacity: officeCover ? 0.85 : 0.55, transition: "opacity .18s", pointerEvents: "none",
+              }} />
+              {/* center affordance */}
+              <div className="dsh-cover-pill" style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, color: "#fff", background: "rgba(0,0,0,0.4)", padding: "9px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, border: "1px solid rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}>
                 {coverUploading ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Camera style={{ width: 15, height: 15 }} />}
                 {officeCover ? "تغيير صورة الغلاف" : "أضف صورة غلاف لصفحتك"}
+              </div>
+              {/* corner camera badge */}
+              <div style={{
+                position: "absolute", insetInlineEnd: 12, top: 12, zIndex: 1,
+                width: 34, height: 34, borderRadius: 10,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(255,255,255,0.92)", boxShadow: "0 4px 12px rgba(0,0,0,0.22)",
+              }}>
+                <Camera style={{ width: 16, height: 16, color: NAVY }} />
               </div>
               <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverUpload} />
             </div>
 
             {/* Logo + Name row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: -52, position: "relative", zIndex: 1, paddingInlineStart: 8 }}>
               {/* Logo circle */}
               <div style={{ flexShrink: 0 }}>
                 <div
                   style={{
-                    width: 56, height: 56, borderRadius: "50%", overflow: "hidden",
+                    width: 76, height: 76, borderRadius: "50%", overflow: "hidden",
                     background: `linear-gradient(135deg, ${NAVY}, hsl(221,54%,38%))`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", position: "relative",
-                    boxShadow: "0 2px 8px rgba(11,37,69,0.2)",
+                    boxShadow: "0 8px 22px rgba(11,37,69,0.32)", border: "4px solid #fff",
                   }}
                   onClick={() => logoInputRef.current?.click()}
                   title="تغيير الشعار"
                 >
                   {logoUploading ? (
-                    <Loader2 style={{ width: 20, height: 20, color: "#fff" }} className="animate-spin" />
+                    <Loader2 style={{ width: 26, height: 26, color: "#fff" }} className="animate-spin" />
                   ) : officeLogo ? (
                     <img src={officeLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
-                    <Building style={{ width: 24, height: 24, color: "#fff" }} />
+                    <Building style={{ width: 30, height: 30, color: "#fff" }} />
                   )}
                   <div style={{
                     position: "absolute", inset: 0, borderRadius: "50%",
-                    background: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity .15s",
+                    background: "rgba(0,0,0,0.4)", opacity: 0, transition: "opacity .15s",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
                     onMouseLeave={e => (e.currentTarget.style.opacity = "0")}
                   >
-                    <Camera style={{ width: 14, height: 14, color: "#fff" }} />
+                    <Camera style={{ width: 18, height: 18, color: "#fff" }} />
                   </div>
                 </div>
                 <input ref={logoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} />
               </div>
 
               {/* Office name — always static */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 19, fontWeight: 800, color: "#111827", lineHeight: 1.3, wordBreak: "break-word" }}>
+              <div style={{ flex: 1, minWidth: 0, alignSelf: "flex-end", paddingBottom: 6 }}>
+                <div style={{ fontSize: 21, fontWeight: 800, color: "#111827", lineHeight: 1.25, wordBreak: "break-word" }}>
                   {snapshot.nameAr || (
                     <span style={{ color: "#9ca3af", fontStyle: "italic", fontWeight: 400, fontSize: 15 }}>
                       لم يُحدَّد اسم المكتب
                     </span>
                   )}
+                </div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 5, fontSize: 11.5, fontWeight: 700, color: "#059669", background: "#ECFDF5", border: "1px solid #A7F3D0", padding: "3px 10px", borderRadius: 999 }}>
+                  <CheckCircle2 style={{ width: 12, height: 12 }} />
+                  مكتب موثّق
                 </div>
               </div>
             </div>
@@ -660,40 +706,50 @@ export default function Dashboard() {
               {/* View mode: link + copy + visit */}
               {!editMode && (
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 8 }}>
-                    رابط صفحتك على Finde
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#1F2A44", marginBottom: 9 }}>
+                    <ExternalLink style={{ width: 14, height: 14, color: "#3F5BD8" }} />
+                    صفحتك العامة على Finde
                   </div>
                   {snapshot.slug ? (
                     <div style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      background: "#f8faff", border: "1px solid #dbeafe",
-                      borderRadius: 12, padding: "12px 16px", flexWrap: "wrap",
+                      display: "flex", alignItems: "center", gap: 12,
+                      background: "linear-gradient(120deg,#F4F7FF,#EEF2FE)",
+                      border: "1px solid #DBE4FF",
+                      borderRadius: 14, padding: "14px 16px", flexWrap: "wrap",
+                      boxShadow: "0 4px 14px rgba(63,91,216,0.08)",
                     }}>
-                      <a
-                        href={`${BASE}/${snapshot.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          flex: 1, minWidth: 0,
-                          direction: "ltr", display: "block",
-                          fontSize: 15, fontFamily: "monospace", fontWeight: 700,
-                          color: NAVY, textDecoration: "none",
-                          letterSpacing: "0.01em", wordBreak: "break-all",
-                        }}
-                      >
-                        {BRAND_DOMAIN}/{snapshot.slug}
-                      </a>
+                      <span style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #DBE4FF", boxShadow: "0 2px 6px rgba(63,91,216,0.12)" }}>
+                        <ExternalLink style={{ width: 18, height: 18, color: "#3F5BD8" }} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 2 }}>الرابط المباشر</div>
+                        <a
+                          href={`${BASE}/${snapshot.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            minWidth: 0,
+                            direction: "ltr", display: "block",
+                            fontSize: 15, fontFamily: "monospace", fontWeight: 700,
+                            color: NAVY, textDecoration: "none",
+                            letterSpacing: "0.01em", wordBreak: "break-all",
+                          }}
+                        >
+                          {BRAND_DOMAIN}/{snapshot.slug}
+                        </a>
+                      </div>
                       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                         <button
                           onClick={copyPageLink}
                           style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            padding: "6px 13px", borderRadius: 8,
-                            border: "1.5px solid #bfdbfe", background: "#fff",
-                            color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            padding: "9px 16px", borderRadius: 10,
+                            border: "none", background: copied ? "#059669" : "#3F5BD8",
+                            color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                            boxShadow: "0 6px 16px rgba(63,91,216,0.28)", transition: "background .18s",
                           }}
                         >
-                          {copied ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
+                          {copied ? <Check style={{ width: 14, height: 14 }} /> : <Copy style={{ width: 14, height: 14 }} />}
                           {copied ? "تم النسخ" : "نسخ"}
                         </button>
                         <a
@@ -701,21 +757,21 @@ export default function Dashboard() {
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            padding: "6px 13px", borderRadius: 8,
-                            border: "1.5px solid #e5e7eb", background: "#fff",
-                            color: "#374151", fontSize: 12, fontWeight: 600, textDecoration: "none",
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            padding: "9px 16px", borderRadius: 10,
+                            border: "1.5px solid #C7D2FE", background: "#fff",
+                            color: "#3F5BD8", fontSize: 13, fontWeight: 700, textDecoration: "none",
                           }}
                         >
-                          <ExternalLink style={{ width: 12, height: 12 }} />
+                          <ExternalLink style={{ width: 14, height: 14 }} />
                           زيارة
                         </a>
                       </div>
                     </div>
                   ) : (
                     <div style={{
-                      background: "#f9fafb", border: "1px dashed #e5e7eb",
-                      borderRadius: 12, padding: "14px 16px",
+                      background: "#F9FAFB", border: "1px dashed #D1D9E6",
+                      borderRadius: 14, padding: "16px",
                       fontSize: 13, color: "#9ca3af", fontStyle: "italic",
                     }}>
                       لم يُحدَّد رابط الصفحة بعد
@@ -971,9 +1027,11 @@ export default function Dashboard() {
         )}
 
         {/* ─── Stats Grid ─── */}
-        <div className="flex items-center gap-2 mb-3 mt-1">
-          <TrendingUp className="h-4 w-4" style={{ color: "#3F5BD8" }} />
-          <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>نظرة سريعة على الأداء</h2>
+        <div className="flex items-center gap-2.5 mb-4 mt-1">
+          <span style={{ width: 34, height: 34, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#3F5BD8,#5B73E0)", boxShadow: "0 6px 16px rgba(63,91,216,0.32)" }}>
+            <TrendingUp className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
+          </span>
+          <h2 className="font-bold" style={{ fontSize: 17, color: "#1F2A44", letterSpacing: "-0.01em" }}>نظرة سريعة على الأداء</h2>
         </div>
         {isLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -990,28 +1048,42 @@ export default function Dashboard() {
                 <p style={{ fontSize: 15, color: "#64748B" }}>لا توجد إحصائيات بعد. ابدأ بإضافة إعلانك الأول!</p>
               </div>
             ) : (
-              statCards.map(({ label, value, icon: Icon, fg, bg }) => (
+              statCards.map(({ label, value, icon: Icon, fg, g2, bg }) => (
                 <div
                   key={label}
                   data-testid={`stat-${label}`}
+                  className="dsh-stat"
                   style={{
-                    background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16,
-                    padding: 18, boxShadow: "0 4px 16px rgba(15,23,42,0.05)",
-                    display: "flex", flexDirection: "column", gap: 12,
+                    background: `linear-gradient(160deg, #fff 60%, ${bg})`,
+                    border: "1px solid #EAEEF5", borderRadius: 18,
+                    padding: 20, boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
+                    display: "flex", flexDirection: "column", gap: 14,
+                    position: "relative", overflow: "hidden",
+                    transition: "transform .18s, box-shadow .18s",
                   }}
                 >
+                  <style>{`
+                    .dsh-stat:hover { transform:translateY(-3px); box-shadow:0 14px 32px rgba(15,23,42,0.10); }
+                  `}</style>
                   <div style={{
-                    width: 42, height: 42, borderRadius: 12, background: bg,
+                    width: 46, height: 46, borderRadius: 14,
+                    background: `linear-gradient(135deg, ${fg}, ${g2})`,
                     display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: `0 8px 18px ${fg}40`,
                   }}>
-                    <Icon className="h-5 w-5" style={{ color: fg }} />
+                    <Icon className="h-[22px] w-[22px]" style={{ color: "#fff" }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 26, fontWeight: 800, color: "#1F2A44", lineHeight: 1 }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: "#1F2A44", lineHeight: 1, letterSpacing: "-0.01em" }}>
                       {value.toLocaleString("en-US")}
                     </div>
-                    <div style={{ fontSize: 13, color: "#64748B", marginTop: 5, fontWeight: 600 }}>{label}</div>
+                    <div style={{ fontSize: 13, color: "#64748B", marginTop: 6, fontWeight: 600 }}>{label}</div>
                   </div>
+                  {/* corner accent */}
+                  <div style={{
+                    position: "absolute", insetInlineStart: -24, bottom: -24, width: 88, height: 88,
+                    borderRadius: "50%", background: bg, opacity: 0.55, pointerEvents: "none",
+                  }} />
                 </div>
               ))
             )}
@@ -1022,13 +1094,13 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Recent Leads */}
-          <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 22, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
+          <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <span style={{ width: 32, height: 32, borderRadius: 10, background: "#F5F3FF", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <Users className="h-4 w-4" style={{ color: "#7C3AED" }} />
+              <div className="flex items-center gap-2.5">
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#7C3AED,#9061F9)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(124,58,237,0.3)" }}>
+                  <Users className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
                 </span>
-                <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>أحدث العملاء</h2>
+                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#1F2A44" }}>أحدث العملاء</h2>
               </div>
               <Link href="/dashboard/leads" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
             </div>
@@ -1045,13 +1117,18 @@ export default function Dashboard() {
                 {(stats?.recentLeads ?? []).map(lead => (
                   <div
                     key={lead.id}
-                    className="flex items-center justify-between p-3 rounded-xl"
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl"
                     style={{ background: "#F8FAFC", border: "1px solid #EEF1F5" }}
                     data-testid={`lead-${lead.id}`}
                   >
-                    <div style={{ minWidth: 0 }}>
-                      <div className="font-bold text-sm" style={{ color: "#1F2A44" }}>{lead.customerName}</div>
-                      <div className="text-xs" style={{ color: "#64748B", direction: "ltr", textAlign: "right" }}>{lead.phone}</div>
+                    <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#F5F3FF", color: "#7C3AED", fontWeight: 800, fontSize: 15 }}>
+                        {(lead.customerName?.trim()?.[0] ?? "؟").toUpperCase()}
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="font-bold text-sm" style={{ color: "#1F2A44" }}>{lead.customerName}</div>
+                        <div className="text-xs" style={{ color: "#64748B", direction: "ltr", textAlign: "right" }}>{lead.phone}</div>
+                      </div>
                     </div>
                     <Badge className={LEAD_STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-700"}>{lead.status}</Badge>
                   </div>
@@ -1061,13 +1138,13 @@ export default function Dashboard() {
           </div>
 
           {/* Top Properties */}
-          <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 22, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
+          <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <span style={{ width: 32, height: 32, borderRadius: 10, background: "#EEF2FE", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <TrendingUp className="h-4 w-4" style={{ color: "#3F5BD8" }} />
+              <div className="flex items-center gap-2.5">
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#3F5BD8,#5B73E0)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(63,91,216,0.3)" }}>
+                  <TrendingUp className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
                 </span>
-                <h2 className="font-bold" style={{ fontSize: 16, color: "#1F2A44" }}>الإعلانات الأكثر مشاهدة</h2>
+                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#1F2A44" }}>الإعلانات الأكثر مشاهدة</h2>
               </div>
               <Link href="/dashboard/listings" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
             </div>

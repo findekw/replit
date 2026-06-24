@@ -139,95 +139,127 @@ export default function Home() {
   return (
     <MainLayout>
       <style>{`
-        body { background: #F5F7FA !important; }
+        body { background: #F6F8FC !important; }
         .fh-wrap { direction: rtl; font-family: 'Cairo', sans-serif; }
+        .fh-wrap *::selection { background: rgba(63,91,216,0.16); }
 
         /* ===== HERO ===== */
         .fh-hero {
           position: relative;
-          background: linear-gradient(135deg, #1F2A44 0%, #2C3E66 55%, #3F5BD8 100%);
-          padding: 54px 16px 120px;
+          background:
+            radial-gradient(circle at 18% 12%, rgba(99,130,246,0.28) 0, transparent 42%),
+            radial-gradient(circle at 88% 8%, rgba(63,91,216,0.32) 0, transparent 40%),
+            radial-gradient(circle at 50% 120%, rgba(99,130,246,0.20) 0, transparent 55%),
+            linear-gradient(150deg, #16203A 0%, #1F2A44 45%, #2E3E72 78%, #3F5BD8 100%);
+          padding: 60px 16px 132px;
           text-align: center;
           overflow: hidden;
         }
         .fh-hero::before {
           content: ""; position: absolute; inset: 0;
-          background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08) 0, transparent 40%),
-                            radial-gradient(circle at 85% 0%, rgba(255,255,255,0.06) 0, transparent 35%);
+          background-image:
+            radial-gradient(circle at 20% 22%, rgba(255,255,255,0.10) 0, transparent 38%),
+            radial-gradient(circle at 82% 4%, rgba(255,255,255,0.07) 0, transparent 34%);
           pointer-events: none;
         }
-        .fh-hero-inner { position: relative; max-width: 720px; margin: 0 auto; z-index: 1; }
-        .fh-eyebrow {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(255,255,255,0.12); color: #fff;
-          padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
-          margin-bottom: 16px; backdrop-filter: blur(4px);
+        .fh-hero::after {
+          content: ""; position: absolute; left:0; right:0; bottom:0; height:140px;
+          background: linear-gradient(180deg, transparent, rgba(246,248,252,0));
+          pointer-events: none;
         }
-        .fh-headline { font-size: 30px; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.4; letter-spacing: -0.4px; }
-        .fh-subtitle { font-size: 15px; color: rgba(255,255,255,0.82); margin: 0 0 28px; line-height: 1.7; }
+        .fh-hero-inner { position: relative; max-width: 740px; margin: 0 auto; z-index: 1; }
+        .fh-eyebrow {
+          display: inline-flex; align-items: center; gap: 7px;
+          background: rgba(255,255,255,0.10); color: #EAF0FF;
+          padding: 7px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+          margin-bottom: 18px; backdrop-filter: blur(6px);
+          border: 1px solid rgba(255,255,255,0.16);
+          box-shadow: 0 4px 16px rgba(15,23,42,0.18);
+        }
+        .fh-headline { font-size: 31px; font-weight: 800; color: #fff; margin: 0 0 12px; line-height: 1.35; letter-spacing: -0.6px; }
+        .fh-headline .hl { background: linear-gradient(90deg, #C7D2FE, #fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .fh-subtitle { font-size: 15px; color: rgba(231,237,250,0.82); margin: 0 0 30px; line-height: 1.75; max-width: 560px; margin-inline: auto; }
 
         /* ===== SEARCH CARD ===== */
-        .fh-card { background:#fff; border-radius:18px; padding:18px; box-shadow:0 18px 50px rgba(15,23,42,0.20); text-align:right; max-width: 560px; margin: 0 auto; }
-        .fh-tabs { display:flex; gap:8px; margin-bottom:14px; }
-        .fh-tab { flex:1; padding:10px 6px; border-radius:11px; border:1.5px solid #E2E8F0; background:#F8FAFC; font-size:14px; font-weight:700; color:#475569; cursor:pointer; transition:all .15s; font-family:inherit; }
-        .fh-tab:hover { border-color:#3F5BD8; color:#3F5BD8; }
-        .fh-tab.active { background:#3F5BD8; color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(63,91,216,0.28); }
+        .fh-card { position:relative; background:#fff; border-radius:22px; padding:20px; box-shadow:0 24px 60px rgba(15,23,42,0.28), 0 4px 14px rgba(15,23,42,0.10); text-align:right; max-width: 580px; margin: 0 auto; border:1px solid rgba(255,255,255,0.6); }
+        .fh-tabs { display:flex; gap:8px; margin-bottom:16px; background:#F1F5F9; padding:5px; border-radius:14px; }
+        .fh-tab { flex:1; padding:11px 6px; border-radius:10px; border:none; background:transparent; font-size:14px; font-weight:700; color:#64748B; cursor:pointer; transition:all .18s ease; font-family:inherit; }
+        .fh-tab:hover { color:#3F5BD8; }
+        .fh-tab.active { background:#fff; color:#1F2A44; box-shadow:0 4px 12px rgba(15,23,42,0.10); }
         .fh-fields { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-        .fh-field { width:100%; height:50px; border:1.5px solid #E2E8F0; border-radius:11px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:15px; font-weight:600; color:#1F2A44; cursor:pointer; font-family:inherit; }
-        .fh-field.filled { border-color:#3F5BD8; background:#EEF4FF; }
-        .fh-field:disabled { opacity:.45; cursor:not-allowed; }
+        .fh-field { width:100%; height:52px; border:1.5px solid #E6EAF1; border-radius:13px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 15px; font-size:15px; font-weight:600; color:#1F2A44; cursor:pointer; font-family:inherit; transition:border-color .18s, background .18s, box-shadow .18s; }
+        .fh-field:hover:not(:disabled) { border-color:#C7D2FE; }
+        .fh-field.filled { border-color:#3F5BD8; background:#EEF4FF; box-shadow:0 2px 8px rgba(63,91,216,0.12); }
+        .fh-field:disabled { opacity:.5; cursor:not-allowed; }
         .fh-field .ph { color:#94A3B8; font-weight:500; }
-        .fh-search-btn { width:100%; height:52px; border:none; border-radius:12px; background:#3F5BD8; color:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px rgba(63,91,216,0.32); display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity .15s; }
-        .fh-search-btn:hover { opacity:.9; }
+        .fh-search-btn { width:100%; height:54px; border:none; border-radius:14px; background:linear-gradient(135deg,#3F5BD8,#3349C0); color:#fff; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 10px 24px rgba(63,91,216,0.36); display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .18s, box-shadow .18s; letter-spacing:-0.2px; }
+        .fh-search-btn:hover { transform:translateY(-2px); box-shadow:0 14px 30px rgba(63,91,216,0.44); }
+        .fh-search-btn:active { transform:translateY(0); }
         @media (min-width:769px){ .fh-fields{ flex-direction:row; } }
 
+        /* trust row */
+        .fh-trust { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px 18px; margin-top:22px; }
+        .fh-trust span { display:inline-flex; align-items:center; gap:6px; color:rgba(231,237,250,0.78); font-size:13px; font-weight:600; }
+        .fh-trust .dot { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.35); }
+
         /* ===== STATS STRIP ===== */
-        .fh-stats { position:relative; z-index:2; margin:-72px auto 0; max-width:760px; padding:0 16px; }
-        .fh-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-        .fh-stat { background:#fff; border:1px solid #EEF1F5; border-radius:16px; padding:18px 12px; text-align:center; box-shadow:0 6px 20px rgba(15,23,42,0.06); }
-        .fh-stat-num { font-size:24px; font-weight:800; color:#1F2A44; line-height:1; }
-        .fh-stat-lbl { font-size:13px; color:#64748B; margin-top:6px; font-weight:600; }
+        .fh-stats { position:relative; z-index:2; margin:-74px auto 0; max-width:780px; padding:0 16px; }
+        .fh-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .fh-stat { display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:20px 12px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.06); transition:transform .2s, box-shadow .2s; }
+        .fh-stat:hover { transform:translateY(-3px); box-shadow:0 16px 38px rgba(15,23,42,0.10); }
+        .fh-stat-ic { width:38px; height:38px; border-radius:11px; background:#EEF2FF; color:#3F5BD8; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+        .fh-stat-num { font-size:25px; font-weight:800; color:#1F2A44; line-height:1; letter-spacing:-0.5px; }
+        .fh-stat-lbl { font-size:13px; color:#64748B; margin-top:4px; font-weight:600; }
 
         /* ===== SECTIONS ===== */
-        .fh-section { max-width:1180px; margin:0 auto; padding:40px 16px 0; }
-        .fh-sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-        .fh-sec-title { font-size:22px; font-weight:800; color:#1F2A44; margin:0; letter-spacing:-0.3px; }
-        .fh-sec-link { font-size:14px; font-weight:700; color:#3F5BD8; display:inline-flex; align-items:center; gap:4px; }
-        .fh-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+        .fh-section { max-width:1180px; margin:0 auto; padding:48px 16px 0; }
+        .fh-sec-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; }
+        .fh-sec-titlewrap { display:flex; flex-direction:column; gap:8px; }
+        .fh-sec-accent { width:42px; height:4px; border-radius:999px; background:linear-gradient(90deg,#3F5BD8,#7C8FF0); }
+        .fh-sec-title { font-size:23px; font-weight:800; color:#1F2A44; margin:0; letter-spacing:-0.5px; }
+        .fh-sec-link { font-size:14px; font-weight:700; color:#3F5BD8; display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; background:#EEF2FF; transition:background .18s, gap .18s; white-space:nowrap; }
+        .fh-sec-link:hover { background:#E0E7FF; gap:9px; }
+        .fh-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
         @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3,1fr); } }
         @media (min-width:1024px){ .fh-grid{ grid-template-columns:repeat(4,1fr); } }
 
         /* gov chips */
-        .fh-gov-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        .fh-gov-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
         @media (min-width:700px){ .fh-gov-grid{ grid-template-columns:repeat(3,1fr); } }
         @media (min-width:1024px){ .fh-gov-grid{ grid-template-columns:repeat(6,1fr); } }
-        .fh-gov { background:#fff; border:1px solid #EEF1F5; border-radius:14px; padding:18px 10px; text-align:center; cursor:pointer; transition:all .18s; display:flex; flex-direction:column; align-items:center; gap:8px; }
-        .fh-gov:hover { border-color:#C7D2FE; box-shadow:0 8px 22px rgba(15,23,42,0.08); transform:translateY(-2px); }
-        .fh-gov-ic { width:46px; height:46px; border-radius:12px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; color:#3F5BD8; }
-        .fh-gov-name { font-size:14px; font-weight:700; color:#1F2A44; }
+        .fh-gov { background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:22px 10px; text-align:center; cursor:pointer; transition:transform .2s, box-shadow .2s, border-color .2s; display:flex; flex-direction:column; align-items:center; gap:10px; }
+        .fh-gov:hover { border-color:#C7D2FE; box-shadow:0 14px 32px rgba(15,23,42,0.10); transform:translateY(-3px); }
+        .fh-gov-ic { width:50px; height:50px; border-radius:14px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); display:flex; align-items:center; justify-content:center; color:#3F5BD8; transition:transform .2s; }
+        .fh-gov:hover .fh-gov-ic { transform:scale(1.08); }
+        .fh-gov-name { font-size:14.5px; font-weight:700; color:#1F2A44; }
 
         /* features */
-        .fh-feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+        .fh-feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
         @media (min-width:900px){ .fh-feat-grid{ grid-template-columns:repeat(4,1fr); } }
-        .fh-feat { background:#fff; border:1px solid #EEF1F5; border-radius:16px; padding:22px 18px; text-align:center; }
-        .fh-feat-ic { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-        .fh-feat h3 { font-size:16px; font-weight:800; color:#1F2A44; margin:0 0 6px; }
-        .fh-feat p { font-size:14px; color:#64748B; margin:0; line-height:1.6; }
+        .fh-feat { background:#fff; border:1px solid #EDF1F7; border-radius:20px; padding:26px 20px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.05); transition:transform .2s, box-shadow .2s; }
+        .fh-feat:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(15,23,42,0.10); }
+        .fh-feat-ic { width:58px; height:58px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; box-shadow:0 6px 16px rgba(15,23,42,0.06); }
+        .fh-feat h3 { font-size:16px; font-weight:800; color:#1F2A44; margin:0 0 7px; letter-spacing:-0.2px; }
+        .fh-feat p { font-size:13.5px; color:#64748B; margin:0; line-height:1.65; }
 
         /* CTA */
-        .fh-cta { max-width:1100px; margin:48px auto 0; padding:0 16px; }
-        .fh-cta-box { position:relative; overflow:hidden; background:linear-gradient(120deg,#1F2A44,#3F5BD8); border-radius:24px; padding:44px 28px; text-align:center; }
-        .fh-cta-box::after { content:""; position:absolute; left:-40px; bottom:-40px; width:180px; height:180px; background:rgba(255,255,255,0.07); border-radius:50%; }
-        .fh-cta h2 { color:#fff; font-size:26px; font-weight:800; margin:0 0 10px; }
-        .fh-cta p { color:rgba(255,255,255,0.85); font-size:15px; margin:0 0 22px; line-height:1.7; }
-        .fh-cta-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#1F2A44; font-weight:800; font-size:15px; padding:14px 28px; border-radius:999px; text-decoration:none; transition:transform .2s; }
-        .fh-cta-btn:hover { transform:translateY(-2px); }
+        .fh-cta { max-width:1180px; margin:56px auto 0; padding:0 16px; }
+        .fh-cta-box { position:relative; overflow:hidden; background:linear-gradient(125deg,#16203A 0%,#1F2A44 42%,#3F5BD8 100%); border-radius:26px; padding:52px 28px; text-align:center; box-shadow:0 24px 60px rgba(31,42,68,0.32); }
+        .fh-cta-box::before { content:""; position:absolute; right:-60px; top:-60px; width:240px; height:240px; background:radial-gradient(circle, rgba(99,130,246,0.45), transparent 70%); border-radius:50%; }
+        .fh-cta-box::after { content:""; position:absolute; left:-50px; bottom:-50px; width:200px; height:200px; background:rgba(255,255,255,0.06); border-radius:50%; }
+        .fh-cta-inner { position:relative; z-index:1; max-width:620px; margin:0 auto; }
+        .fh-cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); color:#EAF0FF; padding:6px 14px; border-radius:999px; font-size:12.5px; font-weight:700; margin-bottom:16px; }
+        .fh-cta h2 { color:#fff; font-size:27px; font-weight:800; margin:0 0 12px; letter-spacing:-0.5px; line-height:1.4; }
+        .fh-cta p { color:rgba(231,237,250,0.86); font-size:15px; margin:0 0 26px; line-height:1.75; }
+        .fh-cta-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#1F2A44; font-weight:800; font-size:15px; padding:15px 30px; border-radius:999px; text-decoration:none; box-shadow:0 12px 28px rgba(0,0,0,0.22); transition:transform .2s, box-shadow .2s; }
+        .fh-cta-btn:hover { transform:translateY(-2px); box-shadow:0 16px 34px rgba(0,0,0,0.28); }
 
         @media (min-width:769px){
-          .fh-hero{ padding:72px 24px 130px; }
-          .fh-headline{ font-size:42px; }
+          .fh-hero{ padding:80px 24px 140px; }
+          .fh-headline{ font-size:46px; }
           .fh-subtitle{ font-size:17px; }
-          .fh-stat-num{ font-size:30px; }
+          .fh-stat-num{ font-size:31px; }
+          .fh-cta h2{ font-size:31px; }
         }
 
         /* sheet */
@@ -244,7 +276,7 @@ export default function Home() {
         <section className="fh-hero">
           <div className="fh-hero-inner">
             <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
-            <h1 className="fh-headline">لاقِ عقارك من مكاتب موثوقة</h1>
+            <h1 className="fh-headline">لاقِ عقارك من <span className="hl">مكاتب موثوقة</span></h1>
             <p className="fh-subtitle">آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد</p>
 
             <div className="fh-card">
@@ -269,15 +301,23 @@ export default function Home() {
               </div>
               <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
             </div>
+
+            <div className="fh-trust">
+              <span><ShieldCheck size={15} /> مكاتب موثّقة</span>
+              <i className="dot" />
+              <span><TrendingUp size={15} /> عقارات محدّثة يوميًا</span>
+              <i className="dot" />
+              <span><MessageCircle size={15} /> تواصل مباشر بدون وسيط</span>
+            </div>
           </div>
         </section>
 
         {/* ===== STATS ===== */}
         <div className="fh-stats">
           <div className="fh-stats-grid">
-            <div className="fh-stat"><div className="fh-stat-num">{(stats?.totalProperties ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">عقار معروض</div></div>
-            <div className="fh-stat"><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب موثوق</div></div>
-            <div className="fh-stat"><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><Building2 size={19} /></div><div className="fh-stat-num">{(stats?.totalProperties ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">عقار معروض</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><ShieldCheck size={19} /></div><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب موثوق</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><MapPin size={19} /></div><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
           </div>
         </div>
 
@@ -285,7 +325,7 @@ export default function Home() {
         {latestList.length > 0 && (
           <section className="fh-section">
             <div className="fh-sec-head">
-              <h2 className="fh-sec-title">أحدث العقارات</h2>
+              <div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">أحدث العقارات</h2></div>
               <Link href="/properties" className="fh-sec-link">عرض الكل <ArrowLeft size={15} /></Link>
             </div>
             <div className="fh-grid">
@@ -296,7 +336,7 @@ export default function Home() {
 
         {/* ===== BROWSE BY GOVERNORATE ===== */}
         <section className="fh-section">
-          <div className="fh-sec-head"><h2 className="fh-sec-title">تصفّح حسب المحافظة</h2></div>
+          <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">تصفّح حسب المحافظة</h2></div></div>
           <div className="fh-gov-grid">
             {Object.entries(GOV_ID).map(([name, id]) => (
               <Link key={id} href={`/properties?governorateId=${id}`} className="fh-gov">
@@ -309,7 +349,7 @@ export default function Home() {
 
         {/* ===== WHY FINDE ===== */}
         <section className="fh-section">
-          <div className="fh-sec-head"><h2 className="fh-sec-title">ليه فايند؟</h2></div>
+          <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">ليه فايند؟</h2></div></div>
           <div className="fh-feat-grid">
             {FEATURES.map(f => (
               <div key={f.label} className="fh-feat">
@@ -325,7 +365,7 @@ export default function Home() {
         {officeList.length > 0 && (
           <section className="fh-section">
             <div className="fh-sec-head">
-              <h2 className="fh-sec-title">مكاتب موثوقة</h2>
+              <div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">مكاتب موثوقة</h2></div>
               <Link href="/offices" className="fh-sec-link">كل المكاتب <ArrowLeft size={15} /></Link>
             </div>
             <div className="fh-grid">
@@ -337,9 +377,12 @@ export default function Home() {
         {/* ===== OFFICE CTA ===== */}
         <section className="fh-cta">
           <div className="fh-cta-box">
-            <h2>عندك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
-            <p>سجّل مكتبك مجانًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ تستقبل العملاء مباشرة.</p>
-            <Link href="/register" className="fh-cta-btn">أضف مكتبك مجانًا <ArrowLeft size={16} /></Link>
+            <div className="fh-cta-inner">
+              <span className="fh-cta-pill"><Star size={13} /> مجاني بالكامل</span>
+              <h2>عندك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
+              <p>سجّل مكتبك مجانًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ تستقبل العملاء مباشرة.</p>
+              <Link href="/register" className="fh-cta-btn">أضف مكتبك مجانًا <ArrowLeft size={16} /></Link>
+            </div>
           </div>
         </section>
 
