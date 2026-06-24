@@ -1,100 +1,99 @@
 import { Property } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Bed, Bath, Square, MapPin, Building2 } from "lucide-react";
+import { useState } from "react";
+import { Bed, Bath, Maximize2, MapPin, Building2, Heart } from "lucide-react";
 
 interface PropertyCardProps {
   property: Property;
 }
 
 const STATUS_BG: Record<string, string> = {
-  "للإيجار": "#4f6fad",
-  "للبيع":   "#3F5BD8",
-  "للبدل":   "#f97316",
+  "للإيجار": "#3F5BD8",
+  "للبيع":   "#1F2A44",
+  "للبدل":   "#EA580C",
 };
+
+const SAVED_KEY = "finde_saved";
+
+function readSaved(): number[] {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"); } catch { return []; }
+}
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const location = [property.governorateName, property.areaName].filter(Boolean).join("، ");
+  const isNew = !!property.createdAt && Date.now() - new Date(property.createdAt).getTime() < 24 * 60 * 60 * 1000;
+  const officeName = (property as { officeName?: string | null }).officeName ?? null;
+  const officeLogo = (property as { officeLogo?: string | null }).officeLogo ?? null;
 
-  const isNew =
-    !!property.createdAt &&
-    Date.now() - new Date(property.createdAt).getTime() < 24 * 60 * 60 * 1000;
+  const [saved, setSaved] = useState<boolean>(() => readSaved().includes(property.id));
+
+  function toggleSave(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const list = readSaved();
+    const next = list.includes(property.id) ? list.filter((i) => i !== property.id) : [...list, property.id];
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(next)); } catch {}
+    setSaved(next.includes(property.id));
+  }
 
   return (
     <Link href={`/properties/${property.id}`} className="block">
-      <div
-        className="property-card"
-        style={property.featured ? { border: "1.5px solid #bfdbfe" } : undefined}
-      >
-        {/* Image */}
-        <div className="property-image">
+      <article className="property-card">
+        {/* Media */}
+        <div className="property-media">
           {property.primaryImage ? (
-            <img src={property.primaryImage} alt={property.titleAr} loading="lazy" />
+            <img className="property-img" src={property.primaryImage} alt={property.titleAr} loading="lazy" />
           ) : (
-            <div
-              className="w-full h-full flex flex-col items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg, #1F2A44 0%, #3F5BD8 100%)" }}
-            >
-              <Building2 className="h-10 w-10 text-white/40" />
-              <span className="text-xs text-white/50">{property.type}</span>
+            <div className="property-img-fallback">
+              <Building2 className="h-9 w-9" style={{ color: "rgba(255,255,255,0.45)" }} />
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{property.type}</span>
             </div>
           )}
 
-          {/* Badges — top left */}
-          <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 6, zIndex: 2 }}>
-            <span className="property-badge" style={{ background: STATUS_BG[property.status] ?? "#6b7280" }}>
-              {property.status}
-            </span>
-            {property.featured && (
-              <span className="property-badge" style={{ background: "#3F5BD8" }}>مميز</span>
-            )}
-            {isNew && !property.featured && (
-              <span className="property-badge" style={{ background: "#10b981" }}>جديد</span>
-            )}
+          <div className="property-badges">
+            <span className="property-badge" style={{ background: STATUS_BG[property.status] ?? "#475569" }}>{property.status}</span>
+            {property.featured && <span className="property-badge property-badge-feat">مميّز</span>}
+            {isNew && !property.featured && <span className="property-badge" style={{ background: "#059669" }}>جديد</span>}
           </div>
 
-          {/* Price pill — bottom right */}
-          <div className="property-price">
-            {property.price.toLocaleString("en-US")} <span style={{ fontSize: 11, fontWeight: 500 }}>KWD</span>
-          </div>
+          <button type="button" className={`property-save${saved ? " on" : ""}`} onClick={toggleSave} aria-label="حفظ" title={saved ? "إزالة من المحفوظات" : "حفظ"}>
+            <Heart className="h-[18px] w-[18px]" style={{ fill: saved ? "#EF4444" : "transparent" }} />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="property-content">
-          <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4, fontWeight: 500 }}>{property.type}</div>
+        {/* Body */}
+        <div className="property-body">
+          <div className="property-price">
+            {property.price.toLocaleString("en-US")}<span className="property-cur">د.ك{property.status === "للإيجار" ? " / شهري" : ""}</span>
+          </div>
+
           <h3 className="property-title">{property.titleAr}</h3>
 
           {location && (
-            <div className="property-location">
+            <div className="property-loc">
               <MapPin style={{ width: 14, height: 14, flexShrink: 0 }} />
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{location}</span>
+              <span className="property-loc-txt">{location}</span>
             </div>
           )}
 
           {(property.bedrooms || property.bathrooms || property.area) && (
-            <div className="flex items-center gap-3 mt-3 pt-3 border-t text-sm text-muted-foreground">
-              {property.bedrooms && (
-                <div className="flex items-center gap-1">
-                  <Bed className="w-3.5 h-3.5" />
-                  <span className="font-medium text-foreground">{property.bedrooms}</span>
-                </div>
-              )}
-              {property.bathrooms && (
-                <div className="flex items-center gap-1">
-                  <Bath className="w-3.5 h-3.5" />
-                  <span className="font-medium text-foreground">{property.bathrooms}</span>
-                </div>
-              )}
-              {property.area && (
-                <div className="flex items-center gap-1">
-                  <Square className="w-3.5 h-3.5" />
-                  <span className="font-medium text-foreground">{property.area}</span>
-                  <span className="text-xs">م²</span>
-                </div>
-              )}
+            <div className="property-specs">
+              {property.bedrooms ? <span className="property-spec"><Bed className="w-4 h-4" />{property.bedrooms}</span> : null}
+              {property.bathrooms ? <span className="property-spec"><Bath className="w-4 h-4" />{property.bathrooms}</span> : null}
+              {property.area ? <span className="property-spec"><Maximize2 className="w-4 h-4" />{property.area} م²</span> : null}
+            </div>
+          )}
+
+          {officeName && (
+            <div className="property-agency">
+              <span className="property-agency-logo">
+                {officeLogo ? <img src={officeLogo} alt="" /> : <Building2 className="w-3.5 h-3.5" style={{ color: "#64748B" }} />}
+              </span>
+              <span className="property-agency-name">{officeName}</span>
             </div>
           )}
         </div>
-      </div>
+      </article>
     </Link>
   );
 }
