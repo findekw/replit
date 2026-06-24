@@ -1,14 +1,20 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { OfficeCard } from "@/components/OfficeCard";
+import { getApiBase } from "@/lib/apiBase";
 import {
   useGetLatestProperties,
   useGetFeaturedOffices,
   useGetPlatformStats,
 } from "@workspace/api-client-react";
+
+const HOME_BASE = getApiBase();
+const DEFAULT_HERO_IMG = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=70";
+
+interface HeroSlide { id: number; imageUrl: string; title: string | null; subtitle: string | null; ctaText: string | null; ctaUrl: string | null; }
 
 const TYPES_BY_STATUS: Record<string, string[]> = {
   "للإيجار": ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
@@ -63,6 +69,38 @@ export default function Home() {
 
   const latestList = (latest as any[]) ?? [];
   const officeList = (offices as any[]) ?? [];
+
+  // ── Admin-managed hero banners ──
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [slideIdx, setSlideIdx] = useState(0);
+
+  useEffect(() => {
+    fetch(`${HOME_BASE}/api/hero-slides`)
+      .then(r => r.json())
+      .then(d => setSlides(Array.isArray(d?.slides) ? d.slides : []))
+      .catch(() => setSlides([]));
+  }, []);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const t = setInterval(() => setSlideIdx(i => (i + 1) % slides.length), 5500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+
+  const current = slides[slideIdx] ?? null;
+  const heroTitle = current?.title || "لاقِ عقارك من مكاتب موثوقة";
+  const heroSubtitle = current?.subtitle || "آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد";
+
+  // ── Scroll-reveal: fade sections in as they enter the viewport ──
+  useEffect(() => {
+    const els = document.querySelectorAll(".fh-reveal");
+    if (!("IntersectionObserver" in window)) { els.forEach(e => e.classList.add("in")); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(e => io.observe(e));
+    return () => io.disconnect();
+  }, [latestList.length, officeList.length]);
 
   function handleStatusChange(s: string) { setStatus(s); setType(""); }
 
@@ -155,6 +193,41 @@ export default function Home() {
           text-align: center;
           overflow: hidden;
         }
+        /* live image background (admin banners / default) */
+        .fh-hero-bg { position:absolute; inset:0; z-index:0; }
+        .fh-hero-slide {
+          position:absolute; inset:0; background-size:cover; background-position:center;
+          opacity:0; transition:opacity 1.1s ease; will-change:opacity, transform;
+        }
+        .fh-hero-slide.active { opacity:1; animation:fh-kenburns 14s ease-out forwards; }
+        @keyframes fh-kenburns { from { transform:scale(1.04); } to { transform:scale(1.15); } }
+        .fh-hero-overlay {
+          position:absolute; inset:0; z-index:1; pointer-events:none;
+          background:
+            linear-gradient(180deg, rgba(16,22,40,0.34) 0%, rgba(16,22,40,0.30) 36%, rgba(19,26,48,0.82) 100%),
+            radial-gradient(circle at 82% 4%, rgba(63,91,216,0.22) 0, transparent 48%);
+        }
+        .fh-hero-inner { z-index:3 !important; }
+        /* CTA from admin banner */
+        .fh-hero-cta {
+          display:inline-flex; align-items:center; gap:8px; margin:0 0 26px;
+          background:#fff; color:#1F2A44; font-weight:800; font-size:15px;
+          padding:13px 26px; border-radius:999px; text-decoration:none;
+          box-shadow:0 12px 30px rgba(0,0,0,0.28); transition:transform .18s, box-shadow .18s;
+        }
+        .fh-hero-cta:hover { transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,0.34); }
+        /* carousel dots */
+        .fh-dots { display:flex; gap:8px; justify-content:center; margin-top:26px; }
+        .fh-dot { width:9px; height:9px; border-radius:999px; border:none; cursor:pointer; background:rgba(255,255,255,0.4); transition:all .2s; padding:0; }
+        .fh-dot.on { background:#fff; width:26px; }
+        /* hero entrance */
+        .fh-anim-1 { animation:fh-rise .7s cubic-bezier(.22,1,.36,1) both; }
+        .fh-anim-2 { animation:fh-rise .7s cubic-bezier(.22,1,.36,1) .12s both; }
+        .fh-anim-3 { animation:fh-rise .7s cubic-bezier(.22,1,.36,1) .24s both; }
+        @keyframes fh-rise { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        /* scroll reveal */
+        .fh-reveal { opacity:0; transform:translateY(26px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1); }
+        .fh-reveal.in { opacity:1; transform:translateY(0); }
         .fh-hero::before {
           content: ""; position: absolute; inset: 0;
           background-image:
@@ -176,9 +249,9 @@ export default function Home() {
           border: 1px solid rgba(255,255,255,0.16);
           box-shadow: 0 4px 16px rgba(15,23,42,0.18);
         }
-        .fh-headline { font-size: 31px; font-weight: 800; color: #fff; margin: 0 0 12px; line-height: 1.35; letter-spacing: -0.6px; }
+        .fh-headline { font-size: 31px; font-weight: 800; color: #fff; margin: 0 0 12px; line-height: 1.35; letter-spacing: -0.6px; text-shadow: 0 2px 20px rgba(0,0,0,0.5); }
         .fh-headline .hl { background: linear-gradient(90deg, #C7D2FE, #fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .fh-subtitle { font-size: 15px; color: rgba(231,237,250,0.82); margin: 0 0 30px; line-height: 1.75; max-width: 560px; margin-inline: auto; }
+        .fh-subtitle { font-size: 15px; color: rgba(243,247,255,0.94); margin: 0 0 30px; line-height: 1.75; max-width: 560px; margin-inline: auto; text-shadow: 0 1px 12px rgba(0,0,0,0.45); }
 
         /* ===== SEARCH CARD ===== */
         .fh-card { position:relative; background:#fff; border-radius:22px; padding:20px; box-shadow:0 24px 60px rgba(15,23,42,0.28), 0 4px 14px rgba(15,23,42,0.10); text-align:right; max-width: 580px; margin: 0 auto; border:1px solid rgba(255,255,255,0.6); }
@@ -274,12 +347,33 @@ export default function Home() {
       <div className="fh-wrap">
         {/* ===== HERO + SEARCH ===== */}
         <section className="fh-hero">
+          <div className="fh-hero-bg">
+            {(slides.length ? slides : [{ id: 0, imageUrl: DEFAULT_HERO_IMG } as HeroSlide]).map((s, i) => (
+              <div
+                key={s.id}
+                className={`fh-hero-slide${i === slideIdx ? " active" : ""}`}
+                style={{ backgroundImage: `url(${s.imageUrl})` }}
+              />
+            ))}
+          </div>
+          <div className="fh-hero-overlay" />
+
           <div className="fh-hero-inner">
             <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
-            <h1 className="fh-headline">لاقِ عقارك من <span className="hl">مكاتب موثوقة</span></h1>
-            <p className="fh-subtitle">آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد</p>
+            <h1 className="fh-headline fh-anim-1">
+              {current?.title ? current.title : <>لاقِ عقارك من <span className="hl">مكاتب موثوقة</span></>}
+            </h1>
+            <p className="fh-subtitle fh-anim-2">{heroSubtitle}</p>
 
-            <div className="fh-card">
+            {current?.ctaText && current?.ctaUrl && (
+              current.ctaUrl.startsWith("/") ? (
+                <Link href={current.ctaUrl} className="fh-hero-cta fh-anim-2">{current.ctaText} <ArrowLeft size={17} /></Link>
+              ) : (
+                <a href={current.ctaUrl} target="_blank" rel="noopener noreferrer" className="fh-hero-cta fh-anim-2">{current.ctaText} <ArrowLeft size={17} /></a>
+              )
+            )}
+
+            <div className="fh-card fh-anim-3">
               <div className="fh-tabs">
                 {["للإيجار", "للبيع", "للبدل"].map(s => (
                   <button key={s} className={`fh-tab${status === s ? " active" : ""}`} onClick={() => handleStatusChange(s)}>{s}</button>
@@ -309,6 +403,14 @@ export default function Home() {
               <i className="dot" />
               <span><MessageCircle size={15} /> تواصل مباشر بدون وسيط</span>
             </div>
+
+            {slides.length > 1 && (
+              <div className="fh-dots">
+                {slides.map((_, i) => (
+                  <button key={i} className={`fh-dot${i === slideIdx ? " on" : ""}`} onClick={() => setSlideIdx(i)} aria-label={`بانر ${i + 1}`} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -323,7 +425,7 @@ export default function Home() {
 
         {/* ===== LATEST PROPERTIES ===== */}
         {latestList.length > 0 && (
-          <section className="fh-section">
+          <section className="fh-section fh-reveal">
             <div className="fh-sec-head">
               <div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">أحدث العقارات</h2></div>
               <Link href="/properties" className="fh-sec-link">عرض الكل <ArrowLeft size={15} /></Link>
@@ -335,7 +437,7 @@ export default function Home() {
         )}
 
         {/* ===== BROWSE BY GOVERNORATE ===== */}
-        <section className="fh-section">
+        <section className="fh-section fh-reveal">
           <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">تصفّح حسب المحافظة</h2></div></div>
           <div className="fh-gov-grid">
             {Object.entries(GOV_ID).map(([name, id]) => (
@@ -348,7 +450,7 @@ export default function Home() {
         </section>
 
         {/* ===== WHY FINDE ===== */}
-        <section className="fh-section">
+        <section className="fh-section fh-reveal">
           <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">ليه فايند؟</h2></div></div>
           <div className="fh-feat-grid">
             {FEATURES.map(f => (
@@ -363,7 +465,7 @@ export default function Home() {
 
         {/* ===== TRUSTED OFFICES ===== */}
         {officeList.length > 0 && (
-          <section className="fh-section">
+          <section className="fh-section fh-reveal">
             <div className="fh-sec-head">
               <div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">مكاتب موثوقة</h2></div>
               <Link href="/offices" className="fh-sec-link">كل المكاتب <ArrowLeft size={15} /></Link>
@@ -375,7 +477,7 @@ export default function Home() {
         )}
 
         {/* ===== OFFICE CTA ===== */}
-        <section className="fh-cta">
+        <section className="fh-cta fh-reveal">
           <div className="fh-cta-box">
             <div className="fh-cta-inner">
               <span className="fh-cta-pill"><Star size={13} /> مجاني بالكامل</span>

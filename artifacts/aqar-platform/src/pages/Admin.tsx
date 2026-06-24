@@ -20,6 +20,7 @@ import {
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus,
+  Image as ImageIcon, Plus, Upload, Loader2,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -77,6 +78,17 @@ interface AllOffice {
   officeId: number;
   officeName: string;
   userEmail: string;
+}
+
+interface HeroSlide {
+  id: number;
+  imageUrl: string;
+  title: string | null;
+  subtitle: string | null;
+  ctaText: string | null;
+  ctaUrl: string | null;
+  active: boolean;
+  sortOrder: number;
 }
 
 interface ConfirmState {
@@ -140,6 +152,13 @@ export default function Admin() {
   const [resetOfficeId, setResetOfficeId] = useState("");
   const [resetPassword, setResetPassword] = useState("");
 
+  /* ── Hero banners state ── */
+  const emptyBanner = { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaUrl: "", sortOrder: 0, active: true };
+  const [heroSlides, setHeroSlides]       = useState<HeroSlide[]>([]);
+  const [loadingHero, setLoadingHero]     = useState(false);
+  const [heroUploading, setHeroUploading] = useState(false);
+  const [newBanner, setNewBanner]         = useState(emptyBanner);
+
   const loadOffices = useCallback(async () => {
     setLoadingOffices(true);
     try {
@@ -185,6 +204,18 @@ export default function Admin() {
     }
   }, []);
 
+  const loadHeroSlides = useCallback(async () => {
+    setLoadingHero(true);
+    try {
+      const data = await adminFetch<{ slides: HeroSlide[] }>("/api/admin/hero-slides");
+      setHeroSlides(data.slides ?? []);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل بانرات الصفحة الرئيسية", variant: "destructive" });
+    } finally {
+      setLoadingHero(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) { navigate("/admin/login"); return; }
@@ -198,8 +229,9 @@ export default function Admin() {
     if (activeTab === "tools" && user) {
       loadAdmins();
       loadAllOffices();
+      loadHeroSlides();
     }
-  }, [activeTab, user, loadAdmins, loadAllOffices]);
+  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides]);
 
   async function clearDemoData() {
     setConfirmClearDemo(false);
@@ -267,6 +299,108 @@ export default function Admin() {
       toast({ title: "تم", description: (data as { message?: string }).message ?? "تمت إعادة تعيين كلمة المرور" });
       setResetPassword("");
       setResetOfficeId("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function uploadHeroImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    setHeroUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch(`${BASE}/api/uploads/images`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !(data as { url?: string }).url) {
+        throw new Error((data as { error?: string }).error ?? "فشل رفع الصورة");
+      }
+      setNewBanner((s) => ({ ...s, imageUrl: (data as { url: string }).url }));
+      toast({ title: "تم", description: "تم رفع الصورة" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setHeroUploading(false);
+    }
+  }
+
+  async function addHeroSlide(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newBanner.imageUrl) {
+      toast({ title: "خطأ", description: "يرجى رفع صورة", variant: "destructive" });
+      return;
+    }
+    setToolsBusy("add-hero");
+    try {
+      const res = await fetch(`${BASE}/api/admin/hero-slides`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: newBanner.imageUrl,
+          title: newBanner.title || null,
+          subtitle: newBanner.subtitle || null,
+          ctaText: newBanner.ctaText || null,
+          ctaUrl: newBanner.ctaUrl || null,
+          active: newBanner.active,
+          sortOrder: Number(newBanner.sortOrder) || 0,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل إضافة البانر");
+      toast({ title: "تم", description: "تم إضافة البانر" });
+      setNewBanner(emptyBanner);
+      await loadHeroSlides();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function toggleHeroSlide(slide: HeroSlide) {
+    setToolsBusy(`hero-${slide.id}`);
+    try {
+      const res = await fetch(`${BASE}/api/admin/hero-slides/${slide.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !slide.active }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل تحديث البانر");
+      await loadHeroSlides();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function deleteHeroSlide(slide: HeroSlide) {
+    if (!window.confirm(`هل تريد حذف هذا البانر؟ "${slide.title || "بدون عنوان"}"`)) return;
+    setToolsBusy(`hero-${slide.id}`);
+    try {
+      const res = await fetch(`${BASE}/api/admin/hero-slides/${slide.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل حذف البانر");
+      toast({ title: "تم", description: "تم حذف البانر" });
+      await loadHeroSlides();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "حدث خطأ";
       toast({ title: "خطأ", description: msg, variant: "destructive" });
@@ -956,6 +1090,193 @@ export default function Admin() {
                     إضافة مسؤول
                   </button>
                 </div>
+              </form>
+            </div>
+
+            {/* 4 — Homepage hero banners (full width) */}
+            <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <ImageIcon className="h-4.5 w-4.5" style={{ color: BLUE }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>بانرات الصفحة الرئيسية</h3>
+              </div>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: BODY }}>
+                تحكّم في صور وإعلانات الهيرو (الصورة الكبيرة أعلى الصفحة الرئيسية) — تظهر كشريط متحرك. كل بانر صورة + عنوان (اختياري) + زر برابط (اختياري).
+              </p>
+
+              {/* Existing banners list */}
+              {loadingHero ? (
+                <div className="space-y-2 mb-4">
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                </div>
+              ) : heroSlides.length === 0 ? (
+                <p className="text-sm mb-4" style={{ color: BODY }}>لا توجد بانرات بعد — أضف أول بانر بالأسفل.</p>
+              ) : (
+                <div className="flex flex-col gap-2 mb-4">
+                  {heroSlides.map((slide) => {
+                    const busy = toolsBusy === `hero-${slide.id}`;
+                    return (
+                      <div
+                        key={slide.id}
+                        className="flex items-center gap-3 px-3 py-2.5"
+                        style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}
+                        data-testid={`hero-slide-${slide.id}`}
+                      >
+                        <img
+                          src={slide.imageUrl}
+                          alt={slide.title ?? "بانر"}
+                          style={{ width: 64, height: 40, objectFit: "cover", borderRadius: 8, flexShrink: 0, background: "#e2e8f0" }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-sm truncate" style={{ color: NAVY }}>
+                            {slide.title || "بدون عنوان"}
+                          </div>
+                          {slide.ctaUrl && (
+                            <div className="text-xs truncate" style={{ color: BLUE }} dir="ltr">{slide.ctaUrl}</div>
+                          )}
+                        </div>
+                        <span
+                          className="adm-chip"
+                          style={{
+                            background: slide.active ? "#E7F6F0" : "#FEECEC",
+                            color: slide.active ? GREEN : RED,
+                          }}
+                        >
+                          {slide.active ? "نشط" : "غير نشط"}
+                        </span>
+                        <button
+                          disabled={busy}
+                          onClick={() => toggleHeroSlide(slide)}
+                          className="adm-btn"
+                          style={{ height: 34, padding: "0 12px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, opacity: busy ? 0.6 : 1 }}
+                        >
+                          {slide.active ? "إخفاء" : "تفعيل"}
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() => deleteHeroSlide(slide)}
+                          className="adm-btn adm-btn--reject"
+                          style={{ height: 34, padding: "0 12px", opacity: busy ? 0.6 : 1 }}
+                          data-testid={`delete-hero-${slide.id}`}
+                        >
+                          <Trash2 style={{ width: 15, height: 15 }} />
+                          حذف
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add new banner form */}
+              <form onSubmit={addHeroSlide} className="mt-4 pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Plus className="h-4 w-4" style={{ color: BLUE }} />
+                  <h4 className="text-sm font-bold" style={{ color: NAVY }}>إضافة بانر جديد</h4>
+                </div>
+
+                {/* Image picker */}
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <div
+                    style={{
+                      width: 96, height: 60, borderRadius: 10, flexShrink: 0,
+                      background: "#F1F5F9", border: `1px dashed ${BORDER}`,
+                      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                    }}
+                  >
+                    {newBanner.imageUrl ? (
+                      <img src={newBanner.imageUrl} alt="معاينة" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <ImageIcon style={{ width: 22, height: 22, color: "#94a3b8" }} />
+                    )}
+                  </div>
+                  <label
+                    className="adm-btn"
+                    style={{
+                      background: "#fff", color: BLUE, border: `1px solid ${BLUE}`,
+                      cursor: heroUploading ? "not-allowed" : "pointer", opacity: heroUploading ? 0.6 : 1,
+                    }}
+                  >
+                    {heroUploading ? (
+                      <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />
+                    ) : (
+                      <Upload style={{ width: 16, height: 16 }} />
+                    )}
+                    {heroUploading ? "جاري الرفع…" : "اختر صورة"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={uploadHeroImage}
+                      disabled={heroUploading}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  {newBanner.imageUrl && !heroUploading && (
+                    <span className="text-xs font-bold inline-flex items-center gap-1" style={{ color: GREEN }}>
+                      <CheckCircle style={{ width: 14, height: 14 }} />
+                      تم رفع الصورة
+                    </span>
+                  )}
+                </div>
+
+                {/* Text fields */}
+                <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                  <input
+                    type="text"
+                    value={newBanner.title}
+                    onChange={(e) => setNewBanner((s) => ({ ...s, title: e.target.value }))}
+                    placeholder="العنوان"
+                    className="adm-input"
+                  />
+                  <input
+                    type="text"
+                    value={newBanner.subtitle}
+                    onChange={(e) => setNewBanner((s) => ({ ...s, subtitle: e.target.value }))}
+                    placeholder="الوصف"
+                    className="adm-input"
+                  />
+                  <input
+                    type="text"
+                    value={newBanner.ctaText}
+                    onChange={(e) => setNewBanner((s) => ({ ...s, ctaText: e.target.value }))}
+                    placeholder="نص الزر"
+                    className="adm-input"
+                  />
+                  <input
+                    type="text"
+                    value={newBanner.ctaUrl}
+                    onChange={(e) => setNewBanner((s) => ({ ...s, ctaUrl: e.target.value }))}
+                    placeholder="مثال: /properties أو https://..."
+                    className="adm-input"
+                    dir="ltr"
+                  />
+                  <input
+                    type="number"
+                    value={newBanner.sortOrder}
+                    onChange={(e) => setNewBanner((s) => ({ ...s, sortOrder: Number(e.target.value) }))}
+                    placeholder="ترتيب"
+                    className="adm-input"
+                  />
+                  <label className="flex items-center gap-2 cursor-pointer select-none" style={{ color: NAVY, fontSize: 13.5, fontWeight: 700 }}>
+                    <input
+                      type="checkbox"
+                      checked={newBanner.active}
+                      onChange={(e) => setNewBanner((s) => ({ ...s, active: e.target.checked }))}
+                      style={{ width: 17, height: 17, accentColor: BLUE, cursor: "pointer" }}
+                    />
+                    نشط
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={toolsBusy === "add-hero" || heroUploading}
+                  className="adm-btn adm-btn--blue"
+                  style={{ opacity: toolsBusy === "add-hero" || heroUploading ? 0.6 : 1 }}
+                  data-testid="add-hero-submit"
+                >
+                  <Plus style={{ width: 16, height: 16 }} />
+                  إضافة البانر
+                </button>
               </form>
             </div>
 

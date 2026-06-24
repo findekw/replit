@@ -5,3 +5,4 @@ export * from "./leads";
 export * from "./users";
 export * from "./admins";
 export * from "./officeUsers";
+export * from "./hero";

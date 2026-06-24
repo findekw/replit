@@ -11,6 +11,7 @@ import adminRouter from "./admin";
 import storageRouter from "./storage";
 import subscriptionRouter from "./subscription";
 import uploadsRouter from "./uploads";
+import heroRouter from "./hero";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(adminRouter);
 router.use(storageRouter);
 router.use(subscriptionRouter);
 router.use(uploadsRouter);
+router.use(heroRouter);
 
 export default router;
