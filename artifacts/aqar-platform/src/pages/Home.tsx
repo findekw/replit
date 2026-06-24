@@ -204,7 +204,7 @@ export default function Home() {
 
         /* ===== STATS STRIP ===== */
         .fh-stats { position:relative; z-index:2; margin:-74px auto 0; max-width:780px; padding:0 16px; }
-        .fh-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .fh-stats-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; }
         .fh-stat { display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:20px 12px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.06); transition:transform .2s, box-shadow .2s; }
         .fh-stat:hover { transform:translateY(-3px); box-shadow:0 16px 38px rgba(15,23,42,0.10); }
         .fh-stat-ic { width:38px; height:38px; border-radius:11px; background:#EEF2FF; color:#3F5BD8; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
@@ -219,14 +219,14 @@ export default function Home() {
         .fh-sec-title { font-size:23px; font-weight:800; color:#1F2A44; margin:0; letter-spacing:-0.5px; }
         .fh-sec-link { font-size:14px; font-weight:700; color:#3F5BD8; display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; background:#EEF2FF; transition:background .18s, gap .18s; white-space:nowrap; }
         .fh-sec-link:hover { background:#E0E7FF; gap:9px; }
-        .fh-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-        @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3,1fr); } }
-        @media (min-width:1024px){ .fh-grid{ grid-template-columns:repeat(4,1fr); } }
+        .fh-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+        @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+        @media (min-width:1024px){ .fh-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
 
         /* gov chips */
-        .fh-gov-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
-        @media (min-width:700px){ .fh-gov-grid{ grid-template-columns:repeat(3,1fr); } }
-        @media (min-width:1024px){ .fh-gov-grid{ grid-template-columns:repeat(6,1fr); } }
+        .fh-gov-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; }
+        @media (min-width:700px){ .fh-gov-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+        @media (min-width:1024px){ .fh-gov-grid{ grid-template-columns:repeat(6, minmax(0, 1fr)); } }
         .fh-gov { background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:22px 10px; text-align:center; cursor:pointer; transition:transform .2s, box-shadow .2s, border-color .2s; display:flex; flex-direction:column; align-items:center; gap:10px; }
         .fh-gov:hover { border-color:#C7D2FE; box-shadow:0 14px 32px rgba(15,23,42,0.10); transform:translateY(-3px); }
         .fh-gov-ic { width:50px; height:50px; border-radius:14px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); display:flex; align-items:center; justify-content:center; color:#3F5BD8; transition:transform .2s; }
@@ -234,8 +234,8 @@ export default function Home() {
         .fh-gov-name { font-size:14.5px; font-weight:700; color:#1F2A44; }
 
         /* features */
-        .fh-feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-        @media (min-width:900px){ .fh-feat-grid{ grid-template-columns:repeat(4,1fr); } }
+        .fh-feat-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+        @media (min-width:900px){ .fh-feat-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
         .fh-feat { background:#fff; border:1px solid #EDF1F7; border-radius:20px; padding:26px 20px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.05); transition:transform .2s, box-shadow .2s; }
         .fh-feat:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(15,23,42,0.10); }
         .fh-feat-ic { width:58px; height:58px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; box-shadow:0 6px 16px rgba(15,23,42,0.06); }

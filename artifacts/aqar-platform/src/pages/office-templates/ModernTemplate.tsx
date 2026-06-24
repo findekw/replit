@@ -143,8 +143,8 @@ const CSS = `
 .tm-iconbtn:hover { border-color: #3F5BD8; color: #3F5BD8; }
 
 .tm-main { max-width: 1180px; margin: 0 auto; padding: 30px 22px 0; }
-.tm-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 26px; }
-@media (min-width:700px){ .tm-stats { grid-template-columns: repeat(3,1fr); } }
+.tm-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 26px; }
+@media (min-width:700px){ .tm-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tm-stat { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; padding: 22px 16px; text-align: center; box-shadow: 0 6px 22px rgba(15,23,42,0.05); }
 .tm-stat-n { font-size: 30px; font-weight: 800; color: #1F2A44; line-height: 1; }
 .tm-stat-l { font-size: 13px; color: #64748B; margin-top: 8px; font-weight: 600; }
@@ -157,8 +157,8 @@ const CSS = `
 .tm-tab { padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; background: #fff; color: #64748B; border: 1px solid #E2E8F0; }
 .tm-tab:hover { border-color: #3F5BD8; color: #3F5BD8; }
 .tm-tab-on { background: #1F2A44; color: #fff; border-color: #1F2A44; }
-.tm-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; }
-@media (min-width:980px){ .tm-grid { grid-template-columns: repeat(3,1fr); } }
+.tm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (min-width:980px){ .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tm-empty { text-align: center; padding: 64px 20px; }
 .tm-empty p { color: #64748B; font-weight: 700; font-size: 16px; margin: 16px 0 0; }
 .tm-pager { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 32px; }

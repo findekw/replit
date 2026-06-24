@@ -88,7 +88,7 @@ function StatusChips({ value, onChange }: { value: string; onChange: (v: string)
 function BedroomsChips({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const labels: Record<string, string> = { "": "الكل", "5": "5+" };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
       {BEDROOM_OPTIONS.map((b) => {
         const active = value === b;
         return (

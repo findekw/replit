@@ -184,8 +184,8 @@ const CSS = `
 .mn-tab:hover { color: #0F172A; }
 .mn-tab-on { color: #0F172A; background: #F1F5F9; }
 
-.mn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-@media (min-width: 980px) { .mn-grid { grid-template-columns: repeat(3, 1fr); } }
+.mn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+@media (min-width: 980px) { .mn-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .mn-empty { text-align: center; padding: 72px 20px; }
 .mn-empty p { color: #94A3B8; font-weight: 600; font-size: 15px; margin: 18px 0 0; }

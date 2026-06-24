@@ -50,20 +50,20 @@ export default function Plans() {
           }
           .feat-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 20px;
             max-width: 1100px;
             margin: 0 auto;
           }
           @media (max-width: 1024px) {
-            .feat-grid { grid-template-columns: repeat(3, 1fr); }
+            .feat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
           }
           @media (max-width: 768px) {
-            .feat-grid { grid-template-columns: repeat(2, 1fr); }
+            .feat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .features-title { font-size: 22px; }
           }
           @media (max-width: 480px) {
-            .feat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .feat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
           }
           .feat-card {
             background: #ffffff;

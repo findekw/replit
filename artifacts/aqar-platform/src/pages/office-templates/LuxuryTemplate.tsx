@@ -167,8 +167,8 @@ const CSS = `
 /* Main */
 .lx-main { max-width: 1180px; margin: 0 auto; padding: 64px 24px 0; }
 
-.lx-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: rgba(201,162,39,0.18); border: 1px solid rgba(201,162,39,0.18); border-radius: 14px; overflow: hidden; margin-bottom: 64px; }
-@media (min-width:760px){ .lx-stats { grid-template-columns: repeat(3,1fr); } }
+.lx-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgba(201,162,39,0.18); border: 1px solid rgba(201,162,39,0.18); border-radius: 14px; overflow: hidden; margin-bottom: 64px; }
+@media (min-width:760px){ .lx-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .lx-stat { background: #121A2B; padding: 36px 18px; text-align: center; }
 .lx-stat-n { font-size: 46px; font-weight: 800; color: #C9A227; line-height: 1; }
 .lx-stat-loc { font-size: 24px; padding-top: 10px; }
@@ -190,8 +190,8 @@ const CSS = `
 .lx-tab-on { background: #C9A227; color: #0B0F1A; border-color: #C9A227; }
 
 /* Grid + card wrappers */
-.lx-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-@media (min-width:980px){ .lx-grid { grid-template-columns: repeat(3,1fr); } }
+.lx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (min-width:980px){ .lx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .lx-cardwrap { background: #fff; border-radius: 18px; padding: 8px; border: 1px solid rgba(201,162,39,0.22); box-shadow: 0 16px 40px rgba(0,0,0,0.32); transition: transform .15s, box-shadow .15s; }
 .lx-cardwrap:hover { transform: translateY(-3px); box-shadow: 0 22px 54px rgba(0,0,0,0.42); }
 
