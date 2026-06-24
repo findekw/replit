@@ -121,7 +121,7 @@ export default function Login() {
               <div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">كلمة المرور</Label>
-                  <a href="#" className="text-xs text-primary hover:underline">نسيت كلمة المرور؟</a>
+                  <Link href="/office/forgot" className="text-xs text-primary hover:underline">نسيت كلمة المرور؟</Link>
                 </div>
                 <div className="relative mt-1">
                   <Input

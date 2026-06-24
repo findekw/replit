@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useGetProperty, useGetSimilarProperties } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
+import { MapPin, Map, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
 
@@ -69,6 +69,10 @@ const styles = `
 .pd-title { font-size: 22px; font-weight: 800; color: #1F2A44; margin: 14px 0 8px; line-height: 1.4; }
 .pd-loc { display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 14px; }
 .pd-ref { font-size: 12px; color: #94A3B8; margin-top: 10px; }
+
+.pd-maplink { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #3F5BD8; text-decoration: none; font-family: inherit; transition: all .15s; }
+.pd-maplink:hover { background: #3F5BD8; border-color: #3F5BD8; color: #fff; }
+.pd-maplink svg { flex-shrink: 0; }
 
 .pd-specs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #EEF1F5; }
 .pd-spec { display: flex; align-items: center; gap: 7px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 9px 14px; font-size: 14px; font-weight: 600; color: #1F2A44; }
@@ -148,6 +152,42 @@ export default function PropertyDetail() {
   });
 
   const [imgIndex, setImgIndex] = useState(0);
+
+  // Dynamic page title + meta description for SEO / sharing
+  useEffect(() => {
+    if (!property) return;
+
+    const DEFAULT_TITLE = "فايند - منصة العقارات";
+    const titlePart = property.titleAr || "عقار";
+    const pricePart = property.price != null
+      ? ` - ${property.price.toLocaleString("en-US")} د.ك`
+      : "";
+    document.title = `${titlePart}${pricePart} | فايند`;
+
+    let metaDesc = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    let createdMeta = false;
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
+      document.head.appendChild(metaDesc);
+      createdMeta = true;
+    }
+    const prevDesc = metaDesc.getAttribute("content") ?? "";
+    if (property.descriptionAr) {
+      const raw = property.descriptionAr.replace(/\s+/g, " ").trim();
+      const desc = raw.length > 150 ? raw.slice(0, 150).trimEnd() + "…" : raw;
+      metaDesc.setAttribute("content", desc);
+    }
+
+    return () => {
+      document.title = DEFAULT_TITLE;
+      if (createdMeta) {
+        metaDesc?.parentNode?.removeChild(metaDesc);
+      } else if (metaDesc) {
+        metaDesc.setAttribute("content", prevDesc);
+      }
+    };
+  }, [property]);
 
   if (isLoading) {
     return (
@@ -288,6 +328,20 @@ export default function PropertyDetail() {
                   <MapPin size={16} color="#3F5BD8" />
                   <span>{[property.governorateName, property.areaName].filter(Boolean).join("، ")}</span>
                 </div>
+
+                {(property.areaName || property.governorateName) && (
+                  <a
+                    className="pd-maplink"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      [property.areaName, property.governorateName, "الكويت"].filter(Boolean).join("، ")
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Map size={16} />
+                    الموقع على الخريطة
+                  </a>
+                )}
 
                 <div className="pd-specs">
                   {property.bedrooms != null && (

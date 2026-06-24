@@ -17,10 +17,20 @@ export default function Offices() {
     <MainLayout>
       <div style={{ background: "#F5F7FA", minHeight: "100vh" }}>
       <div dir="rtl" className="container mx-auto px-4 py-10">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-foreground mb-2">المكاتب العقارية</h1>
-          <p className="text-muted-foreground">تصفح مكاتب العقارات في الكويت</p>
+        {/* Header band */}
+        <div
+          className="rounded-2xl px-6 py-12 sm:py-14 mb-10 text-center"
+          style={{
+            background: "linear-gradient(135deg, #1F2A44, #3F5BD8)",
+            boxShadow: "0 6px 20px rgba(15,23,42,0.06)",
+          }}
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+            المكاتب العقارية
+          </h1>
+          <p className="text-base sm:text-lg text-white/80">
+            تصفّح المكاتب الموثوقة في الكويت
+          </p>
         </div>
 
         {/* Grid */}
@@ -31,8 +41,16 @@ export default function Offices() {
             ))}
           </div>
         ) : offices.length === 0 ? (
-          <div className="text-center py-24 text-muted-foreground">
-            <p className="text-2xl">لا توجد مكاتب</p>
+          <div
+            className="text-center py-20 rounded-2xl bg-white"
+            style={{ boxShadow: "0 6px 20px rgba(15,23,42,0.06)" }}
+          >
+            <p className="text-xl font-semibold" style={{ color: "#1F2A44" }}>
+              لا توجد مكاتب
+            </p>
+            <p className="mt-2 text-sm" style={{ color: "#64748B" }}>
+              لم نعثر على أي مكاتب عقارية حالياً
+            </p>
           </div>
         ) : (
           <>

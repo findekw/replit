@@ -19,6 +19,7 @@ import {
   Building2, CheckCircle, XCircle, ClipboardList,
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
+  Settings, Trash2, KeyRound, UserPlus,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -62,6 +63,20 @@ interface PendingListing {
   imageUrl: string | null;
   areaName: string | null;
   governorateName: string | null;
+}
+
+interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
+
+interface AllOffice {
+  officeId: number;
+  officeName: string;
+  userEmail: string;
 }
 
 interface ConfirmState {
@@ -112,8 +127,18 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "tools">("offices");
   const [confirm, setConfirm]             = useState<ConfirmState | null>(null);
+
+  /* ── Tools tab state ── */
+  const [admins, setAdmins]               = useState<AdminUser[]>([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
+  const [allOffices, setAllOffices]       = useState<AllOffice[]>([]);
+  const [toolsBusy, setToolsBusy]         = useState<string | null>(null);
+  const [confirmClearDemo, setConfirmClearDemo] = useState(false);
+  const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "" });
+  const [resetOfficeId, setResetOfficeId] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
 
   const loadOffices = useCallback(async () => {
     setLoadingOffices(true);
@@ -139,6 +164,27 @@ export default function Admin() {
     }
   }, [toast]);
 
+  const loadAdmins = useCallback(async () => {
+    setLoadingAdmins(true);
+    try {
+      const data = await adminFetch<{ admins: AdminUser[] }>("/api/admin/admins");
+      setAdmins(data.admins ?? []);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل قائمة المسؤولين", variant: "destructive" });
+    } finally {
+      setLoadingAdmins(false);
+    }
+  }, [toast]);
+
+  const loadAllOffices = useCallback(async () => {
+    try {
+      const data = await adminFetch<{ offices: AllOffice[] }>("/api/admin/all-offices");
+      setAllOffices(data.offices ?? []);
+    } catch {
+      /* silent — dropdown just stays empty */
+    }
+  }, []);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) { navigate("/admin/login"); return; }
@@ -146,6 +192,88 @@ export default function Admin() {
       loadListings();
     }
   }, [authLoading, user, navigate, loadOffices, loadListings]);
+
+  // Load tools data when the tools tab is opened
+  useEffect(() => {
+    if (activeTab === "tools" && user) {
+      loadAdmins();
+      loadAllOffices();
+    }
+  }, [activeTab, user, loadAdmins, loadAllOffices]);
+
+  async function clearDemoData() {
+    setConfirmClearDemo(false);
+    setToolsBusy("clear-demo");
+    try {
+      const res = await fetch(`${BASE}/api/admin/demo-data/clear`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل مسح البيانات");
+      toast({ title: "تم", description: (data as { message?: string }).message ?? "تم مسح البيانات التجريبية" });
+      await loadListings();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function addAdmin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
+      toast({ title: "خطأ", description: "يرجى تعبئة جميع الحقول", variant: "destructive" });
+      return;
+    }
+    setToolsBusy("add-admin");
+    try {
+      const res = await fetch(`${BASE}/api/admin/admins`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAdmin),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل إضافة المسؤول");
+      toast({ title: "تم", description: (data as { message?: string }).message ?? "تمت إضافة المسؤول" });
+      setNewAdmin({ name: "", email: "", password: "" });
+      await loadAdmins();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function resetOfficePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetOfficeId || !resetPassword) {
+      toast({ title: "خطأ", description: "اختر المكتب وأدخل كلمة المرور الجديدة", variant: "destructive" });
+      return;
+    }
+    setToolsBusy("reset-password");
+    try {
+      const res = await fetch(`${BASE}/api/admin/offices/${resetOfficeId}/reset-password`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: resetPassword }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل إعادة التعيين");
+      toast({ title: "تم", description: (data as { message?: string }).message ?? "تمت إعادة تعيين كلمة المرور" });
+      setResetPassword("");
+      setResetOfficeId("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
 
   async function executeAction() {
     if (!confirm) return;
@@ -236,6 +364,9 @@ export default function Admin() {
         .adm-btn--approve { background:${GREEN}; color:#fff; }
         .adm-btn--reject { background:#fff; color:${RED}; border:1px solid #FCA5A5; }
         .adm-btn--blue { background:${BLUE}; color:#fff; }
+        .adm-input { height:40px; padding:0 14px; border-radius:10px; border:1px solid ${BORDER}; background:#fff; font-size:13.5px; color:${NAVY}; outline:none; width:100%; transition:border-color .15s ease, box-shadow .15s ease; }
+        .adm-input:focus { border-color:${BLUE}; box-shadow:0 0 0 3px rgba(63,91,216,0.12); }
+        .adm-input::placeholder { color:#94a3b8; }
       `}</style>
 
       {/* Confirm dialog */}
@@ -257,6 +388,24 @@ export default function Admin() {
               {confirm?.action === "approve"
                 ? confirm.type === "office" ? "قبول وتفعيل" : "قبول ونشر"
                 : "تأكيد الرفض"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear demo data confirm dialog */}
+      <AlertDialog open={confirmClearDemo} onOpenChange={(o) => !o && setConfirmClearDemo(false)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>مسح البيانات التجريبية</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف العقارات التجريبية FN-D* وصورها وعملائها نهائياً. لا يؤثر على حسابات المكاتب. هل تريد المتابعة؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={clearDemoData} style={{ background: RED, color: "#fff" }}>
+              مسح البيانات
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -325,6 +474,7 @@ export default function Admin() {
           {([
             { key: "offices"  as const, icon: Users,     label: "طلبات تسجيل المكاتب", count: offices.length },
             { key: "listings" as const, icon: Building2, label: "مراقبة الإعلانات",     count: blockedListings || undefined },
+            { key: "tools"    as const, icon: Settings,  label: "أدوات",               count: undefined },
           ]).map(({ key, icon: Icon, label, count }) => {
             const active = activeTab === key;
             return (
@@ -665,6 +815,150 @@ export default function Admin() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ═══════════════ TOOLS TAB ═══════════════ */}
+        {activeTab === "tools" && (
+          <div className="grid gap-5 lg:grid-cols-2">
+
+            {/* 1 — Clear demo data */}
+            <div className="adm-card" style={{ padding: "22px 24px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Trash2 className="h-4.5 w-4.5" style={{ color: RED }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>مسح البيانات التجريبية</h3>
+              </div>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: BODY }}>
+                يحذف العقارات التجريبية التجريبية FN-D* وصورها وعملائها. لا يؤثر على حسابات المكاتب.
+              </p>
+              <button
+                disabled={toolsBusy === "clear-demo"}
+                onClick={() => setConfirmClearDemo(true)}
+                className="adm-btn"
+                style={{ background: RED, color: "#fff", opacity: toolsBusy === "clear-demo" ? 0.6 : 1 }}
+              >
+                <Trash2 style={{ width: 16, height: 16 }} />
+                مسح البيانات التجريبية
+              </button>
+            </div>
+
+            {/* 3 — Reset office password */}
+            <div className="adm-card" style={{ padding: "22px 24px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <KeyRound className="h-4.5 w-4.5" style={{ color: BLUE }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>إعادة تعيين كلمة مرور مكتب</h3>
+              </div>
+              <form onSubmit={resetOfficePassword} className="flex flex-col gap-3 mt-2">
+                <select
+                  value={resetOfficeId}
+                  onChange={(e) => setResetOfficeId(e.target.value)}
+                  className="adm-input"
+                >
+                  <option value="">— اختر المكتب —</option>
+                  {allOffices.map((o) => (
+                    <option key={o.officeId} value={o.officeId}>
+                      {o.officeName} ({o.userEmail})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  placeholder="كلمة المرور الجديدة"
+                  className="adm-input"
+                />
+                <button
+                  type="submit"
+                  disabled={toolsBusy === "reset-password"}
+                  className="adm-btn adm-btn--blue"
+                  style={{ opacity: toolsBusy === "reset-password" ? 0.6 : 1 }}
+                >
+                  <KeyRound style={{ width: 16, height: 16 }} />
+                  إعادة التعيين
+                </button>
+              </form>
+              <p className="text-xs mt-3" style={{ color: BODY }}>
+                ملاحظة: شارِك كلمة المرور الجديدة مع المكتب يدوياً — لم يتم ربط البريد الإلكتروني بعد.
+              </p>
+            </div>
+
+            {/* 2 — Manage admins (full width) */}
+            <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4.5 w-4.5" style={{ color: NAVY }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>إدارة المسؤولين</h3>
+              </div>
+
+              {loadingAdmins ? (
+                <div className="space-y-2 my-3">
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
+                </div>
+              ) : admins.length === 0 ? (
+                <p className="text-sm my-3" style={{ color: BODY }}>لا يوجد مسؤولون.</p>
+              ) : (
+                <div className="flex flex-col gap-2 my-3">
+                  {admins.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                      style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm" style={{ color: NAVY }}>{a.name}</div>
+                        <div className="text-xs" style={{ color: BODY }} dir="ltr">{a.email}</div>
+                      </div>
+                      <span
+                        className="adm-chip"
+                        style={{
+                          background: a.status === "active" ? "#E7F6F0" : "#FEF6E7",
+                          color: a.status === "active" ? GREEN : AMBER,
+                        }}
+                      >
+                        {a.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form onSubmit={addAdmin} className="grid gap-3 sm:grid-cols-3 mt-4 pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+                <input
+                  type="text"
+                  value={newAdmin.name}
+                  onChange={(e) => setNewAdmin((s) => ({ ...s, name: e.target.value }))}
+                  placeholder="الاسم"
+                  className="adm-input"
+                />
+                <input
+                  type="email"
+                  value={newAdmin.email}
+                  onChange={(e) => setNewAdmin((s) => ({ ...s, email: e.target.value }))}
+                  placeholder="البريد الإلكتروني"
+                  className="adm-input"
+                  dir="ltr"
+                />
+                <input
+                  type="password"
+                  value={newAdmin.password}
+                  onChange={(e) => setNewAdmin((s) => ({ ...s, password: e.target.value }))}
+                  placeholder="كلمة المرور"
+                  className="adm-input"
+                />
+                <div className="sm:col-span-3">
+                  <button
+                    type="submit"
+                    disabled={toolsBusy === "add-admin"}
+                    className="adm-btn adm-btn--blue"
+                    style={{ opacity: toolsBusy === "add-admin" ? 0.6 : 1 }}
+                  >
+                    <UserPlus style={{ width: 16, height: 16 }} />
+                    إضافة مسؤول
+                  </button>
+                </div>
+              </form>
+            </div>
+
           </div>
         )}
       </div>

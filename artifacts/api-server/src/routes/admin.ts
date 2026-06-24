@@ -1,10 +1,15 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable } from "@workspace/db";
+import { eq, and, desc, sql, like, inArray } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import { requireAdmin } from "../lib/authHelpers";
 
 const router: IRouter = Router();
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 // GET /api/admin/pending-offices
 router.get("/admin/pending-offices", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
@@ -393,6 +398,70 @@ router.get("/admin/analytics", requireAdmin, async (_req: Request, res: Response
     });
   } catch (err) {
     console.error("Analytics error:", err);
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── POST /api/admin/offices/:id/reset-password — admin sets a new office password ──
+router.post("/admin/offices/:id/reset-password", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const officeId = Number(req.params.id);
+  const { password } = req.body as { password?: string };
+  if (!officeId) { res.status(400).json({ error: "معرف المكتب غير صالح" }); return; }
+  if (!password || password.length < 8) { res.status(400).json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }); return; }
+  try {
+    const [ou] = await db.select({ id: officeUsersTable.id }).from(officeUsersTable).where(eq(officeUsersTable.officeId, officeId)).limit(1);
+    if (!ou) { res.status(404).json({ error: "لا يوجد حساب مرتبط بهذا المكتب" }); return; }
+    const passwordHash = await bcrypt.hash(password, 12);
+    await db.update(officeUsersTable).set({ passwordHash }).where(eq(officeUsersTable.officeId, officeId));
+    res.json({ message: "تم إعادة تعيين كلمة المرور بنجاح" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── GET /api/admin/admins — list platform admins ──
+router.get("/admin/admins", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const admins = await db.select({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email, status: adminsTable.status, createdAt: adminsTable.createdAt }).from(adminsTable).orderBy(adminsTable.createdAt);
+    res.json({ admins });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── POST /api/admin/admins — create a new admin ──
+router.post("/admin/admins", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const name = String((req.body as any)?.name ?? "").trim();
+  const email = String((req.body as any)?.email ?? "").trim().toLowerCase();
+  const password = String((req.body as any)?.password ?? "");
+  if (name.length < 2) { res.status(400).json({ error: "الاسم يجب أن يكون حرفين على الأقل" }); return; }
+  if (!isValidEmail(email)) { res.status(400).json({ error: "البريد الإلكتروني غير صالح" }); return; }
+  if (password.length < 8) { res.status(400).json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }); return; }
+  try {
+    const [existing] = await db.select({ id: adminsTable.id }).from(adminsTable).where(eq(adminsTable.email, email)).limit(1);
+    if (existing) { res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" }); return; }
+    const passwordHash = await bcrypt.hash(password, 12);
+    const [created] = await db.insert(adminsTable).values({ name, email, passwordHash, status: "active" }).returning({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email });
+    res.status(201).json({ admin: created, message: "تم إنشاء حساب المسؤول بنجاح" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── POST /api/admin/demo-data/clear — remove seeded demo content (FN-D* listings) ──
+// Deletes demo properties (reference_id starting with "FN-D"), their images, and
+// any leads attached to them. Office accounts are kept so logins keep working.
+router.post("/admin/demo-data/clear", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const demoProps = await db.select({ id: propertiesTable.id }).from(propertiesTable).where(like(propertiesTable.referenceId, "FN-D%"));
+    const ids = demoProps.map((p) => p.id);
+    if (ids.length === 0) { res.json({ message: "لا توجد بيانات تجريبية", deletedProperties: 0, deletedLeads: 0 }); return; }
+    const delLeads = await db.delete(leadsTable).where(inArray(leadsTable.propertyId, ids)).returning({ id: leadsTable.id });
+    await db.delete(propertyImagesTable).where(inArray(propertyImagesTable.propertyId, ids));
+    await db.delete(propertiesTable).where(inArray(propertiesTable.id, ids));
+    res.json({ message: `تم مسح ${ids.length} عقار تجريبي`, deletedProperties: ids.length, deletedLeads: delLeads.length });
+  } catch (err) {
+    console.error("clear demo error:", err);
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });

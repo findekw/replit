@@ -84,18 +84,18 @@ export default function Plans() {
             margin: 0 0 8px; letter-spacing: -0.2px; line-height: 1.3;
           }
           .feat-desc {
-            font-size: 15px; color: #0f172a; font-weight: 500;
+            font-size: 15px; color: #64748B; font-weight: 500;
             margin: 0; line-height: 1.7;
           }
           @media (max-width: 768px) {
             .feat-card { padding: 20px 12px; }
             .feat-title { font-size: 15px; }
-            .feat-desc  { font-size: 14px; color: #0f172a; line-height: 1.7; }
+            .feat-desc  { font-size: 14px; color: #64748B; line-height: 1.7; }
           }
           @media (max-width: 480px) {
             .feat-card { padding: 18px 10px; }
             .feat-title { font-size: 15px; }
-            .feat-desc  { font-size: 14px; color: #0f172a; line-height: 1.7; }
+            .feat-desc  { font-size: 14px; color: #64748B; line-height: 1.7; }
           }
           @media (max-width: 768px) {
             .plans-hero-title { font-size: 26px !important; line-height: 1.4 !important; }
@@ -105,20 +105,20 @@ export default function Plans() {
             background: #ffffff;
             border-radius: 18px;
             padding: 28px 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 6px 20px rgba(15,23,42,0.06);
             text-align: center;
             max-width: 420px;
             margin: auto;
             border: 1px solid #e5e7eb;
           }
           .pricing-card h2 { font-size: 22px; font-weight: 800; color: var(--text-heading); margin-bottom: 8px; }
-          .price-old { text-decoration: line-through; color: #0f172a; font-size: 17px; font-weight: 600; margin-bottom: 4px; opacity: 0.45; }
+          .price-old { text-decoration: line-through; color: #64748B; font-size: 17px; font-weight: 600; margin-bottom: 4px; opacity: 0.7; }
           .price-new { font-size: 30px; font-weight: 900; color: var(--text-heading); margin: 4px 0 10px; line-height: 1.2; }
-          .price-new span { font-size: 16px; font-weight: 600; color: #0f172a; }
-          .pricing-desc { font-size: 15px; color: #0f172a; margin: 10px 0; font-weight: 500; }
-          .trial-line { font-size: 15px; font-weight: 800; color: var(--cta-color); margin: 14px 0 10px; }
+          .price-new span { font-size: 16px; font-weight: 600; color: #64748B; }
+          .pricing-desc { font-size: 15px; color: #64748B; margin: 10px 0; font-weight: 500; }
+          .trial-line { font-size: 15px; font-weight: 800; color: #3F5BD8; margin: 14px 0 10px; }
           .cta-btn {
-            background: var(--cta-color);
+            background: #3F5BD8;
             color: #ffffff;
             border: none;
             padding: 14px;
@@ -184,7 +184,7 @@ export default function Plans() {
           >
             اشتراك المكاتب العقارية
           </h1>
-          <p className="max-w-md mx-auto" style={{ color: "#0f172a", fontSize: 15 }}>
+          <p className="max-w-md mx-auto" style={{ color: "#64748B", fontSize: 15 }}>
             كل ما تحتاجه لإدارة وعرض عقارات مكتبك في مكان واحد
           </p>
         </div>
@@ -238,10 +238,10 @@ export default function Plans() {
         <div className="max-w-xl mx-auto px-4 pt-4 pb-16">
           <div
             className="text-center rounded-2xl p-7 border"
-            style={{ background: "#ffffff", borderColor: "#e5e7eb" }}
+            style={{ background: "#ffffff", borderColor: "#e5e7eb", boxShadow: "0 6px 20px rgba(15,23,42,0.06)" }}
           >
             <h3 className="text-lg font-bold mb-2" style={{ color: BLUE }}>هل لديك سؤال؟</h3>
-            <p className="mb-4" style={{ color: "#0f172a", fontSize: 15 }}>
+            <p className="mb-4" style={{ color: "#64748B", fontSize: 15 }}>
               تواصل معنا عبر واتساب وسنساعدك في تجهيز حساب مكتبك
             </p>
             <button

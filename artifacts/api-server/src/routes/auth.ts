@@ -13,6 +13,36 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// ── Simple in-memory login rate limiter (per IP) ─────────────────────────────
+// Blocks brute-force: max 10 login attempts per IP per 5 minutes. In-memory is
+// fine for a single-instance deployment; resets on restart.
+const LOGIN_MAX = 10;
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+const loginHits = new Map<string, { count: number; resetAt: number }>();
+
+function loginLimiter(req: Request, res: Response, next: () => void): void {
+  const ip = (req.ip || req.socket?.remoteAddress || "unknown") as string;
+  const now = Date.now();
+  const entry = loginHits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginHits.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    next();
+    return;
+  }
+  entry.count += 1;
+  if (entry.count > LOGIN_MAX) {
+    res.status(429).json({ error: "محاولات كثيرة جدًا، حاول مرة أخرى بعد قليل" });
+    return;
+  }
+  next();
+}
+
+// Opportunistically drop expired entries so the map can't grow unbounded.
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, e] of loginHits) if (now > e.resetAt) loginHits.delete(ip);
+}, LOGIN_WINDOW_MS).unref?.();
+
 const RESERVED_SLUGS = ["properties", "offices", "admin", "login", "register", "plans", "dashboard", "api", "health", "by-slug", "office-pages", "office"];
 
 function isValidSlug(slug: string): boolean {
@@ -54,7 +84,7 @@ router.post("/auth/user/register", async (req: Request, res: Response): Promise<
   }
 });
 
-router.post("/auth/user/login", async (req: Request, res: Response): Promise<void> => {
+router.post("/auth/user/login", loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
   if (!isValidEmail(email) || !password) { res.status(400).json({ error: "البريد الإلكتروني أو كلمة المرور غير صالحة" }); return; }
@@ -158,7 +188,7 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
   }
 });
 
-router.post("/auth/office/login", async (req: Request, res: Response): Promise<void> => {
+router.post("/auth/office/login", loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
   if (!isValidEmail(email) || !password) { res.status(400).json({ error: "البريد الإلكتروني أو كلمة المرور غير صالحة" }); return; }
@@ -199,7 +229,7 @@ router.get("/auth/office/me", async (req: Request, res: Response): Promise<void>
 // ADMIN flow — no public registration. Cookie: finde_admin
 // ════════════════════════════════════════════════════════════════════════════
 
-router.post("/auth/admin/login", async (req: Request, res: Response): Promise<void> => {
+router.post("/auth/admin/login", loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
   if (!isValidEmail(email) || !password) { res.status(400).json({ error: "البريد الإلكتروني أو كلمة المرور غير صالحة" }); return; }
