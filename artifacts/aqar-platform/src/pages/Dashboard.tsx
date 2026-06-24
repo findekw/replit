@@ -494,7 +494,7 @@ export default function Dashboard() {
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ADE80", boxShadow: "0 0 0 3px rgba(74,222,128,0.25)" }} />
               لوحة تحكم المكتب
             </span>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: "12px 0 0", lineHeight: 1.22, letterSpacing: "-0.01em" }}>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: "12px 0 0", lineHeight: 1.22, letterSpacing: "-0.01em", color: "#fff" }}>
               أهلاً، {officeNameAr || user?.name || "بك"} 👋
             </h1>
             <p style={{ fontSize: 14.5, color: "#C3CEE2", margin: "8px 0 0" }}>
