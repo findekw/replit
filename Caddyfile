@@ -1,7 +1,13 @@
-# IP-first deployment (no domain yet -> plain HTTP on :80).
-# When a domain is ready, replace ":80" with "your-domain.com" and Caddy will
-# obtain a Let's Encrypt certificate automatically.
-:80 {
+# ── Finde — Caddy ────────────────────────────────────────────────────────────
+# Serves the SPA and reverse-proxies /api -> Express. Automatic HTTPS for the
+# domain (Let's Encrypt); plain HTTP kept for the raw IP so the server stays
+# reachable during DNS propagation. The cert is issued automatically once
+# finde.co's A record points at this server (216-> this VPS).
+{
+	email mostfasyntax@gmail.com
+}
+
+(site) {
 	encode gzip
 
 	# API + uploaded files (Express serves /api/uploads/* statically)
@@ -15,4 +21,14 @@
 		try_files {path} /index.html
 		file_server
 	}
+}
+
+# Production domain — automatic HTTPS (HTTP auto-redirects to HTTPS)
+finde.co, www.finde.co {
+	import site
+}
+
+# Fallback: raw IP over plain HTTP (keeps the server reachable pre-DNS)
+http://76.13.77.191 {
+	import site
 }

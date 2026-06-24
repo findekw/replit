@@ -47,6 +47,11 @@ services:
       - app
     ports:
       - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
 
   n8n:
     image: n8nio/n8n:latest
@@ -67,4 +72,6 @@ services:
 volumes:
   pgdata:
   uploads:
+  caddy_data:
+  caddy_config:
   n8ndata:
