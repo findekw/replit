@@ -131,25 +131,11 @@ export default function Plans() {
             margin-top: 6px;
           }
           .cta-btn {
-            animation: pulseCTA 2.5s infinite;
+            box-shadow: 0 6px 16px rgba(63,91,216,0.22);
           }
           .cta-btn:hover {
-            animation: none;
-            transform: scale(1.05);
-            opacity: 0.9;
-          }
-          @keyframes pulseCTA {
-            0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(0,102,255,0.4); }
-            50%  { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(0,102,255,0);   }
-            100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(0,102,255,0);    }
-          }
-          @media (max-width: 768px) {
-            .cta-btn { animation: pulseCTA 3s infinite; }
-            @keyframes pulseCTA {
-              0%   { transform: scale(1);    box-shadow: 0 0 0 0  rgba(0,102,255,0.3); }
-              50%  { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(0,102,255,0);  }
-              100% { transform: scale(1);    box-shadow: 0 0 0 0  rgba(0,102,255,0);   }
-            }
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(63,91,216,0.28);
           }
           @media (max-width: 768px) {
             .pricing-card { padding: 22px 15px; }

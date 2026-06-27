@@ -19,7 +19,7 @@ import {
   Building2, CheckCircle, XCircle, ClipboardList,
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
-  Settings, Trash2, KeyRound, UserPlus,
+  Settings, Trash2, KeyRound, UserPlus, CreditCard,
   Image as ImageIcon, Plus, Upload, Loader2,
 } from "lucide-react";
 
@@ -80,6 +80,19 @@ interface AllOffice {
   userEmail: string;
 }
 
+interface OfficeSubscription {
+  officeId: number;
+  officeName: string;
+  officeSlug: string;
+  officeActive: boolean;
+  subscriptionPlan: string | null;
+  subscriptionStatus: string | null;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  userEmail: string | null;
+  trialDaysLeft: number | null;
+}
+
 interface HeroSlide {
   id: number;
   imageUrl: string;
@@ -129,6 +142,17 @@ function typeLabel(status: string): { text: string; color: string } {
   return { text: "للإيجار", color: "#059669" };
 }
 
+function subStatusInfo(status: string | null): { text: string; color: string; bg: string } {
+  switch (status) {
+    case "active":          return { text: "مشترك",         color: "#059669", bg: "#E7F6F0" };
+    case "trial":           return { text: "تجربة مجانية",  color: "#3F5BD8", bg: "#ECEFFB" };
+    case "pending_payment": return { text: "بانتظار الدفع", color: "#D97706", bg: "#FEF6E7" };
+    case "expired":         return { text: "منتهية",        color: "#DC2626", bg: "#FEECEC" };
+    case "inactive":        return { text: "غير مفعّل",     color: "#64748B", bg: "#F1F5F9" };
+    default:                return { text: status ?? "—",   color: "#64748B", bg: "#F1F5F9" };
+  }
+}
+
 export default function Admin() {
   const { admin: user, isLoading: authLoading, logout } = useAdminAuth();
   const [, navigate] = useLocation();
@@ -139,7 +163,7 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "tools">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "subscriptions" | "tools">("offices");
   const [confirm, setConfirm]             = useState<ConfirmState | null>(null);
 
   /* ── Tools tab state ── */
@@ -151,6 +175,11 @@ export default function Admin() {
   const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "" });
   const [resetOfficeId, setResetOfficeId] = useState("");
   const [resetPassword, setResetPassword] = useState("");
+
+  /* ── Subscriptions tab state ── */
+  const [subs, setSubs]                   = useState<OfficeSubscription[]>([]);
+  const [loadingSubs, setLoadingSubs]     = useState(false);
+  const [subBusy, setSubBusy]             = useState<number | null>(null);
 
   /* ── Hero banners state ── */
   const emptyBanner = { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaUrl: "", sortOrder: 0, active: true };
@@ -204,6 +233,18 @@ export default function Admin() {
     }
   }, []);
 
+  const loadSubscriptions = useCallback(async () => {
+    setLoadingSubs(true);
+    try {
+      const data = await adminFetch<{ offices: OfficeSubscription[] }>("/api/admin/subscriptions");
+      setSubs(data.offices ?? []);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل الاشتراكات", variant: "destructive" });
+    } finally {
+      setLoadingSubs(false);
+    }
+  }, [toast]);
+
   const loadHeroSlides = useCallback(async () => {
     setLoadingHero(true);
     try {
@@ -232,6 +273,11 @@ export default function Admin() {
       loadHeroSlides();
     }
   }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides]);
+
+  // Load subscriptions when that tab is opened
+  useEffect(() => {
+    if (activeTab === "subscriptions" && user) loadSubscriptions();
+  }, [activeTab, user, loadSubscriptions]);
 
   async function clearDemoData() {
     setConfirmClearDemo(false);
@@ -406,6 +452,27 @@ export default function Admin() {
       toast({ title: "خطأ", description: msg, variant: "destructive" });
     } finally {
       setToolsBusy(null);
+    }
+  }
+
+  async function setSubscription(officeId: number, status: string, officeName: string) {
+    setSubBusy(officeId);
+    try {
+      const res = await fetch(`${BASE}/api/admin/offices/${officeId}/set-subscription`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل تحديث الاشتراك");
+      toast({ title: "تم ✓", description: `${officeName}: ${(data as { message?: string }).message ?? "تم تحديث الاشتراك"}` });
+      await loadSubscriptions();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "حدث خطأ";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setSubBusy(null);
     }
   }
 
@@ -606,9 +673,10 @@ export default function Admin() {
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {([
-            { key: "offices"  as const, icon: Users,     label: "طلبات تسجيل المكاتب", count: offices.length },
-            { key: "listings" as const, icon: Building2, label: "مراقبة الإعلانات",     count: blockedListings || undefined },
-            { key: "tools"    as const, icon: Settings,  label: "أدوات",               count: undefined },
+            { key: "offices"       as const, icon: Users,      label: "طلبات تسجيل المكاتب", count: offices.length },
+            { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
+            { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
+            { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
           ]).map(({ key, icon: Icon, label, count }) => {
             const active = activeTab === key;
             return (
@@ -947,6 +1015,118 @@ export default function Admin() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════ SUBSCRIPTIONS TAB ═══════════════ */}
+        {activeTab === "subscriptions" && (
+          <div className="adm-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <div>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4.5 w-4.5" style={{ color: NAVY }} />
+                  <h3 className="text-base font-bold" style={{ color: NAVY }}>اشتراكات المكاتب</h3>
+                </div>
+                <p className="text-sm mt-1" style={{ color: BODY }}>
+                  فعّل اشتراك المكاتب الدافعة يدوياً، أو امنح/مدّد تجربة مجانية. الدفع الإلكتروني غير مفعّل بعد — يتم التحصيل خارج المنصة.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={loadSubscriptions} className="gap-1.5" style={{ color: BODY }}>
+                <RefreshCw className="h-3.5 w-3.5" />تحديث
+              </Button>
+            </div>
+
+            {loadingSubs ? (
+              <div className="p-5 space-y-3">
+                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+              </div>
+            ) : subs.length === 0 ? (
+              <div className="text-center py-20" style={{ color: BODY }}>
+                <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "#ECEFFB" }}>
+                  <CreditCard className="h-7 w-7" style={{ color: BLUE }} />
+                </div>
+                <p className="font-bold" style={{ color: NAVY }}>لا توجد مكاتب بعد</p>
+                <p className="text-sm mt-1">ستظهر اشتراكات المكاتب هنا بعد تسجيلها وتفعيلها</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>المكتب</th>
+                      <th>الباقة</th>
+                      <th>الحالة</th>
+                      <th>التجربة المجانية</th>
+                      <th style={{ textAlign: "center" }}>تغيير الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subs.map((s) => {
+                      const info = subStatusInfo(s.subscriptionStatus);
+                      const busy = subBusy === s.officeId;
+                      return (
+                        <tr key={s.officeId} data-testid={`sub-row-${s.officeId}`}>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#ECEFFB" }}>
+                                <Building2 className="h-5 w-5" style={{ color: BLUE }} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-bold" style={{ color: NAVY }}>{s.officeName}</div>
+                                {s.userEmail && <div className="text-xs" style={{ color: BODY }} dir="ltr">{s.userEmail}</div>}
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ color: BODY }}>{s.subscriptionPlan ?? "—"}</td>
+                          <td><span className="adm-chip" style={{ background: info.bg, color: info.color }}>{info.text}</span></td>
+                          <td>
+                            {s.subscriptionStatus === "trial" && s.trialDaysLeft != null ? (
+                              <span style={{ fontWeight: 700, fontSize: 13, color: s.trialDaysLeft <= 2 ? AMBER : NAVY }}>
+                                {s.trialDaysLeft} يوم متبقٍ
+                              </span>
+                            ) : (
+                              <span style={{ color: "#94a3b8" }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="flex gap-2 justify-center flex-wrap">
+                              <button
+                                disabled={busy || s.subscriptionStatus === "active"}
+                                onClick={() => setSubscription(s.officeId, "active", s.officeName)}
+                                className="adm-btn adm-btn--approve"
+                                style={{ height: 34, padding: "0 12px", opacity: (busy || s.subscriptionStatus === "active") ? 0.5 : 1 }}
+                                data-testid={`sub-activate-${s.officeId}`}
+                              >
+                                {busy ? <Loader2 className="animate-spin" style={{ width: 15, height: 15 }} /> : <CheckCircle style={{ width: 15, height: 15 }} />}
+                                تفعيل الاشتراك
+                              </button>
+                              <button
+                                disabled={busy}
+                                onClick={() => setSubscription(s.officeId, "trial", s.officeName)}
+                                className="adm-btn"
+                                style={{ height: 34, padding: "0 12px", background: "#fff", color: BLUE, border: `1px solid ${BLUE}`, opacity: busy ? 0.5 : 1 }}
+                                data-testid={`sub-trial-${s.officeId}`}
+                              >
+                                تجربة ٧ أيام
+                              </button>
+                              <button
+                                disabled={busy || s.subscriptionStatus === "expired"}
+                                onClick={() => setSubscription(s.officeId, "expired", s.officeName)}
+                                className="adm-btn adm-btn--reject"
+                                style={{ height: 34, padding: "0 12px", opacity: (busy || s.subscriptionStatus === "expired") ? 0.5 : 1 }}
+                                data-testid={`sub-stop-${s.officeId}`}
+                              >
+                                إيقاف
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

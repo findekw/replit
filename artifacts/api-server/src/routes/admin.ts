@@ -231,6 +231,8 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
       updates.trialStartedAt = new Date();
       updates.trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     }
+    // Activating a paid subscription should also make the office visible.
+    if (status === "active") updates.active = true;
     await db.update(officesTable).set(updates).where(eq(officesTable.id, officeId));
     res.json({ message: "تم تحديث حالة الاشتراك بنجاح" });
   } catch {
