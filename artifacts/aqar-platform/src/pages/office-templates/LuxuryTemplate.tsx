@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
 
 /**
@@ -92,7 +93,7 @@ export default function LuxuryTemplate(p: TemplateProps) {
         ) : properties.length === 0 ? (
           <div className="lx-empty">
             <Building2 size={50} style={{ color: "#C9A227", margin: "0 auto", opacity: 0.7 }} />
-            <p>{activeTab === "الكل" ? "لا توجد عقارات منشورة حالياً" : `لا توجد عقارات ${activeTab}`}</p>
+            <p>{emptyMessage(activeTab, activeType)}</p>
           </div>
         ) : (
           <>

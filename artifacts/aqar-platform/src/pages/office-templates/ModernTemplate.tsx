@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
 
 /**
@@ -83,7 +84,7 @@ export default function ModernTemplate(p: TemplateProps) {
         ) : properties.length === 0 ? (
           <div className="tm-card tm-empty">
             <Building2 size={52} style={{ color: "#cbd5e1", margin: "0 auto" }} />
-            <p>{activeTab === "الكل" ? "لا توجد عقارات منشورة حالياً" : `لا توجد عقارات ${activeTab}`}</p>
+            <p>{emptyMessage(activeTab, activeType)}</p>
           </div>
         ) : (
           <>

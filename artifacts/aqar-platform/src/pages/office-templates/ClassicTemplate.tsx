@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon, CheckCircle2,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
 
 /**
@@ -128,7 +129,7 @@ export default function ClassicTemplate(p: TemplateProps) {
           ) : properties.length === 0 ? (
             <div className="cl-card cl-empty">
               <Building2 size={52} style={{ color: "#cbd5e1", margin: "0 auto" }} />
-              <p>{activeTab === "الكل" ? "لا توجد عقارات منشورة حالياً" : `لا توجد عقارات ${activeTab}`}</p>
+              <p>{emptyMessage(activeTab, activeType)}</p>
             </div>
           ) : (
             <>

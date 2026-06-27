@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
 
 /**
@@ -102,7 +103,7 @@ export default function MinimalTemplate(p: TemplateProps) {
           ) : properties.length === 0 ? (
             <div className="mn-empty">
               <Building2 size={40} strokeWidth={1.25} style={{ color: "#CBD5E1", margin: "0 auto" }} />
-              <p>{activeTab === "الكل" ? "لا توجد عقارات منشورة حالياً" : `لا توجد عقارات ${activeTab}`}</p>
+              <p>{emptyMessage(activeTab, activeType)}</p>
             </div>
           ) : (
             <>

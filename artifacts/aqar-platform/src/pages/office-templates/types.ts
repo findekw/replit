@@ -69,6 +69,15 @@ export interface TemplateProps {
 export const TEMPLATE_KEYS = ["modern", "luxury", "minimal", "classic"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
+/** Empty-state copy that reflects the active status + type filters. */
+export function emptyMessage(activeTab: string, activeType: string): string {
+  const status = activeTab && activeTab !== "الكل" ? activeTab : "";
+  if (activeType && status) return `لا توجد عقارات ${activeType} ${status}`;
+  if (activeType) return `لا توجد عقارات من نوع ${activeType}`;
+  if (status) return `لا توجد عقارات ${status}`;
+  return "لا توجد عقارات منشورة حالياً";
+}
+
 export function resolveTemplateKey(t: string | null | undefined): TemplateKey {
   // Back-compat: old "dark" maps to the new "luxury".
   if (t === "dark") return "luxury";
