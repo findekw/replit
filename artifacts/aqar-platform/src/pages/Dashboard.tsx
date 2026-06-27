@@ -727,12 +727,14 @@ export default function Dashboard() {
                           href={`${BASE}/${snapshot.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title={`${BRAND_DOMAIN}/${snapshot.slug}`}
                           style={{
-                            minWidth: 0,
+                            minWidth: 0, maxWidth: "100%",
                             direction: "ltr", display: "block",
-                            fontSize: 15, fontFamily: "monospace", fontWeight: 700,
+                            fontSize: 14, fontFamily: "monospace", fontWeight: 700,
                             color: NAVY, textDecoration: "none",
-                            letterSpacing: "0.01em", wordBreak: "break-all",
+                            letterSpacing: "0.01em",
+                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                           }}
                         >
                           {BRAND_DOMAIN}/{snapshot.slug}

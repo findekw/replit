@@ -40,14 +40,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <style>{`
         .dsh-root { min-height:100vh; display:flex; background:#F6F8FC; font-family:'Cairo',system-ui,sans-serif; }
         .dsh-sidebar {
-          position:fixed; inset-block:0; inset-inline-end:0; z-index:50; width:272px;
+          position:fixed; top:0; bottom:0; right:0; z-index:50; width:272px; max-width:84vw;
           background:linear-gradient(185deg,#243150 0%,#1F2A44 60%,#1A2238 100%);
           display:flex; flex-direction:column;
           transform:translateX(100%); transition:transform .32s cubic-bezier(.4,0,.2,1);
           box-shadow:-8px 0 32px rgba(15,23,42,0.28);
         }
         .dsh-sidebar.open { transform:translateX(0); }
-        @media (min-width:768px){ .dsh-sidebar{ position:static; transform:none; box-shadow:none; } }
+        @media (min-width:768px){ .dsh-sidebar{ position:static; transform:none; box-shadow:none; max-width:none; } }
         .dsh-logo-wrap {
           height:78px; display:flex; align-items:center; gap:11px; padding:0 22px;
           border-bottom:1px solid rgba(255,255,255,0.07);
