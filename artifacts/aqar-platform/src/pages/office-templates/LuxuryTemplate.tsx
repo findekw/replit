@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { TypeFilter } from "./TypeFilter";
 
 /**
  * LUXURY — "فخم": dark editorial agency look. Centered full-bleed dark hero with a
@@ -14,7 +15,7 @@ import type { TemplateProps, CardProperty } from "./types";
  * labels, and light card wrappers so the (light) PropertyCards sit on the dark canvas.
  */
 export default function LuxuryTemplate(p: TemplateProps) {
-  const { office, properties, loadingProps, activeTab, setActiveTab, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
+  const { office, properties, loadingProps, activeTab, setActiveTab, activeType, setActiveType, propertyTypes, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
 
   return (
     <div dir="rtl" className="lx-root">
@@ -74,10 +75,13 @@ export default function LuxuryTemplate(p: TemplateProps) {
         {/* Listings */}
         <div className="lx-listhead">
           <div className="lx-label"><span className="lx-label-line" /> المعروضات</div>
-          <div className="lx-tabs">
-            {statusTabs.map((t) => (
-              <button key={t} className={`lx-tab ${activeTab === t ? "lx-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
-            ))}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="lx-tabs">
+              {statusTabs.map((t) => (
+                <button key={t} className={`lx-tab ${activeTab === t ? "lx-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
+              ))}
+            </div>
+            <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} dark accent="#C9A227" />
           </div>
         </div>
 

@@ -53,6 +53,9 @@ export interface TemplateProps {
   loadingProps: boolean;
   activeTab: string;
   setActiveTab: (t: string) => void;
+  activeType: string;
+  setActiveType: (t: string) => void;
+  propertyTypes: readonly string[];
   page: number;
   totalPages: number;
   setPage: (p: number) => void;

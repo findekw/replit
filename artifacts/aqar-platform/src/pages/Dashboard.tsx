@@ -375,10 +375,10 @@ export default function Dashboard() {
   const statCards = stats ? [
     { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
-    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#D97706", g2: "#F59E0B", bg: "#FFFBEB" },
+    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
-    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#0D9488", g2: "#14B8A6", bg: "#F0FDFA" },
-    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#D97706", g2: "#F59E0B", bg: "#FFFBEB" },
+    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
+    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
   ] : [];
@@ -1099,7 +1099,7 @@ export default function Dashboard() {
           <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
-                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#0D9488,#14B8A6)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(13,148,136,0.3)" }}>
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#059669,#10B981)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(5,150,105,0.3)" }}>
                   <Users className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
                 </span>
                 <h2 className="font-bold" style={{ fontSize: 16.5, color: "#1F2A44" }}>أحدث العملاء</h2>
@@ -1124,7 +1124,7 @@ export default function Dashboard() {
                     data-testid={`lead-${lead.id}`}
                   >
                     <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-                      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#F0FDFA", color: "#0D9488", fontWeight: 800, fontSize: 15 }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#ECFDF5", color: "#059669", fontWeight: 800, fontSize: 15 }}>
                         {(lead.customerName?.trim()?.[0] ?? "؟").toUpperCase()}
                       </span>
                       <div style={{ minWidth: 0 }}>

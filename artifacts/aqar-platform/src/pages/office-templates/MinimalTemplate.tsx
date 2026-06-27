@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { TypeFilter } from "./TypeFilter";
 
 /**
  * MINIMAL — ultra-clean Scandinavian/editorial look: pure white, big bold black
@@ -13,7 +14,7 @@ import type { TemplateProps, CardProperty } from "./types";
  * tons of whitespace. Deliberately the calmest, most typographic of the four.
  */
 export default function MinimalTemplate(p: TemplateProps) {
-  const { office, properties, loadingProps, activeTab, setActiveTab, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
+  const { office, properties, loadingProps, activeTab, setActiveTab, activeType, setActiveType, propertyTypes, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
 
   return (
     <div dir="rtl" className="mn-root">
@@ -86,10 +87,13 @@ export default function MinimalTemplate(p: TemplateProps) {
         <section className="mn-section">
           <div className="mn-listhead">
             <div className="mn-eyebrow">العقارات</div>
-            <div className="mn-tabs">
-              {statusTabs.map((t) => (
-                <button key={t} className={`mn-tab ${activeTab === t ? "mn-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
-              ))}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <div className="mn-tabs">
+                {statusTabs.map((t) => (
+                  <button key={t} className={`mn-tab ${activeTab === t ? "mn-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
+                ))}
+              </div>
+              <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} accent="#059669" />
             </div>
           </div>
 

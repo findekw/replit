@@ -321,9 +321,17 @@ router.get("/offices/:id/properties", async (req, res): Promise<void> => {
   const viewerOfficeId = await getOfficeId(req);
   const isOwner = viewerOfficeId !== null && viewerOfficeId === officeId;
 
-  const whereClause = isOwner
-    ? eq(propertiesTable.officeId, officeId)
-    : and(eq(propertiesTable.officeId, officeId), eq(propertiesTable.active, true));
+  // Filters (read straight from the query — the generated zod schema only types
+  // page/limit, so status/type would otherwise be silently dropped).
+  const statusFilter = String((req.query as Record<string, unknown>).status ?? "").trim();
+  const typeFilter = String((req.query as Record<string, unknown>).type ?? "").trim();
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
+
+  const conditions = [eq(propertiesTable.officeId, officeId)];
+  if (!isOwner) conditions.push(eq(propertiesTable.active, true));
+  if (statusFilter && VALID_STATUSES.includes(statusFilter)) conditions.push(eq(propertiesTable.status, statusFilter));
+  if (typeFilter) conditions.push(eq(propertiesTable.type, typeFilter));
+  const whereClause = and(...conditions);
 
   const [propsRaw, totalRaw] = await Promise.all([
     db

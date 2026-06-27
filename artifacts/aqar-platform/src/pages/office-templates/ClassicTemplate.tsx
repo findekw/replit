@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon, CheckCircle2,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { TypeFilter } from "./TypeFilter";
 
 /**
  * CLASSIC — corporate / trust look: solid navy top bar with logo + trust badges
@@ -14,7 +15,7 @@ import type { TemplateProps, CardProperty } from "./types";
  * Structured, bordered, divider-heavy. Distinct from the single-column templates.
  */
 export default function ClassicTemplate(p: TemplateProps) {
-  const { office, properties, loadingProps, activeTab, setActiveTab, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
+  const { office, properties, loadingProps, activeTab, setActiveTab, activeType, setActiveType, propertyTypes, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
 
   return (
     <div dir="rtl" className="cl-root">
@@ -112,10 +113,13 @@ export default function ClassicTemplate(p: TemplateProps) {
         <main className="cl-main">
           <div className="cl-listhead">
             <h2 className="cl-h2">عقارات المكتب</h2>
-            <div className="cl-tabs">
-              {statusTabs.map((t) => (
-                <button key={t} className={`cl-tab ${activeTab === t ? "cl-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
-              ))}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <div className="cl-tabs">
+                {statusTabs.map((t) => (
+                  <button key={t} className={`cl-tab ${activeTab === t ? "cl-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
+                ))}
+              </div>
+              <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} accent="#1F2A44" />
             </div>
           </div>
 

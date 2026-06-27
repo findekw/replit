@@ -45,11 +45,14 @@ const _AREA_ID: { name: string; id: number; govId: number }[] = [
   {name:"اسطبلات الجهراء",id:133,govId:6},{name:"الجهراء الصناعية",id:134,govId:6},{name:"الجهراء القديمة",id:124,govId:6},{name:"الخويسات",id:137,govId:6},{name:"الصبية",id:132,govId:6},{name:"الصليبية",id:129,govId:6},{name:"الصليبيخات",id:41,govId:6},{name:"العبدلي",id:130,govId:6},{name:"العيون",id:127,govId:6},{name:"القصر",id:43,govId:6},{name:"المطلاع",id:122,govId:6},{name:"النسيم",id:123,govId:6},{name:"النعايم",id:138,govId:6},{name:"النعيم",id:42,govId:6},{name:"النهضة",id:139,govId:6},{name:"الهجن",id:128,govId:6},{name:"الواحة",id:125,govId:6},{name:"امغرة الصناعية",id:126,govId:6},{name:"تيماء",id:136,govId:6},{name:"جنوب سعد العبدالله",id:135,govId:6},{name:"سعد العبدالله",id:44,govId:6},{name:"كبد",id:131,govId:6},
 ];
 
+// One restrained accent across all feature cards (el-captin-style: few colors).
+const FEAT_COLOR = "#3F5BD8";
+const FEAT_BG = "#EEF2FF";
 const FEATURES = [
-  { icon: <ShieldCheck size={26} strokeWidth={2} />, label: "مكاتب موثوقة ومرخّصة", desc: "كل الإعلانات من مكاتب عقارية حقيقية تمت مراجعتها", color: "#3F5BD8", bg: "#EEF2FF" },
-  { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: "#059669", bg: "#ECFDF5" },
-  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "كلّم المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: "#D97706", bg: "#FEF3C7" },
-  { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: "#DC2626", bg: "#FFF1F2" },
+  { icon: <ShieldCheck size={26} strokeWidth={2} />, label: "مكاتب موثوقة ومرخّصة", desc: "كل الإعلانات من مكاتب عقارية حقيقية تمت مراجعتها", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "كلّم المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: FEAT_COLOR, bg: FEAT_BG },
 ];
 
 export default function Home() {

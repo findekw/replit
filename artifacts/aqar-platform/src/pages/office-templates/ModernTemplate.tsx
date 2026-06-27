@@ -6,13 +6,14 @@ import {
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
+import { TypeFilter } from "./TypeFilter";
 
 /**
  * MODERN — bold marketplace look: deep navy→indigo gradient hero, big logo tile,
  * floating glass contact bar, generous spacing. The flagship default template.
  */
 export default function ModernTemplate(p: TemplateProps) {
-  const { office, properties, loadingProps, activeTab, setActiveTab, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
+  const { office, properties, loadingProps, activeTab, setActiveTab, activeType, setActiveType, propertyTypes, page, totalPages, setPage, onWhatsApp, onCall, statusTabs, hasWA, hasPhone } = p;
 
   return (
     <div dir="rtl" className="tm-root">
@@ -67,10 +68,13 @@ export default function ModernTemplate(p: TemplateProps) {
         {/* Listings */}
         <div className="tm-listhead">
           <h2 className="tm-h2">عقارات المكتب</h2>
-          <div className="tm-tabs">
-            {statusTabs.map((t) => (
-              <button key={t} className={`tm-tab ${activeTab === t ? "tm-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
-            ))}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="tm-tabs">
+              {statusTabs.map((t) => (
+                <button key={t} className={`tm-tab ${activeTab === t ? "tm-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
+              ))}
+            </div>
+            <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} accent="#3F5BD8" />
           </div>
         </div>
 

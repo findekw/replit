@@ -12,6 +12,8 @@ import ClassicTemplate from "./office-templates/ClassicTemplate";
 
 const BASE = getApiBase();
 const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل"] as const;
+// Common property types offered as a quick filter on the office page.
+const PROPERTY_TYPES = ["شقة", "بيت", "دور", "ارض", "عمارة", "محل", "مكتب", "مخزن", "شاليه", "مزرعة", "قسيمة"] as const;
 
 const TEMPLATES = {
   modern: ModernTemplate,
@@ -31,6 +33,7 @@ export default function OfficePage() {
   const [loadingProps, setLoadingProps] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("الكل");
+  const [activeType, setActiveType] = useState<string>("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -49,7 +52,8 @@ export default function OfficePage() {
     if (!office) return;
     setLoadingProps(true);
     const statusParam = activeTab !== "الكل" ? `&status=${encodeURIComponent(activeTab)}` : "";
-    fetch(`${BASE}/api/offices/${office.id}/properties?page=${page}&limit=12${statusParam}`, { credentials: "include" })
+    const typeParam = activeType ? `&type=${encodeURIComponent(activeType)}` : "";
+    fetch(`${BASE}/api/offices/${office.id}/properties?page=${page}&limit=12${statusParam}${typeParam}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data: { properties: OfficeProperty[]; totalPages: number }) => {
         setProperties(data.properties ?? []);
@@ -57,9 +61,9 @@ export default function OfficePage() {
       })
       .catch(() => setProperties([]))
       .finally(() => setLoadingProps(false));
-  }, [office, activeTab, page]);
+  }, [office, activeTab, activeType, page]);
 
-  useEffect(() => { setPage(1); }, [activeTab]);
+  useEffect(() => { setPage(1); }, [activeTab, activeType]);
 
   // Document title for SEO / sharing
   useEffect(() => {
@@ -105,7 +109,9 @@ export default function OfficePage() {
   const Template = TEMPLATES[resolveTemplateKey(office.landingTemplate)] ?? ModernTemplate;
 
   const props: TemplateProps = {
-    office, properties, loadingProps, activeTab, setActiveTab, page, totalPages, setPage,
+    office, properties, loadingProps, activeTab, setActiveTab,
+    activeType, setActiveType, propertyTypes: PROPERTY_TYPES,
+    page, totalPages, setPage,
     onWhatsApp, onCall, statusTabs: STATUS_TABS, hasWA, hasPhone,
   };
 
