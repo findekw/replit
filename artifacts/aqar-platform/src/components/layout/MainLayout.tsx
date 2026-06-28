@@ -422,11 +422,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 >
                   <Instagram className="h-4 w-4" />
                 </a>
-                <a href="https://x.com/yourusername" target="_blank" rel="noopener noreferrer"
-                  aria-label="X (Twitter)" className="ft-social-btn" title="X"
-                >
-                  <XIcon />
-                </a>
               </div>
             </div>
 

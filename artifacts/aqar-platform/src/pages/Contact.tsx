@@ -79,16 +79,6 @@ export default function Contact() {
                   <Instagram className="h-4 w-4" />
                   إنستقرام
                 </a>
-                <a
-                  href="https://x.com/yourusername"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ background: "#000" }}
-                >
-                  <XIcon />
-                  X
-                </a>
               </div>
             </div>
           </div>
