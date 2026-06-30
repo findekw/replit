@@ -31,14 +31,14 @@ export default function Contact() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-4">
+                <Mail className="h-6 w-6 text-indigo-600" />
               </div>
               <h2 className="font-bold text-gray-900 text-base mb-1">البريد الإلكتروني</h2>
               <p className="text-gray-500 text-sm mb-4">راسلنا وسنرد عليك في أقرب وقت</p>
               <a
                 href="mailto:info@finde.co"
-                className="text-sm font-semibold text-blue-600 hover:underline break-all"
+                className="text-sm font-semibold text-indigo-600 hover:underline break-all"
               >
                 info@finde.co
               </a>

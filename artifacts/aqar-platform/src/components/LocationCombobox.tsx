@@ -96,7 +96,7 @@ export function LocationCombobox({
           justifyContent: "space-between",
           gap: "8px",
           borderRadius: "10px",
-          border: open ? "1px solid #3F5BD8" : "1px solid #94A3B8",
+          border: open ? "1px solid #667EEA" : "1px solid #94A3B8",
           outline: "none",
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
@@ -241,7 +241,7 @@ export function LocationCombobox({
                         width: "14px",
                         height: "14px",
                         flexShrink: 0,
-                        color: "#2563eb",
+                        color: "#667EEA",
                         opacity: isSelected ? 1 : 0,
                       }}
                     />

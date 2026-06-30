@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .dsh-root { min-height:100vh; display:flex; background:#F6F8FC; font-family:'Cairo',system-ui,sans-serif; }
         .dsh-sidebar {
           position:fixed; top:0; bottom:0; right:0; z-index:50; width:272px; max-width:84vw;
-          background:linear-gradient(185deg,#243150 0%,#1F2A44 60%,#1A2238 100%);
+          background:linear-gradient(185deg,#243150 0%,#111827 60%,#1A2238 100%);
           display:flex; flex-direction:column;
           transform:translateX(100%); transition:transform .32s cubic-bezier(.4,0,.2,1);
           box-shadow:-8px 0 32px rgba(15,23,42,0.28);
@@ -54,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dsh-logo-badge {
           width:34px; height:34px; border-radius:10px; flex-shrink:0;
-          background:linear-gradient(135deg,#3F5BD8,#5B73E0);
+          background:linear-gradient(135deg,#667EEA,#5B73E0);
           display:flex; align-items:center; justify-content:center;
           box-shadow:0 6px 16px rgba(63,91,216,0.45);
         }
@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dsh-avatar {
           width:44px; height:44px; border-radius:13px; flex-shrink:0;
-          background:linear-gradient(135deg,#3F5BD8,#5B73E0); color:#fff;
+          background:linear-gradient(135deg,#667EEA,#5B73E0); color:#fff;
           display:flex; align-items:center; justify-content:center;
           font-weight:800; font-size:18px; box-shadow:0 6px 16px rgba(63,91,216,0.5);
           border:1px solid rgba(255,255,255,0.18);
@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dsh-navlink:hover { background:rgba(255,255,255,0.06); color:#fff; }
         .dsh-navlink.active {
-          background:linear-gradient(135deg,#3F5BD8,#4B66E0); color:#fff; font-weight:700;
+          background:linear-gradient(135deg,#667EEA,#4B66E0); color:#fff; font-weight:700;
           box-shadow:0 8px 20px rgba(63,91,216,0.5), inset 0 1px 0 rgba(255,255,255,0.18);
         }
         .dsh-navlink.active::before {
@@ -115,12 +115,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           position:sticky; top:0; z-index:30;
           box-shadow:0 1px 0 rgba(15,23,42,0.02);
         }
-        .dsh-pagetitle { font-size:18px; font-weight:800; color:#1F2A44; letter-spacing:-0.01em; }
+        .dsh-pagetitle { font-size:18px; font-weight:800; color:#111827; letter-spacing:-0.01em; }
         .dsh-pagetitle small { display:block; font-size:11.5px; font-weight:600; color:#94A3B8; margin-top:1px; letter-spacing:0; }
         .dsh-cta {
           display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 18px;
           border-radius:13px; font-weight:700; font-size:14px; color:#fff; border:none; cursor:pointer;
-          background:linear-gradient(135deg,#3F5BD8,#4B66E0);
+          background:linear-gradient(135deg,#667EEA,#4B66E0);
           box-shadow:0 8px 20px rgba(63,91,216,0.34);
           transition:transform .15s, box-shadow .15s;
         }
@@ -222,7 +222,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden flex-shrink-0 text-[#1F2A44] hover:bg-slate-100"
+            className="md:hidden flex-shrink-0 text-[#111827] hover:bg-slate-100"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -261,10 +261,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               background: "rgba(63,91,216,0.12)", border: "1px solid rgba(63,91,216,0.2)",
             }}>
-              <Clock className="h-5 w-5" style={{ color: "#3F5BD8" }} />
+              <Clock className="h-5 w-5" style={{ color: "#667EEA" }} />
             </span>
             <div>
-              <span className="font-bold" style={{ color: "#1F2A44" }}>حسابك قيد المراجعة</span>
+              <span className="font-bold" style={{ color: "#111827" }}>حسابك قيد المراجعة</span>
               <span className="text-sm mr-2" style={{ color: "#64748B" }}>
                 سيتم تفعيل حسابك خلال 24 ساعة. يمكنك إضافة إعلانات الآن وستُنشر بعد التفعيل.
               </span>

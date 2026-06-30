@@ -3,8 +3,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { MessageCircle, Shield } from "lucide-react";
 
-const BLUE     = "#1F2A44";
-const ACCENT   = "#3F5BD8";
+const BLUE     = "#111827";
+const ACCENT   = "#667EEA";
 const WA_GREEN = "#25D366";
 
 const FEATURE_CARDS = [
@@ -116,9 +116,9 @@ export default function Plans() {
           .price-new { font-size: 30px; font-weight: 900; color: var(--text-heading); margin: 4px 0 10px; line-height: 1.2; }
           .price-new span { font-size: 16px; font-weight: 600; color: #64748B; }
           .pricing-desc { font-size: 15px; color: #64748B; margin: 10px 0; font-weight: 500; }
-          .trial-line { font-size: 15px; font-weight: 800; color: #3F5BD8; margin: 14px 0 10px; }
+          .trial-line { font-size: 15px; font-weight: 800; color: #667EEA; margin: 14px 0 10px; }
           .cta-btn {
-            background: #3F5BD8;
+            background: #667EEA;
             color: #ffffff;
             border: none;
             padding: 14px;

@@ -65,8 +65,8 @@ function StatusChips({ value, onChange }: { value: string; onChange: (v: string)
             style={{
               height: "38px",
               borderRadius: "10px",
-              border: active ? "2px solid #3F5BD8" : "1.5px solid #94A3B8",
-              background: active ? "#3F5BD8" : "#F5F7FA",
+              border: active ? "2px solid #667EEA" : "1.5px solid #94A3B8",
+              background: active ? "#667EEA" : "#F5F7FA",
               color: active ? "#ffffff" : "#0f172a",
               fontWeight: active ? 700 : 600,
               fontSize: "13px",
@@ -98,8 +98,8 @@ function BedroomsChips({ value, onChange }: { value: string; onChange: (v: strin
             style={{
               height: "36px",
               borderRadius: "10px",
-              border: active ? "2px solid #3F5BD8" : "1.5px solid #94A3B8",
-              background: active ? "#3F5BD8" : "#F5F7FA",
+              border: active ? "2px solid #667EEA" : "1.5px solid #94A3B8",
+              background: active ? "#667EEA" : "#F5F7FA",
               color: active ? "#ffffff" : "#0f172a",
               fontWeight: active ? 700 : 600,
               fontSize: "13px",
@@ -553,7 +553,7 @@ export default function Properties() {
           .pagination button,
           .pagination a {
             background-color: #ffffff;
-            color: #1F2A44;
+            color: #111827;
             border: 1px solid #E5E7EB;
             border-radius: 10px;
             padding: 8px 16px;
@@ -567,9 +567,9 @@ export default function Properties() {
           .pagination .active,
           .pagination button.active,
           .pagination a.active {
-            background-color: #3F5BD8;
+            background-color: #667EEA;
             color: #ffffff;
-            border-color: #3F5BD8;
+            border-color: #667EEA;
           }
           .pagination button:disabled {
             opacity: 0.5;
@@ -591,7 +591,7 @@ export default function Properties() {
             transition: border-color 0.15s, background 0.15s; outline: none;
           }
           .prop-field-btn:active:not(:disabled) { background: #f1f5f9; }
-          .prop-field-btn.has-value { background: #eff6ff; border-color: #3F5BD8; }
+          .prop-field-btn.has-value { background: #eff6ff; border-color: #667EEA; }
           .prop-field-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
           .prop-sheet-item {
@@ -602,7 +602,7 @@ export default function Properties() {
             -webkit-tap-highlight-color: transparent;
           }
           .prop-sheet-item:active { background: #f1f5f9; }
-          .prop-sheet-item.sel { background: #eff6ff; color: #3F5BD8; font-weight: 600; }
+          .prop-sheet-item.sel { background: #eff6ff; color: #667EEA; font-weight: 600; }
 
           .prop-status-tab {
             padding: 10px 14px; font-size: 14px; font-weight: 700;
@@ -622,7 +622,7 @@ export default function Properties() {
           }
           .results-loading-thumb {
             position: absolute; top: 0; bottom: 0; width: 40%;
-            background: linear-gradient(90deg, #3F5BD8, #7B9FF5);
+            background: linear-gradient(90deg, #667EEA, #7B9FF5);
             border-radius: 2px;
             animation: resultsBarSlide 1.1s ease-in-out infinite;
           }
@@ -632,13 +632,13 @@ export default function Properties() {
           }
           .results-refreshing-text {
             display: inline-flex; align-items: center; gap: 6px;
-            font-size: 13px; color: #3F5BD8; font-weight: 600;
+            font-size: 13px; color: #667EEA; font-weight: 600;
             animation: refreshPulse 1.2s ease infinite;
           }
           @keyframes spin { to { transform: rotate(360deg); } }
           .results-spinner {
             width: 13px; height: 13px; border: 2px solid #c7d2fe;
-            border-top-color: #3F5BD8; border-radius: 50%;
+            border-top-color: #667EEA; border-radius: 50%;
             animation: spin 0.7s linear infinite; flex-shrink: 0;
           }
         `}</style>
@@ -664,8 +664,8 @@ export default function Properties() {
                     setStatus(s); applyFilters();
                   }}
                   style={{
-                    borderBottom: status === s ? "2.5px solid #3F5BD8" : "2.5px solid transparent",
-                    color: status === s ? "#1F2A44" : "#9ca3af",
+                    borderBottom: status === s ? "2.5px solid #667EEA" : "2.5px solid transparent",
+                    color: status === s ? "#111827" : "#9ca3af",
                     marginBottom: -1,
                   }}
                 >
@@ -684,7 +684,7 @@ export default function Properties() {
                 <span style={{ color: type ? "#1e293b" : "#94a3b8", fontWeight: type ? 600 : 400 }}>
                   {type || "نوع العقار"}
                 </span>
-                <ChevronDown size={18} color={type ? "#2563eb" : "#94a3b8"} />
+                <ChevronDown size={18} color={type ? "#667EEA" : "#94a3b8"} />
               </button>
 
               {/* Governorate */}
@@ -697,7 +697,7 @@ export default function Properties() {
                     ? (governorates ?? []).find(g => String(g.id) === govId)?.nameAr.replace("محافظة ", "")
                     : "المحافظة"}
                 </span>
-                <ChevronDown size={18} color={govId ? "#2563eb" : "#94a3b8"} />
+                <ChevronDown size={18} color={govId ? "#667EEA" : "#94a3b8"} />
               </button>
 
               {/* Area */}
@@ -711,7 +711,7 @@ export default function Properties() {
                     ? (areas ?? []).find(a => String(a.id) === areaId)?.nameAr
                     : govId ? "المنطقة" : "اختر المحافظة أولاً"}
                 </span>
-                <ChevronDown size={18} color={areaId ? "#2563eb" : "#94a3b8"} />
+                <ChevronDown size={18} color={areaId ? "#667EEA" : "#94a3b8"} />
               </button>
 
               {/* Advanced filters row */}
@@ -731,7 +731,7 @@ export default function Properties() {
                   {(minPrice || maxPrice || minArea || maxArea || bedrooms) && (
                     <span style={{
                       minWidth: "18px", height: "18px", borderRadius: "9px",
-                      background: "#3F5BD8", color: "#fff",
+                      background: "#667EEA", color: "#fff",
                       fontSize: "11px", fontWeight: 700,
                       display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
                     }}>
@@ -815,7 +815,7 @@ export default function Properties() {
               }}
             >
               <div style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
-                <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#2C4870", margin: 0 }}>
+                <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#111827", margin: 0 }}>
                   تصفية النتائج
                 </h2>
               </div>
@@ -926,7 +926,7 @@ export default function Properties() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "14px 20px 10px", borderBottom: "1px solid #f1f5f9", flexShrink: 0,
             }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#2C4870" }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#111827" }}>
                 {sheetOpen === "type" ? "نوع العقار" : sheetOpen === "gov" ? "المحافظة" : "المنطقة"}
               </h3>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1010,7 +1010,7 @@ export default function Properties() {
                       onClick={() => handleSheetSelect(item.value)}
                     >
                       <span>{item.label}</span>
-                      {isSel && <Check size={16} color="#2563eb" />}
+                      {isSel && <Check size={16} color="#667EEA" />}
                     </button>
                   );
                 })
@@ -1123,7 +1123,7 @@ export default function Properties() {
                 onClick={applyMobileFilter}
                 style={{
                   flex: 2, height: "48px", borderRadius: "12px",
-                  border: "none", background: "#2563eb",
+                  border: "none", background: "#667EEA",
                   color: "#ffffff", fontWeight: 700, fontSize: "15px",
                   cursor: "pointer", outline: "none",
                 }}

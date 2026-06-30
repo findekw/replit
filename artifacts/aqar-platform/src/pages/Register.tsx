@@ -284,7 +284,7 @@ export default function Register() {
 
   if (formState === "success") {
     return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, #1F2A44, #3F5BD8)" }}>
+      <div dir="rtl" className="min-h-screen flex items-center justify-center px-4" style={{ background: "linear-gradient(135deg, #111827, #667EEA)" }}>
         <div className="w-full max-w-md rounded-3xl p-10 text-center" style={{ background: "#ffffff", boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
           <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-foreground mb-3">تم بنجاح!</h2>
@@ -306,7 +306,7 @@ export default function Register() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: "linear-gradient(135deg, #1F2A44, #3F5BD8)" }}>
+    <div dir="rtl" className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: "linear-gradient(135deg, #111827, #667EEA)" }}>
       <div className="w-full max-w-md rounded-3xl p-8" style={{ background: "#ffffff", boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
 
         {/* Logo */}
@@ -319,7 +319,7 @@ export default function Register() {
         </div>
 
         {/* Feature link */}
-        <p className="text-center mb-5" style={{ color: "#3F5BD8", fontWeight: 500, fontSize: 15 }}>
+        <p className="text-center mb-5" style={{ color: "#667EEA", fontWeight: 500, fontSize: 15 }}>
           🔗 رابط خاص لمكتبك تقدر مشاركته في واتساب، إنستغرام والبزنس كارد
         </p>
 
@@ -647,7 +647,7 @@ export default function Register() {
             <Link
               href="/login"
               className="font-semibold hover:underline transition-all"
-              style={{ color: "#3F5BD8" }}
+              style={{ color: "#667EEA" }}
             >
               تسجيل الدخول
             </Link>

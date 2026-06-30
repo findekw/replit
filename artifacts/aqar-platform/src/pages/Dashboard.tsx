@@ -18,9 +18,9 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
-  "جديد": "bg-blue-100 text-blue-800",
-  "مهتم": "bg-blue-50 text-blue-700",
-  "تم التواصل": "bg-blue-100 text-blue-800",
+  "جديد": "bg-indigo-100 text-indigo-800",
+  "مهتم": "bg-indigo-50 text-indigo-700",
+  "تم التواصل": "bg-indigo-100 text-indigo-800",
   "غير جاد": "bg-gray-100 text-gray-700",
   "مغلق": "bg-red-100 text-red-800",
 };
@@ -373,14 +373,14 @@ export default function Dashboard() {
   const isLoading = authLoading || statsLoading;
 
   const statCards = stats ? [
-    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
-    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
-    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
-    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#3F5BD8", g2: "#5B73E0", bg: "#EEF2FE" },
+    { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
   ] : [];
 
   if (!authLoading && !oid) {
@@ -401,9 +401,9 @@ export default function Dashboard() {
     if (subStatus === "trial") {
       const urgent = trialDaysLeft !== null && trialDaysLeft <= 2;
       return (
-        <div className={`mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border ${urgent ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"}`}>
+        <div className={`mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border ${urgent ? "bg-orange-50 border-orange-200" : "bg-indigo-50 border-indigo-200"}`}>
           <div className="flex items-start gap-3">
-            <Clock className={`h-5 w-5 mt-0.5 flex-shrink-0 ${urgent ? "text-orange-500" : "text-blue-500"}`} />
+            <Clock className={`h-5 w-5 mt-0.5 flex-shrink-0 ${urgent ? "text-orange-500" : "text-indigo-500"}`} />
             <div>
               <p className="font-semibold" style={{ fontSize: 15, color: urgent ? "#9a3412" : "#1e40af" }}>
                 {trialDaysLeft !== null && trialDaysLeft > 0
@@ -415,7 +415,7 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <Button size="sm" className={`gap-2 flex-shrink-0 ${urgent ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"} text-white`} onClick={requestSubscription} disabled={requestingSubscription}>
+          <Button size="sm" className={`gap-2 flex-shrink-0 ${urgent ? "bg-orange-500 hover:bg-orange-600" : "bg-indigo-600 hover:bg-indigo-700"} text-white`} onClick={requestSubscription} disabled={requestingSubscription}>
             <Crown className="h-3.5 w-3.5" />اشترك الآن
           </Button>
         </div>
@@ -423,12 +423,12 @@ export default function Dashboard() {
     }
     if (subStatus === "pending_payment") {
       return (
-        <div className="mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-blue-50 border border-blue-200">
+        <div className="mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-50 border border-indigo-200">
           <div className="flex items-start gap-3">
-            <Clock className="h-5 w-5 mt-0.5 flex-shrink-0 text-blue-600" />
+            <Clock className="h-5 w-5 mt-0.5 flex-shrink-0 text-indigo-600" />
             <div>
-              <p className="font-semibold text-sm text-blue-800">طلب اشتراكك قيد المراجعة</p>
-              <p className="text-xs text-blue-600 mt-0.5">تم استلام طلبك. تواصل معنا لإكمال الدفع وتفعيل اشتراكك</p>
+              <p className="font-semibold text-sm text-indigo-800">طلب اشتراكك قيد المراجعة</p>
+              <p className="text-xs text-indigo-600 mt-0.5">تم استلام طلبك. تواصل معنا لإكمال الدفع وتفعيل اشتراكك</p>
             </div>
           </div>
           <a href={`https://wa.me/96595005151?text=${encodeURIComponent("مرحبا، اريد الاشتراك في المنصة وتفعيل حسابي")}`} target="_blank" rel="noopener noreferrer">
@@ -472,7 +472,7 @@ export default function Dashboard() {
         <div
           className="mb-6"
           style={{
-            background: "linear-gradient(120deg,#1A2238 0%,#26345A 52%,#3F5BD8 135%)",
+            background: "linear-gradient(120deg,#1A2238 0%,#26345A 52%,#667EEA 135%)",
             borderRadius: 22, padding: "28px 30px", color: "#fff",
             boxShadow: "0 16px 40px rgba(31,42,68,0.26)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -504,7 +504,7 @@ export default function Dashboard() {
           <Link href="/dashboard/listings/new" style={{ position: "relative", zIndex: 1 }}>
             <Button
               className="gap-2 h-12 px-7 rounded-2xl font-bold"
-              style={{ background: "#fff", color: "#1F2A44", boxShadow: "0 10px 24px rgba(0,0,0,0.22)" }}
+              style={{ background: "#fff", color: "#111827", boxShadow: "0 10px 24px rgba(0,0,0,0.22)" }}
               data-testid="button-add-listing-dashboard"
             >
               <Plus className="h-[18px] w-[18px]" />إضافة إعلان جديد
@@ -533,9 +533,9 @@ export default function Dashboard() {
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "14px 22px", borderBottom: "1px solid #F0F2F7", background: "#FAFBFE",
           }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 700, color: "#1F2A44", letterSpacing: "0.02em" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 700, color: "#111827", letterSpacing: "0.02em" }}>
               <span style={{ width: 26, height: 26, borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#EEF2FE" }}>
-                <Building style={{ width: 14, height: 14, color: "#3F5BD8" }} />
+                <Building style={{ width: 14, height: 14, color: "#667EEA" }} />
               </span>
               ملف المكتب العقاري
             </span>
@@ -554,7 +554,7 @@ export default function Dashboard() {
               </button>
             ) : (
               <span style={{
-                fontSize: 11, fontWeight: 600, color: "#2563eb",
+                fontSize: 11, fontWeight: 600, color: "#667EEA",
                 background: "#eff6ff", padding: "3px 10px", borderRadius: 20,
               }}>
                 وضع التعديل
@@ -572,7 +572,7 @@ export default function Dashboard() {
               className="dsh-cover"
               style={{
                 position: "relative", height: 150, borderRadius: 16, cursor: "pointer", overflow: "hidden",
-                background: officeCover ? "#0b1220" : `linear-gradient(135deg, ${NAVY} 0%, #2E3E66 50%, #3F5BD8 100%)`,
+                background: officeCover ? "#0b1220" : `linear-gradient(135deg, ${NAVY} 0%, #2E3E66 50%, #667EEA 100%)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 border: "1px solid #EAEEF5", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04)",
               }}
@@ -706,8 +706,8 @@ export default function Dashboard() {
               {/* View mode: link + copy + visit */}
               {!editMode && (
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#1F2A44", marginBottom: 9 }}>
-                    <ExternalLink style={{ width: 14, height: 14, color: "#3F5BD8" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 9 }}>
+                    <ExternalLink style={{ width: 14, height: 14, color: "#667EEA" }} />
                     صفحتك العامة على Finde
                   </div>
                   {snapshot.slug ? (
@@ -719,7 +719,7 @@ export default function Dashboard() {
                       boxShadow: "0 4px 14px rgba(63,91,216,0.08)",
                     }}>
                       <span style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #DBE4FF", boxShadow: "0 2px 6px rgba(63,91,216,0.12)" }}>
-                        <ExternalLink style={{ width: 18, height: 18, color: "#3F5BD8" }} />
+                        <ExternalLink style={{ width: 18, height: 18, color: "#667EEA" }} />
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 2 }}>الرابط المباشر</div>
@@ -746,7 +746,7 @@ export default function Dashboard() {
                           style={{
                             display: "inline-flex", alignItems: "center", gap: 6,
                             padding: "9px 16px", borderRadius: 10,
-                            border: "none", background: copied ? "#059669" : "#3F5BD8",
+                            border: "none", background: copied ? "#059669" : "#667EEA",
                             color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
                             boxShadow: "0 6px 16px rgba(63,91,216,0.28)", transition: "background .18s",
                           }}
@@ -762,7 +762,7 @@ export default function Dashboard() {
                             display: "inline-flex", alignItems: "center", gap: 6,
                             padding: "9px 16px", borderRadius: 10,
                             border: "1.5px solid #C7D2FE", background: "#fff",
-                            color: "#3F5BD8", fontSize: 13, fontWeight: 700, textDecoration: "none",
+                            color: "#667EEA", fontSize: 13, fontWeight: 700, textDecoration: "none",
                           }}
                         >
                           <ExternalLink style={{ width: 14, height: 14 }} />
@@ -997,8 +997,8 @@ export default function Dashboard() {
                 <p className="mb-1" style={{ fontSize: 13, color: "#0f172a" }}>حالة الاشتراك</p>
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                   subStatus === "active" ? "bg-green-100 text-green-800" :
-                  subStatus === "trial" ? "bg-blue-100 text-blue-800" :
-                  subStatus === "pending_payment" ? "bg-blue-50 text-blue-700" :
+                  subStatus === "trial" ? "bg-indigo-100 text-indigo-800" :
+                  subStatus === "pending_payment" ? "bg-indigo-50 text-indigo-700" :
                   "bg-red-100 text-red-800"
                 }`}>
                   {subStatus === "active" && <CheckCircle2 className="h-3 w-3" />}
@@ -1019,7 +1019,7 @@ export default function Dashboard() {
             </div>
             {subStatus !== "active" && subStatus !== "pending_payment" && (
               <div className="mt-4 pt-4 border-t">
-                <Button size="sm" className="gap-2 bg-[#2563EB] hover:bg-blue-700 text-white" onClick={requestSubscription} disabled={requestingSubscription}>
+                <Button size="sm" className="gap-2 bg-[#667EEA] hover:bg-indigo-700 text-white" onClick={requestSubscription} disabled={requestingSubscription}>
                   <Crown className="h-3.5 w-3.5" />
                   {requestingSubscription ? "جارٍ الإرسال..." : "اشترك الآن — 10 د.ك / شهر"}
                 </Button>
@@ -1030,10 +1030,10 @@ export default function Dashboard() {
 
         {/* ─── Stats Grid ─── */}
         <div className="flex items-center gap-2.5 mb-4 mt-1">
-          <span style={{ width: 34, height: 34, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#3F5BD8,#5B73E0)", boxShadow: "0 6px 16px rgba(63,91,216,0.32)" }}>
+          <span style={{ width: 34, height: 34, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#667EEA,#5B73E0)", boxShadow: "0 6px 16px rgba(63,91,216,0.32)" }}>
             <TrendingUp className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
           </span>
-          <h2 className="font-bold" style={{ fontSize: 17, color: "#1F2A44", letterSpacing: "-0.01em" }}>نظرة سريعة على الأداء</h2>
+          <h2 className="font-bold" style={{ fontSize: 17, color: "#111827", letterSpacing: "-0.01em" }}>نظرة سريعة على الأداء</h2>
         </div>
         {isLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -1076,7 +1076,7 @@ export default function Dashboard() {
                     <Icon className="h-[22px] w-[22px]" style={{ color: "#fff" }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 28, fontWeight: 800, color: "#1F2A44", lineHeight: 1, letterSpacing: "-0.01em" }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: "#111827", lineHeight: 1, letterSpacing: "-0.01em" }}>
                       {value.toLocaleString("en-US")}
                     </div>
                     <div style={{ fontSize: 13, color: "#64748B", marginTop: 6, fontWeight: 600 }}>{label}</div>
@@ -1102,16 +1102,16 @@ export default function Dashboard() {
                 <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#059669,#10B981)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(5,150,105,0.3)" }}>
                   <Users className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
                 </span>
-                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#1F2A44" }}>أحدث العملاء</h2>
+                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#111827" }}>أحدث العملاء</h2>
               </div>
-              <Link href="/dashboard/leads" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
+              <Link href="/dashboard/leads" className="text-sm font-semibold hover:underline" style={{ color: "#667EEA" }}>عرض الكل</Link>
             </div>
             {isLoading ? (
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
             ) : (stats?.recentLeads ?? []).length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
-                <p style={{ fontSize: 15, color: "#1F2A44", fontWeight: 700 }}>لا توجد عملاء حتى الآن</p>
+                <p style={{ fontSize: 15, color: "#111827", fontWeight: 700 }}>لا توجد عملاء حتى الآن</p>
                 <p className="mt-1" style={{ fontSize: 13, color: "#64748B" }}>ستظهر هنا طلبات العملاء على عقاراتك</p>
               </div>
             ) : (
@@ -1128,7 +1128,7 @@ export default function Dashboard() {
                         {(lead.customerName?.trim()?.[0] ?? "؟").toUpperCase()}
                       </span>
                       <div style={{ minWidth: 0 }}>
-                        <div className="font-bold text-sm" style={{ color: "#1F2A44" }}>{lead.customerName}</div>
+                        <div className="font-bold text-sm" style={{ color: "#111827" }}>{lead.customerName}</div>
                         <div className="text-xs" style={{ color: "#64748B", direction: "ltr", textAlign: "right" }}>{lead.phone}</div>
                       </div>
                     </div>
@@ -1143,19 +1143,19 @@ export default function Dashboard() {
           <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
-                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#3F5BD8,#5B73E0)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(63,91,216,0.3)" }}>
+                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#667EEA,#5B73E0)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(63,91,216,0.3)" }}>
                   <TrendingUp className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
                 </span>
-                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#1F2A44" }}>الإعلانات الأكثر مشاهدة</h2>
+                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#111827" }}>الإعلانات الأكثر مشاهدة</h2>
               </div>
-              <Link href="/dashboard/listings" className="text-sm font-semibold hover:underline" style={{ color: "#3F5BD8" }}>عرض الكل</Link>
+              <Link href="/dashboard/listings" className="text-sm font-semibold hover:underline" style={{ color: "#667EEA" }}>عرض الكل</Link>
             </div>
             {isLoading ? (
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
             ) : (stats?.topProperties ?? []).length === 0 ? (
               <div className="text-center py-8">
                 <Building className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
-                <p style={{ fontSize: 15, color: "#1F2A44", fontWeight: 700 }}>لا توجد إعلانات حتى الآن</p>
+                <p style={{ fontSize: 15, color: "#111827", fontWeight: 700 }}>لا توجد إعلانات حتى الآن</p>
                 <Link href="/dashboard/listings/new">
                   <Button variant="outline" size="sm" className="mt-3 gap-2">
                     <Plus className="h-4 w-4" />إضافة إعلان
@@ -1179,8 +1179,8 @@ export default function Dashboard() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold truncate" style={{ color: "#1F2A44" }}>{p.titleAr}</div>
-                      <div className="text-xs" style={{ color: "#3F5BD8", fontWeight: 700 }}>{p.price.toLocaleString("en-US")} KWD</div>
+                      <div className="text-sm font-bold truncate" style={{ color: "#111827" }}>{p.titleAr}</div>
+                      <div className="text-xs" style={{ color: "#667EEA", fontWeight: 700 }}>{p.price.toLocaleString("en-US")} KWD</div>
                     </div>
                     <div
                       className="text-xs flex items-center gap-1 flex-shrink-0"

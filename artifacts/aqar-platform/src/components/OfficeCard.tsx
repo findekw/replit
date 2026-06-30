@@ -49,7 +49,7 @@ export function OfficeCard({ office }: OfficeCardProps) {
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
-              <Building2 style={{ width: 30, height: 30, color: "#1F2A44" }} />
+              <Building2 style={{ width: 30, height: 30, color: "#111827" }} />
             )}
           </div>
         </div>
@@ -102,7 +102,7 @@ export function OfficeCard({ office }: OfficeCardProps) {
               style={{
                 fontSize: "13px",
                 fontWeight: 600,
-                color: "#3F5BD8",
+                color: "#667EEA",
               }}
             >
               {office.activeListings} عقار

@@ -46,7 +46,7 @@ const _AREA_ID: { name: string; id: number; govId: number }[] = [
 ];
 
 // One restrained accent across all feature cards (el-captin-style: few colors).
-const FEAT_COLOR = "#3F5BD8";
+const FEAT_COLOR = "#667EEA";
 const FEAT_BG = "#EEF2FF";
 const FEATURES = [
   { icon: <ShieldCheck size={26} strokeWidth={2} />, label: "مكاتب موثوقة ومرخّصة", desc: "كل الإعلانات من مكاتب عقارية حقيقية تمت مراجعتها", color: FEAT_COLOR, bg: FEAT_BG },
@@ -191,7 +191,7 @@ export default function Home() {
             radial-gradient(circle at 18% 12%, rgba(99,130,246,0.28) 0, transparent 42%),
             radial-gradient(circle at 88% 8%, rgba(63,91,216,0.32) 0, transparent 40%),
             radial-gradient(circle at 50% 120%, rgba(99,130,246,0.20) 0, transparent 55%),
-            linear-gradient(150deg, #16203A 0%, #1F2A44 45%, #2E3E72 78%, #3F5BD8 100%);
+            linear-gradient(150deg, #16203A 0%, #111827 45%, #2E3E72 78%, #667EEA 100%);
           padding: 60px 16px 132px;
           text-align: center;
           overflow: hidden;
@@ -214,7 +214,7 @@ export default function Home() {
         /* CTA from admin banner */
         .fh-hero-cta {
           display:inline-flex; align-items:center; gap:8px; margin:0 0 26px;
-          background:#fff; color:#1F2A44; font-weight:800; font-size:15px;
+          background:#fff; color:#111827; font-weight:800; font-size:15px;
           padding:13px 26px; border-radius:999px; text-decoration:none;
           box-shadow:0 6px 18px rgba(0,0,0,0.18); transition:transform .18s, box-shadow .18s;
         }
@@ -260,15 +260,15 @@ export default function Home() {
         .fh-card { position:relative; background:#fff; border-radius:22px; padding:20px; box-shadow:0 16px 40px rgba(15,23,42,0.16), 0 2px 8px rgba(15,23,42,0.05); text-align:right; max-width: 580px; margin: 0 auto; border:1px solid rgba(255,255,255,0.6); }
         .fh-tabs { display:flex; gap:8px; margin-bottom:16px; background:#F1F5F9; padding:5px; border-radius:14px; }
         .fh-tab { flex:1; padding:11px 6px; border-radius:10px; border:none; background:transparent; font-size:14px; font-weight:700; color:#64748B; cursor:pointer; transition:all .18s ease; font-family:inherit; }
-        .fh-tab:hover { color:#3F5BD8; }
-        .fh-tab.active { background:#fff; color:#1F2A44; box-shadow:0 4px 12px rgba(15,23,42,0.10); }
+        .fh-tab:hover { color:#667EEA; }
+        .fh-tab.active { background:#fff; color:#111827; box-shadow:0 4px 12px rgba(15,23,42,0.10); }
         .fh-fields { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-        .fh-field { width:100%; height:52px; border:1.5px solid #E6EAF1; border-radius:13px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 15px; font-size:15px; font-weight:600; color:#1F2A44; cursor:pointer; font-family:inherit; transition:border-color .18s, background .18s, box-shadow .18s; }
+        .fh-field { width:100%; height:52px; border:1.5px solid #E6EAF1; border-radius:13px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 15px; font-size:15px; font-weight:600; color:#111827; cursor:pointer; font-family:inherit; transition:border-color .18s, background .18s, box-shadow .18s; }
         .fh-field:hover:not(:disabled) { border-color:#C7D2FE; }
-        .fh-field.filled { border-color:#3F5BD8; background:#EEF4FF; box-shadow:0 2px 8px rgba(63,91,216,0.12); }
+        .fh-field.filled { border-color:#667EEA; background:#EEF4FF; box-shadow:0 2px 8px rgba(63,91,216,0.12); }
         .fh-field:disabled { opacity:.5; cursor:not-allowed; }
         .fh-field .ph { color:#94A3B8; font-weight:500; }
-        .fh-search-btn { width:100%; height:54px; border:none; border-radius:14px; background:linear-gradient(135deg,#3F5BD8,#3349C0); color:#fff; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 6px 16px rgba(63,91,216,0.22); display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .18s, box-shadow .18s; letter-spacing:-0.2px; }
+        .fh-search-btn { width:100%; height:54px; border:none; border-radius:14px; background:linear-gradient(135deg,#667EEA,#3349C0); color:#fff; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 6px 16px rgba(63,91,216,0.22); display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .18s, box-shadow .18s; letter-spacing:-0.2px; }
         .fh-search-btn:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(63,91,216,0.30); }
         .fh-search-btn:active { transform:translateY(0); }
         @media (min-width:769px){ .fh-fields{ flex-direction:row; } }
@@ -283,17 +283,17 @@ export default function Home() {
         .fh-stats-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; }
         .fh-stat { display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:20px 12px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.06); transition:transform .2s, box-shadow .2s; }
         .fh-stat:hover { transform:translateY(-3px); box-shadow:0 16px 38px rgba(15,23,42,0.10); }
-        .fh-stat-ic { width:38px; height:38px; border-radius:11px; background:#EEF2FF; color:#3F5BD8; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
-        .fh-stat-num { font-size:25px; font-weight:800; color:#1F2A44; line-height:1; letter-spacing:-0.5px; }
+        .fh-stat-ic { width:38px; height:38px; border-radius:11px; background:#EEF2FF; color:#667EEA; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+        .fh-stat-num { font-size:25px; font-weight:800; color:#111827; line-height:1; letter-spacing:-0.5px; }
         .fh-stat-lbl { font-size:13px; color:#64748B; margin-top:4px; font-weight:600; }
 
         /* ===== SECTIONS ===== */
         .fh-section { max-width:1180px; margin:0 auto; padding:48px 16px 0; }
         .fh-sec-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; }
         .fh-sec-titlewrap { display:flex; flex-direction:column; gap:8px; }
-        .fh-sec-accent { width:42px; height:4px; border-radius:999px; background:linear-gradient(90deg,#3F5BD8,#7C8FF0); }
-        .fh-sec-title { font-size:23px; font-weight:800; color:#1F2A44; margin:0; letter-spacing:-0.5px; }
-        .fh-sec-link { font-size:14px; font-weight:700; color:#3F5BD8; display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; background:#EEF2FF; transition:background .18s, gap .18s; white-space:nowrap; }
+        .fh-sec-accent { width:42px; height:4px; border-radius:999px; background:linear-gradient(90deg,#667EEA,#7C8FF0); }
+        .fh-sec-title { font-size:23px; font-weight:800; color:#111827; margin:0; letter-spacing:-0.5px; }
+        .fh-sec-link { font-size:14px; font-weight:700; color:#667EEA; display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; background:#EEF2FF; transition:background .18s, gap .18s; white-space:nowrap; }
         .fh-sec-link:hover { background:#E0E7FF; gap:9px; }
         .fh-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
         @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
@@ -305,9 +305,9 @@ export default function Home() {
         @media (min-width:1024px){ .fh-gov-grid{ grid-template-columns:repeat(6, minmax(0, 1fr)); } }
         .fh-gov { background:#fff; border:1px solid #EDF1F7; border-radius:18px; padding:22px 10px; text-align:center; cursor:pointer; transition:transform .2s, box-shadow .2s, border-color .2s; display:flex; flex-direction:column; align-items:center; gap:10px; }
         .fh-gov:hover { border-color:#C7D2FE; box-shadow:0 14px 32px rgba(15,23,42,0.10); transform:translateY(-3px); }
-        .fh-gov-ic { width:50px; height:50px; border-radius:14px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); display:flex; align-items:center; justify-content:center; color:#3F5BD8; transition:transform .2s; }
+        .fh-gov-ic { width:50px; height:50px; border-radius:14px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); display:flex; align-items:center; justify-content:center; color:#667EEA; transition:transform .2s; }
         .fh-gov:hover .fh-gov-ic { transform:scale(1.08); }
-        .fh-gov-name { font-size:14.5px; font-weight:700; color:#1F2A44; }
+        .fh-gov-name { font-size:14.5px; font-weight:700; color:#111827; }
 
         /* features */
         .fh-feat-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
@@ -315,19 +315,19 @@ export default function Home() {
         .fh-feat { background:#fff; border:1px solid #EDF1F7; border-radius:20px; padding:26px 20px; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,0.05); transition:transform .2s, box-shadow .2s; }
         .fh-feat:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(15,23,42,0.10); }
         .fh-feat-ic { width:58px; height:58px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; box-shadow:0 6px 16px rgba(15,23,42,0.06); }
-        .fh-feat h3 { font-size:16px; font-weight:800; color:#1F2A44; margin:0 0 7px; letter-spacing:-0.2px; }
+        .fh-feat h3 { font-size:16px; font-weight:800; color:#111827; margin:0 0 7px; letter-spacing:-0.2px; }
         .fh-feat p { font-size:13.5px; color:#64748B; margin:0; line-height:1.65; }
 
         /* CTA */
         .fh-cta { max-width:1180px; margin:56px auto 0; padding:0 16px; }
-        .fh-cta-box { position:relative; overflow:hidden; background:linear-gradient(125deg,#16203A 0%,#1F2A44 42%,#3F5BD8 100%); border-radius:26px; padding:52px 28px; text-align:center; box-shadow:0 16px 40px rgba(31,42,68,0.18); }
+        .fh-cta-box { position:relative; overflow:hidden; background:linear-gradient(125deg,#16203A 0%,#111827 42%,#667EEA 100%); border-radius:26px; padding:52px 28px; text-align:center; box-shadow:0 16px 40px rgba(31,42,68,0.18); }
         .fh-cta-box::before { content:""; position:absolute; right:-60px; top:-60px; width:240px; height:240px; background:radial-gradient(circle, rgba(99,130,246,0.45), transparent 70%); border-radius:50%; }
         .fh-cta-box::after { content:""; position:absolute; left:-50px; bottom:-50px; width:200px; height:200px; background:rgba(255,255,255,0.06); border-radius:50%; }
         .fh-cta-inner { position:relative; z-index:1; max-width:620px; margin:0 auto; }
         .fh-cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); color:#EAF0FF; padding:6px 14px; border-radius:999px; font-size:12.5px; font-weight:700; margin-bottom:16px; }
         .fh-cta h2 { color:#fff; font-size:27px; font-weight:800; margin:0 0 12px; letter-spacing:-0.5px; line-height:1.4; }
         .fh-cta p { color:rgba(231,237,250,0.86); font-size:15px; margin:0 0 26px; line-height:1.75; }
-        .fh-cta-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#1F2A44; font-weight:800; font-size:15px; padding:15px 30px; border-radius:999px; text-decoration:none; box-shadow:0 6px 16px rgba(0,0,0,0.14); transition:transform .2s, box-shadow .2s; }
+        .fh-cta-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#111827; font-weight:800; font-size:15px; padding:15px 30px; border-radius:999px; text-decoration:none; box-shadow:0 6px 16px rgba(0,0,0,0.14); transition:transform .2s, box-shadow .2s; }
         .fh-cta-btn:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(0,0,0,0.18); }
 
         @media (min-width:769px){
@@ -344,7 +344,7 @@ export default function Home() {
         @media (min-width:769px){ .fh-sheet-wrap{ justify-content:center; align-items:center; } .fh-sheet{ border-radius:20px; height:auto; max-height:70vh; width:420px; } .fh-sheet-handle{ display:none; } }
         .fh-sheet-item { width:100%; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border:none; border-bottom:1px solid #F1F5F9; cursor:pointer; font-size:15px; color:#1E293B; background:transparent; text-align:right; font-family:inherit; }
         .fh-sheet-item:active { background:#F1F5F9; }
-        .fh-sheet-item.sel { background:#EEF4FF; color:#3F5BD8; font-weight:700; }
+        .fh-sheet-item.sel { background:#EEF4FF; color:#667EEA; font-weight:700; }
       `}</style>
 
       <div className="fh-wrap">
@@ -385,15 +385,15 @@ export default function Home() {
               <div className="fh-fields">
                 <button className={`fh-field${type ? " filled" : ""}`} onClick={() => openSheet("type")}>
                   <span className={type ? "" : "ph"}>{type || "نوع العقار"}</span>
-                  <ChevronDown size={17} color={type ? "#3F5BD8" : "#94A3B8"} />
+                  <ChevronDown size={17} color={type ? "#667EEA" : "#94A3B8"} />
                 </button>
                 <button className={`fh-field${province ? " filled" : ""}`} onClick={() => openSheet("gov")}>
                   <span className={province ? "" : "ph"}>{province || "المحافظة"}</span>
-                  <ChevronDown size={17} color={province ? "#3F5BD8" : "#94A3B8"} />
+                  <ChevronDown size={17} color={province ? "#667EEA" : "#94A3B8"} />
                 </button>
                 <button className={`fh-field${area ? " filled" : ""}`} onClick={() => { if (province) openSheet("area"); }} disabled={!province}>
                   <span className={area ? "" : "ph"}>{area || (province ? "المنطقة" : "اختر المحافظة")}</span>
-                  <ChevronDown size={17} color={area ? "#3F5BD8" : "#94A3B8"} />
+                  <ChevronDown size={17} color={area ? "#667EEA" : "#94A3B8"} />
                 </button>
               </div>
               <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
@@ -501,7 +501,7 @@ export default function Home() {
           <div dir="rtl" className="fh-sheet">
             <div className="fh-sheet-handle" style={{ width: 40, height: 4, background: "#E2E8F0", borderRadius: 2, margin: "14px auto 0", flexShrink: 0 }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 10px", borderBottom: "1px solid #F1F5F9", flexShrink: 0 }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#1F2A44", fontFamily: "'Cairo', sans-serif" }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#111827", fontFamily: "'Cairo', sans-serif" }}>
                 {sheetOpen === "type" ? "نوع العقار" : sheetOpen === "gov" ? "المحافظة" : "المنطقة"}
               </h3>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -525,7 +525,7 @@ export default function Home() {
               {filteredSheetItems.map(item => (
                 <button key={item.value} className={`fh-sheet-item${item.value === currentSheetValue ? " sel" : ""}`} onClick={() => handleSheetSelect(item.value)}>
                   <span>{item.label}</span>
-                  {item.value === currentSheetValue && <Check size={16} color="#3F5BD8" />}
+                  {item.value === currentSheetValue && <Check size={16} color="#667EEA" />}
                 </button>
               ))}
               {filteredSheetItems.length === 0 && <p style={{ textAlign: "center", color: "#94A3B8", padding: "32px 20px", fontFamily: "'Cairo', sans-serif", fontSize: 14 }}>لا توجد نتائج</p>}

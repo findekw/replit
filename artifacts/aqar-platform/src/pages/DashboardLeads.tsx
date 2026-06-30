@@ -12,16 +12,16 @@ import { useOfficeAuth } from "@/lib/AuthContext";
 const LEAD_STATUSES = ["جديد", "مهتم", "تم التواصل", "غير جاد", "مغلق"];
 
 const STATUS_COLORS: Record<string, string> = {
-  "جديد": "bg-blue-100 text-blue-800 border-blue-200",
-  "مهتم": "bg-blue-50 text-blue-700 border-blue-200",
-  "تم التواصل": "bg-blue-100 text-blue-800 border-blue-200",
+  "جديد": "bg-indigo-100 text-indigo-800 border-indigo-200",
+  "مهتم": "bg-indigo-50 text-indigo-700 border-indigo-200",
+  "تم التواصل": "bg-indigo-100 text-indigo-800 border-indigo-200",
   "غير جاد": "bg-gray-100 text-gray-600 border-gray-200",
   "مغلق": "bg-red-100 text-red-800 border-red-200",
 };
 
 const INTERACTION_COLORS: Record<string, string> = {
   "واتساب": "bg-green-100 text-green-800 border-green-200",
-  "اتصال": "bg-blue-100 text-blue-800 border-blue-200",
+  "اتصال": "bg-indigo-100 text-indigo-800 border-indigo-200",
   "استفسار": "bg-purple-100 text-purple-800 border-purple-200",
 };
 
@@ -86,7 +86,7 @@ export default function DashboardLeads() {
     <DashboardLayout>
       <div dir="rtl">
         <div className="mb-6">
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", margin: 0 }}>العملاء المحتملون</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>العملاء المحتملون</h1>
           <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
             كل تفاعل على عقاراتك أو صفحة مكتبك يُسجَّل هنا تلقائياً
           </p>
@@ -95,9 +95,9 @@ export default function DashboardLeads() {
         {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "إجمالي العملاء", value: totalLeads, icon: Users, fg: "#3F5BD8", bg: "#EEF2FE" },
+            { label: "إجمالي العملاء", value: totalLeads, icon: Users, fg: "#667EEA", bg: "#EEF2FE" },
             { label: "واتساب", value: waCount, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
-            { label: "اتصالات", value: callCount, icon: Phone, fg: "#3F5BD8", bg: "#EEF2FE" },
+            { label: "اتصالات", value: callCount, icon: Phone, fg: "#667EEA", bg: "#EEF2FE" },
             { label: "استفسارات", value: formCount, icon: FileText, fg: "#7C3AED", bg: "#F5F3FF" },
           ].map(({ label, value, icon: Icon, fg, bg }) => (
             <div
@@ -110,7 +110,7 @@ export default function DashboardLeads() {
                 </div>
                 <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>{label}</span>
               </div>
-              <p style={{ fontSize: 26, fontWeight: 800, color: "#1F2A44" }}>
+              <p style={{ fontSize: 26, fontWeight: 800, color: "#111827" }}>
                 {isLoading ? "—" : value}
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function DashboardLeads() {
               <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                 <Users className="h-9 w-9" style={{ color: "#94A3B8" }} />
               </div>
-              <p style={{ fontSize: 18, fontWeight: 800, color: "#1F2A44" }}>لا يوجد عملاء</p>
+              <p style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>لا يوجد عملاء</p>
               <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
                 ستظهر هنا نقرات واتساب والاتصال على عقاراتك تلقائياً
               </p>

@@ -27,7 +27,7 @@ export default function ForgotPassword() {
         justifyContent: "center",
         padding: 16,
         fontFamily: "'Cairo', sans-serif",
-        background: "linear-gradient(135deg, #1F2A44, #3F5BD8)",
+        background: "linear-gradient(135deg, #111827, #667EEA)",
       }}
     >
       <div
@@ -46,7 +46,7 @@ export default function ForgotPassword() {
               width: 56,
               height: 56,
               borderRadius: 16,
-              background: "#1F2A44",
+              background: "#111827",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
           >
             <KeyRound className="h-7 w-7" style={{ color: "#fff" }} />
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: "#1F2A44", margin: 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: "#111827", margin: 0 }}>
             استعادة كلمة المرور
           </h1>
         </div>
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
         >
           <p style={{ fontSize: 14, color: "#334155", lineHeight: 1.9, margin: 0 }}>
             لإعادة تعيين كلمة المرور الخاصة بك، يرجى التواصل مع فريق الدعم وسيقوم مسؤول
-            <span style={{ fontWeight: 700, color: "#1F2A44" }}> Finde </span>
+            <span style={{ fontWeight: 700, color: "#111827" }}> Finde </span>
             بإعادة تعيينها لك. خدمة إرسال رابط الاستعادة عبر البريد الإلكتروني غير متاحة حاليًا.
           </p>
         </div>
@@ -142,7 +142,7 @@ export default function ForgotPassword() {
           <Link
             href="/login"
             className="font-semibold hover:underline"
-            style={{ color: "#3F5BD8", fontSize: 14 }}
+            style={{ color: "#667EEA", fontSize: 14 }}
           >
             تسجيل الدخول
           </Link>

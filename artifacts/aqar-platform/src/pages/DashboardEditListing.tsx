@@ -404,7 +404,7 @@ export default function DashboardEditListing() {
                       type="button"
                       onClick={() => handleSetPrimary(img)}
                       className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-white transition-colors"
-                      style={{ background: img.isPrimary ? "#2563EB" : "rgba(0,0,0,0.4)" }}
+                      style={{ background: img.isPrimary ? "#667EEA" : "rgba(0,0,0,0.4)" }}
                       title="تعيين كرئيسية"
                     >
                       <Star size={12} className="fill-current" />
@@ -417,7 +417,7 @@ export default function DashboardEditListing() {
                       <X size={12} />
                     </button>
                     {img.isPrimary && (
-                      <div className="absolute bottom-0 left-0 right-0 text-center text-xs font-bold py-0.5 text-white" style={{ background: "#2563EB" }}>
+                      <div className="absolute bottom-0 left-0 right-0 text-center text-xs font-bold py-0.5 text-white" style={{ background: "#667EEA" }}>
                         رئيسية
                       </div>
                     )}

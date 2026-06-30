@@ -21,7 +21,7 @@ export default function Offices() {
         <div
           className="rounded-2xl px-6 py-12 sm:py-14 mb-10 text-center"
           style={{
-            background: "linear-gradient(135deg, #1F2A44, #3F5BD8)",
+            background: "linear-gradient(135deg, #111827, #667EEA)",
             boxShadow: "0 6px 20px rgba(15,23,42,0.06)",
           }}
         >
@@ -45,7 +45,7 @@ export default function Offices() {
             className="text-center py-20 rounded-2xl bg-white"
             style={{ boxShadow: "0 6px 20px rgba(15,23,42,0.06)" }}
           >
-            <p className="text-xl font-semibold" style={{ color: "#1F2A44" }}>
+            <p className="text-xl font-semibold" style={{ color: "#111827" }}>
               لا توجد مكاتب
             </p>
             <p className="mt-2 text-sm" style={{ color: "#64748B" }}>

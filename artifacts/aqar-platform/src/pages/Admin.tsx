@@ -27,8 +27,8 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 /* ── Finde design system tokens ── */
-const NAVY = "#1F2A44";
-const BLUE = "#3F5BD8";
+const NAVY = "#111827";
+const BLUE = "#667EEA";
 const BODY = "#64748B";
 const BORDER = "#EEF1F5";
 const PAGE_BG = "#F5F7FA";
@@ -137,7 +137,7 @@ function formatDate(iso: string) {
 }
 
 function typeLabel(status: string): { text: string; color: string } {
-  if (status === "للبيع")   return { text: "للبيع",  color: "#2563eb" };
+  if (status === "للبيع")   return { text: "للبيع",  color: "#667EEA" };
   if (status === "للبدل")   return { text: "للبدل",  color: "#7c3aed" };
   return { text: "للإيجار", color: "#059669" };
 }
@@ -145,7 +145,7 @@ function typeLabel(status: string): { text: string; color: string } {
 function subStatusInfo(status: string | null): { text: string; color: string; bg: string } {
   switch (status) {
     case "active":          return { text: "مشترك",         color: "#059669", bg: "#E7F6F0" };
-    case "trial":           return { text: "تجربة مجانية",  color: "#3F5BD8", bg: "#ECEFFB" };
+    case "trial":           return { text: "تجربة مجانية",  color: "#667EEA", bg: "#ECEFFB" };
     case "pending_payment": return { text: "بانتظار الدفع", color: "#D97706", bg: "#FEF6E7" };
     case "expired":         return { text: "منتهية",        color: "#DC2626", bg: "#FEECEC" };
     case "inactive":        return { text: "غير مفعّل",     color: "#64748B", bg: "#F1F5F9" };

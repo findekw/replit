@@ -18,23 +18,23 @@ body::-webkit-scrollbar,
 
 /* ── Design tokens ── */
 :root {
-  --primary-navy: #2C4870;
-  --secondary-blue: #4F6FAD;
+  --primary-navy: #111827;
+  --secondary-blue: #667EEA;
   --bg-light: #F8FAFC;
   --border-light: #E5E7EB;
 
   /* ── Global color system ── */
-  --primary-color:      #1F2A44;
-  --cta-color:          #3F5BD8;
+  --primary-color:      #111827;
+  --cta-color:          #667EEA;
   --background-main:    #F5F7FA;
   --background-section: #F5F7FA;
-  --text-heading:       #1F2A44;
+  --text-heading:       #111827;
   --text-body:          #6B7280;
   --text-secondary:     #9CA3AF;
-  --footer-bg:          #1F2A44;
+  --footer-bg:          #111827;
   --footer-heading:     #FFFFFF;
   --footer-text:        #D1D5DB;
-  --icon-color:         #1F2A44;
+  --icon-color:         #111827;
 }
 
 /* ── Unified heading color ── */
@@ -125,21 +125,21 @@ h1, h2, h3 {
   --popover-foreground: 221 54% 23%;
   --popover-border: 214 32% 91%;
   
-  --primary: 221 54% 23%; /* Navy */
+  --primary: 229 76% 66%; /* Indigo #667EEA */
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 96%;
   --secondary-foreground: 221 54% 23%;
   --muted: 210 40% 96%;
   --muted-foreground: 222 47% 11%;
   
-  --accent: 217 83% 53%; /* #2563EB accent blue */
+  --accent: 229 76% 66%; /* Indigo #667EEA */
   --accent-foreground: 0 0% 100%;
   
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
   
   --input: 214 32% 91%;
-  --ring: 221 54% 23%;
+  --ring: 229 76% 66%;
   
   --chart-1: 221 54% 23%;
   --chart-2: 142 71% 45%;
@@ -150,16 +150,16 @@ h1, h2, h3 {
   --sidebar: 0 0% 100%;
   --sidebar-foreground: 221 54% 23%;
   --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 221 54% 23%;
+  --sidebar-primary: 229 76% 66%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 96%;
   --sidebar-accent-foreground: 221 54% 23%;
-  --sidebar-ring: 221 54% 23%;
+  --sidebar-ring: 229 76% 66%;
 
   --app-font-sans: 'Cairo', 'Tajawal', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 }
 
 .dark {
@@ -269,7 +269,7 @@ h1, h2, h3 {
 .property-img-fallback {
   width: 100%; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  background: linear-gradient(135deg, #1F2A44 0%, #3F5BD8 100%);
+  background: linear-gradient(135deg, #111827 0%, #667EEA 100%);
 }
 .property-media::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;

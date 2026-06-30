@@ -13,8 +13,8 @@ import {
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
-const NAVY = "#1F2A44";
-const BLUE = "#3F5BD8";
+const NAVY = "#111827";
+const BLUE = "#667EEA";
 const BODY = "#64748B";
 const BORDER = "#EEF1F5";
 const PAGE_BG = "#F5F7FA";
@@ -40,7 +40,7 @@ function daysLabel(d: number | null) {
 type Tier = "highPerforming" | "active" | "lowPerforming" | "inactive";
 const TIER_META: Record<Tier, { label: string; labelShort: string; color: string; bg: string; border: string; icon: any }> = {
   highPerforming: { label: "عالي الأداء",      labelShort: "عالي الأداء",   color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", icon: Star },
-  active:         { label: "مكتب نشط",          labelShort: "نشط",           color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe", icon: TrendingUp },
+  active:         { label: "مكتب نشط",          labelShort: "نشط",           color: "#667EEA", bg: "#eff6ff", border: "#bfdbfe", icon: TrendingUp },
   lowPerforming:  { label: "منخفض الأداء",      labelShort: "منخفض الأداء", color: "#d97706", bg: "#fffbeb", border: "#fde68a", icon: TrendingDown },
   inactive:       { label: "غير نشط",           labelShort: "غير نشط",       color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb", icon: XCircle },
 };
@@ -102,7 +102,7 @@ function AlertRow({ type, icon: Icon, title, body, action, onAction }: {
   const cfg = {
     danger: { border: "#fecaca", bg: "#fff5f5", col: "#dc2626", btn: "#dc2626" },
     warn:   { border: "#fde68a", bg: "#fffef0", col: "#d97706", btn: "#d97706" },
-    info:   { border: "#bfdbfe", bg: "#f0f6ff", col: "#2563eb", btn: "#2563eb" },
+    info:   { border: "#bfdbfe", bg: "#f0f6ff", col: "#667EEA", btn: "#667EEA" },
   }[type];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 12 }}>
@@ -279,7 +279,7 @@ export default function AdminAnalytics() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
               <KpiCard label="إجمالي المكاتب" value={fmt(ov.totalOffices)}   icon={Building2}    color={NAVY}     />
               <KpiCard label="مكاتب نشطة"      value={fmt(offices.filter(o => o.active && o.subscriptionStatus !== "expired").length)} icon={CheckCircle2} color="#16a34a" sub="لديها اشتراك فعّال" />
-              <KpiCard label="إجمالي الإعلانات" value={fmt(ov.totalAds)}      icon={Activity}     color="#2563eb"  sub={ov.pendingAds > 0 ? `${ov.pendingAds} معلّق` : undefined} />
+              <KpiCard label="إجمالي الإعلانات" value={fmt(ov.totalAds)}      icon={Activity}     color="#667EEA"  sub={ov.pendingAds > 0 ? `${ov.pendingAds} معلّق` : undefined} />
               <KpiCard label="نقرات واتساب"    value={fmt(ov.totalWhatsapp)} icon={MessageCircle} color="#22c55e" />
             </div>
 
@@ -360,7 +360,7 @@ export default function AdminAnalytics() {
                           <td style={{ padding: "13px 14px", textAlign: "center", color: "#374151" }}>{fmt(o.totalViews)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "center", color: "#374151" }}>{fmt(o.whatsappClicks)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "center" }}>
-                            <span style={{ fontWeight: 700, fontSize: 14, color: o.engagementScore >= 50 ? "#16a34a" : o.engagementScore >= 20 ? "#2563eb" : o.engagementScore >= 5 ? "#d97706" : "#dc2626" }}>
+                            <span style={{ fontWeight: 700, fontSize: 14, color: o.engagementScore >= 50 ? "#16a34a" : o.engagementScore >= 20 ? "#667EEA" : o.engagementScore >= 5 ? "#d97706" : "#dc2626" }}>
                               {o.engagementScore}
                             </span>
                           </td>
@@ -546,7 +546,7 @@ export default function AdminAnalytics() {
                           </a>
                         </td>
                         <td style={{ padding: "11px 14px", color: "#6b7280", fontSize: 12 }}>{ad.officeName ?? "—"}</td>
-                        <td style={{ padding: "11px 14px", fontWeight: 700, color: "#2563eb" }}>{fmt(ad.views ?? 0)}</td>
+                        <td style={{ padding: "11px 14px", fontWeight: 700, color: "#667EEA" }}>{fmt(ad.views ?? 0)}</td>
                         <td style={{ padding: "11px 14px", fontWeight: 600, color: "#22c55e" }}>{fmt(ad.whatsappClicks ?? 0)}</td>
                         <td style={{ padding: "11px 14px", fontWeight: 600, color: "#f59e0b" }}>{fmt(ad.callClicks ?? 0)}</td>
                       </tr>
@@ -610,7 +610,7 @@ export default function AdminAnalytics() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
               {[
                 { label: "اشتراكات نشطة",   val: subs.active ?? 0,       color: "#16a34a", icon: CheckCircle2 },
-                { label: "فترة تجريبية",    val: subs.trial ?? 0,        color: "#2563eb", icon: Clock },
+                { label: "فترة تجريبية",    val: subs.trial ?? 0,        color: "#667EEA", icon: Clock },
                 { label: "تنتهي قريباً",     val: subs.expiringSoon ?? 0, color: "#d97706", icon: AlertTriangle },
                 { label: "منتهية",           val: subs.expired ?? 0,      color: "#dc2626", icon: XCircle },
                 { label: "غير نشطة",         val: subs.inactive ?? 0,     color: "#6b7280", icon: XCircle },
@@ -685,7 +685,7 @@ export default function AdminAnalytics() {
                     success: { border: "#bbf7d0", bg: "#f0fdf4", col: "#16a34a", hdr: "#dcfce7" },
                     warn:    { border: "#fde68a", bg: "#fffbeb", col: "#d97706", hdr: "#fef9c3" },
                     danger:  { border: "#fecaca", bg: "#fef2f2", col: "#dc2626", hdr: "#fee2e2" },
-                    info:    { border: "#bfdbfe", bg: "#eff6ff", col: "#2563eb", hdr: "#dbeafe" },
+                    info:    { border: "#bfdbfe", bg: "#eff6ff", col: "#667EEA", hdr: "#dbeafe" },
                   }[ins.type as string] ?? { border: "#e5e7eb", bg: "#f9fafb", col: "#6b7280", hdr: "#f3f4f6" };
                   return (
                     <div key={i} style={{ background: cfg.bg, borderRadius: 12, border: `1px solid ${cfg.border}`, overflow: "hidden" }}>

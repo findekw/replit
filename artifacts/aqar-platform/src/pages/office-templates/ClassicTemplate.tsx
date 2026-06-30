@@ -27,7 +27,7 @@ export default function ClassicTemplate(p: TemplateProps) {
         <div className="cl-topbar-inner">
           <div className="cl-brand">
             <div className="cl-brand-logo">
-              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={34} style={{ color: "#1F2A44" }} />}
+              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={34} style={{ color: "#111827" }} />}
             </div>
             <div className="cl-brand-text">
               <h1 className="cl-name">{office.nameAr}</h1>
@@ -64,7 +64,7 @@ export default function ClassicTemplate(p: TemplateProps) {
         <aside className="cl-sidebar">
           <div className="cl-card cl-info">
             <div className="cl-info-logo">
-              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={40} style={{ color: "#1F2A44" }} />}
+              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={40} style={{ color: "#111827" }} />}
             </div>
             <h2 className="cl-info-name">{office.nameAr}</h2>
 
@@ -120,7 +120,7 @@ export default function ClassicTemplate(p: TemplateProps) {
                   <button key={t} className={`cl-tab ${activeTab === t ? "cl-tab-on" : ""}`} onClick={() => setActiveTab(t)}>{t}</button>
                 ))}
               </div>
-              <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} accent="#1F2A44" />
+              <TypeFilter value={activeType} onChange={setActiveType} types={propertyTypes} accent="#111827" />
             </div>
           </div>
 
@@ -174,7 +174,7 @@ const CSS = `
 .cl-root * { box-sizing: border-box; }
 
 /* Top bar */
-.cl-topbar { background: #1F2A44; border-bottom: 3px solid #3F5BD8; }
+.cl-topbar { background: #111827; border-bottom: 3px solid #667EEA; }
 .cl-topbar-inner { max-width: 1240px; margin: 0 auto; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
 .cl-brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .cl-brand-logo { width: 62px; height: 62px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 2px solid rgba(255,255,255,0.15); }
@@ -188,11 +188,11 @@ const CSS = `
 .cl-topbar-actions { display: flex; gap: 10px; flex-shrink: 0; }
 .cl-btn { height: 46px; padding: 0 22px; border-radius: 10px; border: none; font-weight: 700; font-size: 14.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Cairo', sans-serif; transition: filter .15s, transform .12s; white-space: nowrap; }
 .cl-btn:hover { filter: brightness(0.94); transform: translateY(-1px); }
-.cl-btn-call { background: #3F5BD8; color: #fff; box-shadow: 0 4px 14px rgba(63,91,216,0.35); }
+.cl-btn-call { background: #667EEA; color: #fff; box-shadow: 0 4px 14px rgba(63,91,216,0.35); }
 .cl-btn-wa { background: #25D366; color: #fff; box-shadow: 0 4px 14px rgba(37,211,102,0.3); }
 
 /* Info strip */
-.cl-strip { background: #3F5BD8; }
+.cl-strip { background: #667EEA; }
 .cl-strip-inner { max-width: 1240px; margin: 0 auto; padding: 9px 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cl-strip-item { display: inline-flex; align-items: center; gap: 5px; color: #fff; font-size: 13px; font-weight: 600; opacity: 0.95; }
 .cl-strip-dot { color: rgba(255,255,255,0.5); font-weight: 700; }
@@ -208,16 +208,16 @@ const CSS = `
 .cl-info { padding: 24px 22px; }
 .cl-info-logo { width: 76px; height: 76px; border-radius: 12px; background: #fff; border: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 14px; }
 .cl-info-logo img { width: 100%; height: 100%; object-fit: cover; }
-.cl-info-name { font-size: 19px; font-weight: 800; color: #1F2A44; margin: 0; letter-spacing: -0.3px; line-height: 1.3; }
+.cl-info-name { font-size: 19px; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.3px; line-height: 1.3; }
 .cl-divider { height: 1px; background: #EBEFF5; margin: 18px 0; }
-.cl-sub { font-size: 13px; font-weight: 800; color: #3F5BD8; margin: 0 0 10px; letter-spacing: 0.2px; }
+.cl-sub { font-size: 13px; font-weight: 800; color: #667EEA; margin: 0 0 10px; letter-spacing: 0.2px; }
 .cl-desc { color: #475569; line-height: 1.95; font-size: 14px; margin: 0; }
 .cl-contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .cl-contact-list li { display: flex; align-items: center; gap: 10px; }
-.cl-ci { width: 34px; height: 34px; border-radius: 8px; background: #F1F4F9; border: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center; color: #1F2A44; flex-shrink: 0; }
+.cl-ci { width: 34px; height: 34px; border-radius: 8px; background: #F1F4F9; border: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center; color: #111827; flex-shrink: 0; }
 .cl-ci-wa { color: #25D366; }
 .cl-contact-row { background: none; border: none; padding: 0; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: #334155; cursor: pointer; text-align: right; text-decoration: none; word-break: break-all; transition: color .15s; }
-.cl-contact-row:hover { color: #3F5BD8; }
+.cl-contact-row:hover { color: #667EEA; }
 .cl-trust { display: flex; flex-wrap: wrap; gap: 8px; }
 .cl-trust-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 700; }
 .cl-trust-ok { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
@@ -226,24 +226,24 @@ const CSS = `
 /* Main column */
 .cl-main { min-width: 0; }
 .cl-listhead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #E2E8F0; }
-.cl-h2 { font-size: 22px; font-weight: 800; color: #1F2A44; margin: 0; letter-spacing: -0.3px; position: relative; padding-right: 14px; }
-.cl-h2::before { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 22px; background: #3F5BD8; border-radius: 2px; }
+.cl-h2 { font-size: 22px; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.3px; position: relative; padding-right: 14px; }
+.cl-h2::before { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 22px; background: #667EEA; border-radius: 2px; }
 .cl-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .cl-tab { padding: 9px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; background: #fff; color: #475569; border: 1px solid #D9E0EA; }
-.cl-tab:hover { border-color: #3F5BD8; color: #3F5BD8; }
-.cl-tab-on { background: #1F2A44; color: #fff; border-color: #1F2A44; }
+.cl-tab:hover { border-color: #667EEA; color: #667EEA; }
+.cl-tab-on { background: #111827; color: #fff; border-color: #111827; }
 .cl-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
 @media (min-width: 640px) { .cl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .cl-empty { text-align: center; padding: 60px 20px; }
 .cl-empty p { color: #64748B; font-weight: 700; font-size: 16px; margin: 16px 0 0; }
 .cl-pager { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 30px; }
-.cl-pgbtn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 10px; border: 1px solid #D9E0EA; background: #fff; color: #1F2A44; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; }
-.cl-pgbtn:hover:not(:disabled) { border-color: #3F5BD8; color: #3F5BD8; }
+.cl-pgbtn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 10px; border: 1px solid #D9E0EA; background: #fff; color: #111827; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; }
+.cl-pgbtn:hover:not(:disabled) { border-color: #667EEA; color: #667EEA; }
 .cl-pgbtn:disabled { opacity: .45; cursor: not-allowed; }
 .cl-pginfo { font-size: 14px; color: #64748B; font-weight: 600; }
 
 /* Footer */
-.cl-footer { background: #1F2A44; margin-top: 48px; }
+.cl-footer { background: #111827; margin-top: 48px; }
 .cl-footer-inner { max-width: 1240px; margin: 0 auto; padding: 26px 22px; text-align: center; color: #94a3b8; font-size: 14px; }
 .cl-footer a { color: #8aa0f0; font-weight: 800; text-decoration: none; }
 

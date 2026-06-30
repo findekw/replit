@@ -33,13 +33,13 @@ export default function AdminLogin() {
   };
 
   return (
-    <div dir="rtl" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "linear-gradient(135deg, #0b1220, #1F2A44)" }}>
+    <div dir="rtl" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "linear-gradient(135deg, #0b1220, #111827)" }}>
       <div style={{ width: "100%", maxWidth: 400, background: "#fff", borderRadius: 20, padding: "36px 32px", boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#1F2A44", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#111827", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
             <Shield className="h-7 w-7" style={{ color: "#fff" }} />
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: "#1F2A44", margin: 0 }}>لوحة المسؤول</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: "#111827", margin: 0 }}>لوحة المسؤول</h1>
           <p style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>دخول إدارة المنصة</p>
         </div>
 

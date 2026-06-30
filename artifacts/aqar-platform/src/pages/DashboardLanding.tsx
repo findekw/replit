@@ -28,8 +28,8 @@ const TEMPLATES: TemplateMeta[] = [
     key: "modern",
     name: "مودرن",
     description: "تصميم عصري جريء بواجهة متدرّجة وبطاقة تواصل بارزة — الأكثر شيوعًا.",
-    heroBg: "linear-gradient(135deg,#16203a 0%,#243056 45%,#3F5BD8 120%)",
-    accent: "#3F5BD8",
+    heroBg: "linear-gradient(135deg,#16203a 0%,#243056 45%,#667EEA 120%)",
+    accent: "#667EEA",
     accentContrast: "#ffffff",
     logoDot: "#ffffff",
     lineColor: "rgba(255,255,255,0.55)",
@@ -40,7 +40,7 @@ const TEMPLATES: TemplateMeta[] = [
     description: "خلفية داكنة ولمسات ذهبية بأسلوب تحريري راقٍ — للمكاتب المميّزة.",
     heroBg: "linear-gradient(160deg,#0B0F1A 0%,#16203a 100%)",
     accent: "#C9A227",
-    accentContrast: "#1F2A44",
+    accentContrast: "#111827",
     logoDot: "#C9A227",
     lineColor: "rgba(255,255,255,0.4)",
   },
@@ -58,8 +58,8 @@ const TEMPLATES: TemplateMeta[] = [
     key: "classic",
     name: "كلاسيك",
     description: "تصميم مؤسسي بعمودين ولوحة تواصل جانبية — موثوق ومنظّم.",
-    heroBg: "linear-gradient(180deg,#1F2A44 0%,#1F2A44 70%,#3F5BD8 70%,#3F5BD8 100%)",
-    accent: "#3F5BD8",
+    heroBg: "linear-gradient(180deg,#111827 0%,#111827 70%,#667EEA 70%,#667EEA 100%)",
+    accent: "#667EEA",
     accentContrast: "#ffffff",
     logoDot: "#ffffff",
     lineColor: "rgba(255,255,255,0.55)",
@@ -183,7 +183,7 @@ export default function DashboardLanding() {
       <div dir="rtl">
         {/* Header */}
         <div style={{ marginBottom: 22 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1F2A44", margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: "#111827", margin: 0 }}>
             قالب صفحة الهبوط
           </h1>
           <p style={{ fontSize: 14, color: "#64748B", margin: "6px 0 0" }}>
@@ -227,7 +227,7 @@ export default function DashboardLanding() {
                     textAlign: "start",
                     cursor: "pointer",
                     background: "#fff",
-                    border: isSelected ? "2px solid #3F5BD8" : "1px solid #EEF1F5",
+                    border: isSelected ? "2px solid #667EEA" : "1px solid #EEF1F5",
                     borderRadius: 18,
                     boxShadow: isSelected
                       ? "0 0 0 3px rgba(63,91,216,0.18), 0 6px 20px rgba(15,23,42,0.06)"
@@ -246,7 +246,7 @@ export default function DashboardLanding() {
                         width: 26,
                         height: 26,
                         borderRadius: 999,
-                        background: "#3F5BD8",
+                        background: "#667EEA",
                         color: "#fff",
                         display: "flex",
                         alignItems: "center",
@@ -260,7 +260,7 @@ export default function DashboardLanding() {
                   )}
                   <TemplatePreview tpl={tpl} />
                   <div style={{ marginTop: 14 }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#1F2A44" }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
                       {tpl.name}
                       {tpl.key === currentTemplate && (
                         <span
@@ -295,7 +295,7 @@ export default function DashboardLanding() {
             onClick={handleSave}
             disabled={saving || isLoading || officeId <= 0}
             className="gap-2 h-11 px-6 rounded-xl font-bold"
-            style={{ background: "#3F5BD8" }}
+            style={{ background: "#667EEA" }}
             data-testid="button-save-template"
           >
             <Save className="h-4 w-4" />

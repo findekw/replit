@@ -8,8 +8,8 @@ interface PropertyCardProps {
 }
 
 const STATUS_BG: Record<string, string> = {
-  "للإيجار": "#3F5BD8",
-  "للبيع":   "#1F2A44",
+  "للإيجار": "#667EEA",
+  "للبيع":   "#111827",
   "للبدل":   "#EA580C",
 };
 

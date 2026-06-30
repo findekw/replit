@@ -46,7 +46,7 @@ export default function Login() {
   return (
     <>
       <style>{`
-        body { overflow: hidden !important; background: #1F2A44 !important; }
+        body { overflow: hidden !important; background: #111827 !important; }
         .login-submit-btn { width: 100%; height: 50px; font-size: 16px; font-weight: 700; border-radius: 12px; }
         @media (max-width: 768px) {
           .login-card { padding: 28px 20px !important; }
@@ -61,7 +61,7 @@ export default function Login() {
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          background: "linear-gradient(135deg, #1F2A44, #3F5BD8)",
+          background: "linear-gradient(135deg, #111827, #667EEA)",
         }}
       >
         {/* Content centered */}
@@ -85,7 +85,7 @@ export default function Login() {
               <Link href="/" className="inline-block">
                 <img src="/logo.png" alt="Finde" className="site-logo" style={{ marginBottom: 10 }} />
               </Link>
-              <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1F2A44", margin: 0 }}>تسجيل دخول المكاتب العقارية</h1>
+              <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>تسجيل دخول المكاتب العقارية</h1>
               <p style={{ fontSize: 13, color: "#0f172a", marginTop: 4 }}>ادخل إلى حسابك لإدارة عقاراتك</p>
             </div>
 
@@ -169,7 +169,7 @@ export default function Login() {
             <div style={{ marginTop: 24, textAlign: "center" }}>
               <p style={{ fontSize: 14, color: "#444", marginBottom: 10 }}>
                 مكتب عقاري غير مشترك؟{" "}
-                <Link href="/plans" className="font-semibold hover:underline" style={{ color: "#3F5BD8", marginRight: 4 }}>
+                <Link href="/plans" className="font-semibold hover:underline" style={{ color: "#667EEA", marginRight: 4 }}>
                   عرض الاشتراك
                 </Link>
               </p>

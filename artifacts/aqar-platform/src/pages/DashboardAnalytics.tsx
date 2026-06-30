@@ -59,7 +59,7 @@ export default function DashboardAnalytics() {
           <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <BarChart2 className="h-9 w-9" style={{ color: "#94A3B8" }} />
           </div>
-          <p style={{ fontSize: 18, fontWeight: 800, color: "#1F2A44" }}>لا يوجد مكتب مرتبط</p>
+          <p style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>لا يوجد مكتب مرتبط</p>
         </div>
       </DashboardLayout>
     );
@@ -69,7 +69,7 @@ export default function DashboardAnalytics() {
     <DashboardLayout>
       <div dir="rtl">
         <div className="mb-6">
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", margin: 0 }}>الإحصائيات والتحليلات</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>الإحصائيات والتحليلات</h1>
           <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>تابع تطور المشاهدات والعملاء وأداء إعلاناتك</p>
         </div>
 
@@ -85,9 +85,9 @@ export default function DashboardAnalytics() {
               <div className="flex items-start justify-between mb-5 gap-2">
                 <div className="flex items-center gap-2.5">
                   <span style={{ width: 36, height: 36, borderRadius: 11, background: "#EEF2FE", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                    <TrendingUp style={{ width: 18, height: 18, color: "#3F5BD8" }} />
+                    <TrendingUp style={{ width: 18, height: 18, color: "#667EEA" }} />
                   </span>
-                  <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1F2A44" }}>المشاهدات والعملاء الشهريين</h2>
+                  <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>المشاهدات والعملاء الشهريين</h2>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#D97706", background: "#FFFBEB", border: "1px solid #FDE68A", padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>بيانات توضيحية</span>
               </div>
@@ -95,20 +95,20 @@ export default function DashboardAnalytics() {
                 <AreaChart data={monthlyViews}>
                   <defs>
                     <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F2A44" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#1F2A44" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#111827" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#111827" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="leadsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3F5BD8" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#3F5BD8" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#667EEA" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#667EEA" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F5" />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} />
                   <Tooltip {...CHART_TOOLTIP} />
-                  <Area type="monotone" dataKey="مشاهدات" stroke="#1F2A44" fill="url(#viewsGrad)" strokeWidth={2.5} />
-                  <Area type="monotone" dataKey="عملاء" stroke="#3F5BD8" fill="url(#leadsGrad)" strokeWidth={2.5} />
+                  <Area type="monotone" dataKey="مشاهدات" stroke="#111827" fill="url(#viewsGrad)" strokeWidth={2.5} />
+                  <Area type="monotone" dataKey="عملاء" stroke="#667EEA" fill="url(#leadsGrad)" strokeWidth={2.5} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -117,9 +117,9 @@ export default function DashboardAnalytics() {
             <div style={CARD_STYLE}>
               <div className="flex items-center gap-2.5 mb-5">
                 <span style={{ width: 36, height: 36, borderRadius: 11, background: "#EEF2FE", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <BarChart2 style={{ width: 18, height: 18, color: "#3F5BD8" }} />
+                  <BarChart2 style={{ width: 18, height: 18, color: "#667EEA" }} />
                 </span>
-                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1F2A44" }}>نظرة عامة على الأداء</h2>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>نظرة عامة على الأداء</h2>
               </div>
               {performanceData.every(d => d.value === 0) ? (
                 <div className="text-center py-12">
@@ -133,7 +133,7 @@ export default function DashboardAnalytics() {
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} />
                     <Tooltip {...CHART_TOOLTIP} cursor={{ fill: "rgba(63,91,216,0.06)" }} />
-                    <Bar dataKey="value" fill="#3F5BD8" radius={[6, 6, 0, 0]} maxBarSize={56} />
+                    <Bar dataKey="value" fill="#667EEA" radius={[6, 6, 0, 0]} maxBarSize={56} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -145,7 +145,7 @@ export default function DashboardAnalytics() {
                 <span style={{ width: 36, height: 36, borderRadius: 11, background: "#ECFDF5", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                   <Activity style={{ width: 18, height: 18, color: "#059669" }} />
                 </span>
-                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1F2A44" }}>مؤشرات التفاعل</h2>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>مؤشرات التفاعل</h2>
               </div>
               {engagementData.every(d => d.value === 0) ? (
                 <div className="text-center py-12">
@@ -159,7 +159,7 @@ export default function DashboardAnalytics() {
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} />
                     <Tooltip {...CHART_TOOLTIP} cursor={{ fill: "rgba(31,42,68,0.05)" }} />
-                    <Bar dataKey="value" fill="#1F2A44" radius={[6, 6, 0, 0]} maxBarSize={56} />
+                    <Bar dataKey="value" fill="#111827" radius={[6, 6, 0, 0]} maxBarSize={56} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

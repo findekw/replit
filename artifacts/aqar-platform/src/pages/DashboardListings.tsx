@@ -14,7 +14,7 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const STATUS_COLORS: Record<string, string> = {
-  "للإيجار": "bg-blue-50 text-blue-700 border border-blue-100",
+  "للإيجار": "bg-indigo-50 text-indigo-700 border border-indigo-100",
   "للبيع": "bg-emerald-50 text-emerald-700 border border-emerald-100",
   "للبدل": "bg-amber-50 text-amber-700 border border-amber-100",
 };
@@ -84,11 +84,11 @@ export default function DashboardListings() {
       <div dir="rtl">
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", margin: 0 }}>إعلاناتي</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>إعلاناتي</h1>
             <p style={{ fontSize: 14, color: "#64748B", margin: "4px 0 0" }}>إدارة كل عقاراتك المعروضة على المنصة</p>
           </div>
           <Link href="/dashboard/listings/new">
-            <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#3F5BD8" }} data-testid="button-add-listing">
+            <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#667EEA" }} data-testid="button-add-listing">
               <Plus className="h-4 w-4" />
               إضافة إعلان
             </Button>
@@ -105,10 +105,10 @@ export default function DashboardListings() {
               <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                 <Building className="h-9 w-9" style={{ color: "#94A3B8" }} />
               </div>
-              <p style={{ fontSize: 18, fontWeight: 800, color: "#1F2A44" }}>لا توجد إعلانات حتى الآن</p>
+              <p style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>لا توجد إعلانات حتى الآن</p>
               <p style={{ fontSize: 14, color: "#64748B", marginBottom: 22 }}>أضف أول إعلان لمكتبك لبدء جذب العملاء</p>
               <Link href="/dashboard/listings/new">
-                <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#3F5BD8" }}>
+                <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#667EEA" }}>
                   <Plus className="h-4 w-4" />
                   إضافة إعلان
                 </Button>
@@ -139,7 +139,7 @@ export default function DashboardListings() {
                             </div>
                           )}
                           <div>
-                            <div className="font-bold text-sm line-clamp-1" style={{ color: "#1F2A44" }}>{p.titleAr}</div>
+                            <div className="font-bold text-sm line-clamp-1" style={{ color: "#111827" }}>{p.titleAr}</div>
                             <div className="text-xs" style={{ color: "#94A3B8" }}>{p.referenceId}</div>
                             <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                               {/* Mobile-only: show status and price */}
@@ -164,7 +164,7 @@ export default function DashboardListings() {
                           {p.status}
                         </Badge>
                       </td>
-                      <td className="p-4 hidden md:table-cell text-sm font-bold" style={{ color: "#3F5BD8" }}>
+                      <td className="p-4 hidden md:table-cell text-sm font-bold" style={{ color: "#667EEA" }}>
                         {p.price.toLocaleString("en-US")} KWD
                       </td>
                       <td className="p-4 hidden lg:table-cell">
@@ -208,7 +208,7 @@ export default function DashboardListings() {
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 p-4" style={{ borderTop: "1px solid #EEF1F5" }}>
                   <Button variant="outline" size="sm" className="rounded-xl font-semibold" disabled={page <= 1} onClick={() => setPage(page - 1)}>السابق</Button>
-                  <span className="px-4 py-1.5 text-sm font-bold rounded-xl" style={{ color: "#1F2A44", background: "#F5F7FA" }}>{page} / {totalPages}</span>
+                  <span className="px-4 py-1.5 text-sm font-bold rounded-xl" style={{ color: "#111827", background: "#F5F7FA" }}>{page} / {totalPages}</span>
                   <Button variant="outline" size="sm" className="rounded-xl font-semibold" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>التالي</Button>
                 </div>
               )}

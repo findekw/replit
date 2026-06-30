@@ -12,8 +12,8 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const STATUS_COLORS: Record<string, string> = {
-  "للإيجار": "#4f6fad",
-  "للبيع": "#3F5BD8",
+  "للإيجار": "#667EEA",
+  "للبيع": "#667EEA",
   "للبدل": "#f97316",
 };
 
@@ -27,13 +27,13 @@ const styles = `
 .pd-container { max-width: 1200px; margin: 0 auto; padding: 20px 16px 96px; }
 .pd-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748B; margin-bottom: 16px; flex-wrap: wrap; }
 .pd-breadcrumb a { color: #64748B; text-decoration: none; transition: color .15s; display: inline-flex; align-items: center; gap: 4px; }
-.pd-breadcrumb a:hover { color: #3F5BD8; }
+.pd-breadcrumb a:hover { color: #667EEA; }
 .pd-breadcrumb .pd-bc-sep { color: #CBD5E1; }
-.pd-breadcrumb .pd-bc-current { color: #1F2A44; font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pd-breadcrumb .pd-bc-current { color: #111827; font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .pd-searchnav { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #EEF1F5; border-radius: 14px; padding: 8px 12px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15,23,42,0.04); }
-.pd-navbtn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #E2E8F0; color: #1F2A44; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
-.pd-navbtn:hover:not(:disabled) { border-color: #3F5BD8; color: #3F5BD8; }
+.pd-navbtn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #E2E8F0; color: #111827; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
+.pd-navbtn:hover:not(:disabled) { border-color: #667EEA; color: #667EEA; }
 .pd-navbtn:disabled { opacity: .4; cursor: not-allowed; }
 .pd-navcount { font-size: 13px; color: #64748B; font-weight: 600; }
 
@@ -43,9 +43,9 @@ const styles = `
 .pd-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
 
 /* Gallery */
-.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #1F2A44; aspect-ratio: 16/10; }
+.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16/10; }
 .pd-gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pd-gallery-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1F2A44 0%, #2d3c5e 100%); }
+.pd-gallery-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
 .pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .pd-gnav:hover { background: rgba(15,23,42,0.8); }
 .pd-gnav-prev { right: 14px; }
@@ -56,35 +56,35 @@ const styles = `
 .pd-badge-featured { background: #f59e0b; }
 
 .pd-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
-.pd-thumb { flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #1F2A44; transition: border-color .15s; }
+.pd-thumb { flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #111827; transition: border-color .15s; }
 .pd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pd-thumb.active { border-color: #3F5BD8; }
+.pd-thumb.active { border-color: #667EEA; }
 
 /* Header card */
 .pd-head { padding: 24px; }
 .pd-head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.pd-price { font-size: 30px; font-weight: 900; color: #1F2A44; white-space: nowrap; line-height: 1.1; }
-.pd-price .pd-cur { font-size: 18px; font-weight: 700; color: #3F5BD8; margin-right: 4px; }
+.pd-price { font-size: 30px; font-weight: 900; color: #111827; white-space: nowrap; line-height: 1.1; }
+.pd-price .pd-cur { font-size: 18px; font-weight: 700; color: #667EEA; margin-right: 4px; }
 .pd-price-sub { font-size: 13px; color: #64748B; font-weight: 600; }
-.pd-title { font-size: 22px; font-weight: 800; color: #1F2A44; margin: 14px 0 8px; line-height: 1.4; }
+.pd-title { font-size: 22px; font-weight: 800; color: #111827; margin: 14px 0 8px; line-height: 1.4; }
 .pd-loc { display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 14px; }
 .pd-ref { font-size: 12px; color: #94A3B8; margin-top: 10px; }
 
-.pd-maplink { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #3F5BD8; text-decoration: none; font-family: inherit; transition: all .15s; }
-.pd-maplink:hover { background: #3F5BD8; border-color: #3F5BD8; color: #fff; }
+.pd-maplink { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #667EEA; text-decoration: none; font-family: inherit; transition: all .15s; }
+.pd-maplink:hover { background: #667EEA; border-color: #667EEA; color: #fff; }
 .pd-maplink svg { flex-shrink: 0; }
 
 .pd-specs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #EEF1F5; }
-.pd-spec { display: flex; align-items: center; gap: 7px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 9px 14px; font-size: 14px; font-weight: 600; color: #1F2A44; }
-.pd-spec svg { color: #3F5BD8; }
+.pd-spec { display: flex; align-items: center; gap: 7px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 9px 14px; font-size: 14px; font-weight: 600; color: #111827; }
+.pd-spec svg { color: #667EEA; }
 
 .pd-sec { padding: 24px; }
-.pd-sec-title { font-size: 18px; font-weight: 800; color: #1F2A44; margin: 0 0 14px; }
+.pd-sec-title { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 14px; }
 .pd-desc { color: #475569; line-height: 2; font-size: 15px; white-space: pre-line; }
 
 .pd-amen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (min-width: 640px) { .pd-amen { grid-template-columns: 1fr 1fr 1fr; } }
-.pd-amen-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1F2A44; font-weight: 500; }
+.pd-amen-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #111827; font-weight: 500; }
 .pd-amen-check { width: 22px; height: 22px; border-radius: 7px; background: rgba(5,150,105,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .pd-amen-check svg { color: #059669; }
 
@@ -94,22 +94,22 @@ const styles = `
 .pd-office { padding: 20px; }
 .pd-office-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
 .pd-office-logo { width: 54px; height: 54px; border-radius: 14px; object-fit: cover; border: 1px solid #EEF1F5; flex-shrink: 0; }
-.pd-office-logo-ph { width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #1F2A44 0%, #2d3c5e 100%); }
-.pd-office-name { font-size: 16px; font-weight: 800; color: #1F2A44; }
+.pd-office-logo-ph { width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
+.pd-office-name { font-size: 16px; font-weight: 800; color: #111827; }
 .pd-office-gov { font-size: 12px; color: #64748B; margin-top: 2px; }
-.pd-office-link { display: block; text-align: center; font-size: 13px; color: #3F5BD8; font-weight: 700; text-decoration: none; padding: 10px; border-radius: 10px; transition: background .15s; }
+.pd-office-link { display: block; text-align: center; font-size: 13px; color: #667EEA; font-weight: 700; text-decoration: none; padding: 10px; border-radius: 10px; transition: background .15s; }
 .pd-office-link:hover { background: #F5F7FA; }
 
 .pd-cta { width: 100%; height: 50px; border-radius: 12px; border: none; font-weight: 700; font-size: 15px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .15s; }
 .pd-cta-wa { background: #25D366; color: #fff; }
 .pd-cta-wa:hover { background: #1eb858; }
-.pd-cta-call { background: #fff; color: #1F2A44; border: 1.5px solid #1F2A44; }
-.pd-cta-call:hover { background: #1F2A44; color: #fff; }
+.pd-cta-call { background: #fff; color: #111827; border: 1.5px solid #111827; }
+.pd-cta-call:hover { background: #111827; color: #fff; }
 .pd-cta-stack { display: flex; flex-direction: column; gap: 10px; }
 
 .pd-share { display: flex; gap: 10px; }
 .pd-share-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 1px solid #E2E8F0; color: #475569; border-radius: 12px; padding: 11px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
-.pd-share-btn:hover { border-color: #3F5BD8; color: #3F5BD8; }
+.pd-share-btn:hover { border-color: #667EEA; color: #667EEA; }
 .pd-share-icon { flex: 0 0 auto; width: 46px; }
 
 /* Similar */
@@ -325,7 +325,7 @@ export default function PropertyDetail() {
 
                 <h1 className="pd-title">{property.titleAr}</h1>
                 <div className="pd-loc">
-                  <MapPin size={16} color="#3F5BD8" />
+                  <MapPin size={16} color="#667EEA" />
                   <span>{[property.governorateName, property.areaName].filter(Boolean).join("، ")}</span>
                 </div>
 

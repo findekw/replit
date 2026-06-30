@@ -10,7 +10,7 @@ export function TypeFilter({
   onChange,
   types,
   dark = false,
-  accent = "#3F5BD8",
+  accent = "#667EEA",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -31,7 +31,7 @@ export function TypeFilter({
           fontFamily: "'Cairo', sans-serif",
           fontSize: 14,
           fontWeight: 700,
-          color: dark ? "#F4ECD8" : "#1F2A44",
+          color: dark ? "#F4ECD8" : "#111827",
           background: dark ? "rgba(255,255,255,0.05)" : "#fff",
           border: `1px solid ${value ? accent : dark ? "rgba(201,162,39,0.4)" : "#E2E8F0"}`,
           borderRadius: 999,
@@ -44,7 +44,7 @@ export function TypeFilter({
       >
         <option value="">كل الأنواع</option>
         {types.map((t) => (
-          <option key={t} value={t} style={{ color: "#1F2A44" }}>
+          <option key={t} value={t} style={{ color: "#111827" }}>
             {t}
           </option>
         ))}

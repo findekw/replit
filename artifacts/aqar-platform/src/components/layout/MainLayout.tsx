@@ -16,8 +16,8 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
-const BLUE = "#1F2A44";
-const ACCENT = "#3F5BD8";
+const BLUE = "#111827";
+const ACCENT = "#667EEA";
 const HEADER_BG = "#ffffff";
 const HEADER_TEXT = "#0f172a";
 
@@ -176,7 +176,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         .register-btn,
         a.register-btn,
         button.register-btn {
-          background: #3F5BD8 !important;
+          background: #667EEA !important;
           color: #fff !important;
           border: none !important;
           border-radius: 10px;
@@ -189,7 +189,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         }
         .register-btn:active,
         a.register-btn:active {
-          background: #1F2A44 !important;
+          background: #111827 !important;
         }
         .site-logo {
           width: 100px;
@@ -226,8 +226,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   href={href}
                   className={`text-[15px] px-4 h-full flex items-center transition-all duration-200 relative ${
                     location === href
-                      ? "font-bold text-[#1F2A44] after:absolute after:bottom-0 after:right-3 after:left-3 after:h-[3px] after:rounded-t-full after:bg-[#3F5BD8]"
-                      : "font-semibold text-[#475569] hover:text-[#1F2A44]"
+                      ? "font-bold text-[#111827] after:absolute after:bottom-0 after:right-3 after:left-3 after:h-[3px] after:rounded-t-full after:bg-[#667EEA]"
+                      : "font-semibold text-[#475569] hover:text-[#111827]"
                   }`}
                 >
                   {label}

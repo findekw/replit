@@ -86,7 +86,7 @@ export default function OfficePage() {
     return (
       <div dir="rtl" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 16px", fontFamily: "'Cairo', sans-serif", background: "#F6F8FC" }}>
         <Building2 className="h-16 w-16" style={{ color: "#cbd5e1", marginBottom: 16 }} />
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1F2A44", marginBottom: 8 }}>الصفحة غير موجودة</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 8 }}>الصفحة غير موجودة</h1>
         <p style={{ color: "#64748B", marginBottom: 24 }}>لم يتم العثور على هذا المكتب على المنصة</p>
         <Button onClick={() => navigate("/offices")}>تصفّح جميع المكاتب</Button>
       </div>
@@ -96,7 +96,7 @@ export default function OfficePage() {
   if (loadingOffice || !office) {
     return (
       <div dir="rtl" style={{ minHeight: "100vh", background: "#F6F8FC", fontFamily: "'Cairo', sans-serif" }}>
-        <div style={{ height: 300, background: "linear-gradient(135deg,#16203a,#3F5BD8)" }} />
+        <div style={{ height: 300, background: "linear-gradient(135deg,#16203a,#667EEA)" }} />
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: 24, display: "flex", gap: 16, flexWrap: "wrap" }}>
           {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} style={{ flex: "1 1 280px", height: 280, background: "#e9eef5", borderRadius: 18 }} />)}
         </div>

@@ -282,7 +282,7 @@ export default function DashboardAddListing() {
 
           {/* Progress badge */}
           <div className="flex items-center gap-2 mb-6">
-            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-600 text-xs font-bold">✓</div>
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold">✓</div>
             <span style={{ fontSize: 14, color: "#0f172a" }}>تم إنشاء الإعلان</span>
             <div className="flex-1 h-0.5 bg-border mx-1" />
             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-xs font-bold">2</div>
@@ -369,7 +369,7 @@ export default function DashboardAddListing() {
                         <button
                           onClick={() => setPrimary(img.id)}
                           className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center transition-colors text-white"
-                          style={{ background: img.isPrimary ? "#2563EB" : "rgba(0,0,0,0.4)" }}
+                          style={{ background: img.isPrimary ? "#667EEA" : "rgba(0,0,0,0.4)" }}
                           title="تعيين كرئيسية"
                         >
                           <Star className="h-3.5 w-3.5 fill-current" />
@@ -381,7 +381,7 @@ export default function DashboardAddListing() {
                           <X className="h-3.5 w-3.5" />
                         </button>
                         {img.isPrimary && (
-                          <div className="absolute bottom-0 left-0 right-0 text-center text-xs font-bold py-0.5 text-white" style={{ background: "#2563EB" }}>
+                          <div className="absolute bottom-0 left-0 right-0 text-center text-xs font-bold py-0.5 text-white" style={{ background: "#667EEA" }}>
                             رئيسية
                           </div>
                         )}
@@ -429,7 +429,7 @@ export default function DashboardAddListing() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">إضافة إعلان</h1>
             {user?.status === "pending" && (
-              <p className="text-sm text-blue-700 mt-0.5">سيُنشر إعلانك بعد تفعيل حسابك</p>
+              <p className="text-sm text-indigo-700 mt-0.5">سيُنشر إعلانك بعد تفعيل حسابك</p>
             )}
           </div>
         </div>
