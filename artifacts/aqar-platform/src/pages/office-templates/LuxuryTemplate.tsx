@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star, Mail,
+  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -47,11 +47,10 @@ export default function LuxuryTemplate(p: TemplateProps) {
             {office.governorateName && <span className="lx-badge"><MapPin size={14} /> {office.governorateName}</span>}
           </div>
 
-          {(hasWA || hasPhone || office.email) && (
+          {(hasWA || hasPhone) && (
             <div className="lx-hero-cta">
               {hasWA && <button className="lx-btn lx-btn-gold" onClick={onWhatsApp}><MessageCircle size={19} /> تواصل واتساب</button>}
               {hasPhone && <button className="lx-btn lx-btn-outline" onClick={onCall}><Phone size={18} /> اتصال</button>}
-              {office.email && <a className="lx-iconbtn" href={`mailto:${office.email}`} title="البريد الإلكتروني"><Mail size={19} /></a>}
             </div>
           )}
         </div>

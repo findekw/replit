@@ -1,4 +1,4 @@
-import { Router, type Request, type Response, type NextFunction, type IRouter } from "express";
+import { Router, type Request, type Response, type IRouter } from "express";
 import multer, { type FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
@@ -15,46 +15,92 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-const ALLOWED_MIME = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const ALLOWED_VIDEO_MIME = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (_req, file, cb) => {
-    const ext =
-      file.mimetype === "image/png" ? ".png" :
-      file.mimetype === "image/webp" ? ".webp" : ".jpg";
-    const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
-    cb(null, unique);
-  },
-});
+function makeStorage(kind: "image" | "video") {
+  return multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+    filename: (_req, file, cb) => {
+      const ext =
+        file.mimetype === "image/png" ? ".png" :
+        file.mimetype === "image/webp" ? ".webp" :
+        file.mimetype === "video/webm" ? ".webm" :
+        file.mimetype === "video/quicktime" ? ".mov" :
+        kind === "video" ? ".mp4" : ".jpg";
+      const unique = `${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
+      cb(null, unique);
+    },
+  });
+}
 
-const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
-  if (!ALLOWED_MIME.has(file.mimetype)) {
-    (cb as any)(Object.assign(new Error("INVALID_TYPE"), { code: "INVALID_TYPE" }));
-    return;
-  }
-  cb(null, true);
-};
-
-const upload = multer({ storage, limits: { fileSize: MAX_SIZE_BYTES }, fileFilter });
-
-router.post("/uploads/images", (req: Request, res: Response) => {
-  upload.single("image")(req, res, (err: unknown) => {
-    if (err) {
-      const e = err as { code?: string; message?: string };
-      console.error("[Upload] Error:", e.code, e.message);
-      if (e.code === "LIMIT_FILE_SIZE") {
-        res.status(400).json({ error: "حجم الصورة كبير", code: "FILE_TOO_LARGE" });
-        return;
-      }
-      if (e.code === "INVALID_TYPE") {
-        res.status(400).json({ error: "نوع الملف غير مدعوم", code: "INVALID_TYPE" });
-        return;
-      }
-      res.status(500).json({ error: "فشل رفع الصورة" });
+function makeFileFilter(allowed: Set<string>) {
+  return (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+    if (!allowed.has(file.mimetype)) {
+      (cb as any)(Object.assign(new Error("INVALID_TYPE"), { code: "INVALID_TYPE" }));
       return;
     }
+    cb(null, true);
+  };
+}
+
+const uploadImage = multer({
+  storage: makeStorage("image"),
+  limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
+  fileFilter: makeFileFilter(ALLOWED_IMAGE_MIME),
+});
+
+const uploadVideo = multer({
+  storage: makeStorage("video"),
+  limits: { fileSize: MAX_VIDEO_SIZE_BYTES },
+  fileFilter: makeFileFilter(ALLOWED_VIDEO_MIME),
+});
+
+function handleUploadError(err: unknown, res: Response, kind: "image" | "video"): boolean {
+  if (!err) return false;
+  const e = err as { code?: string; message?: string };
+  console.error(`[Upload] ${kind} error:`, e.code, e.message);
+  if (e.code === "LIMIT_FILE_SIZE") {
+    res.status(400).json({
+      error: kind === "video" ? "حجم الفيديو كبير" : "حجم الصورة كبير",
+      code: "FILE_TOO_LARGE",
+    });
+    return true;
+  }
+  if (e.code === "INVALID_TYPE") {
+    res.status(400).json({ error: "نوع الملف غير مدعوم", code: "INVALID_TYPE" });
+    return true;
+  }
+  res.status(500).json({ error: kind === "video" ? "فشل رفع الفيديو" : "فشل رفع الصورة" });
+  return true;
+}
+
+function fileUrl(file: Express.Multer.File) {
+  return `/api/uploads/${file.filename}`;
+}
+
+router.post("/uploads/video", (req: Request, res: Response) => {
+  uploadVideo.single("video")(req, res, (err: unknown) => {
+    if (handleUploadError(err, res, "video")) return;
+
+    if (!req.file) {
+      res.status(400).json({ error: "لم يتم إرسال أي فيديو" });
+      return;
+    }
+
+    console.log(
+      `[Upload] Saved video: ${req.file.filename} | type: ${req.file.mimetype} | size: ${req.file.size} bytes`
+    );
+
+    res.json({ url: fileUrl(req.file), filename: req.file.filename });
+  });
+});
+
+router.post("/uploads/images", (req: Request, res: Response) => {
+  uploadImage.single("image")(req, res, (err: unknown) => {
+    if (handleUploadError(err, res, "image")) return;
 
     if (!req.file) {
       res.status(400).json({ error: "لم يتم إرسال أي صورة" });
@@ -65,7 +111,7 @@ router.post("/uploads/images", (req: Request, res: Response) => {
       `[Upload] Saved: ${req.file.filename} | type: ${req.file.mimetype} | size: ${req.file.size} bytes`
     );
 
-    res.json({ url: `/api/uploads/${req.file.filename}`, filename: req.file.filename });
+    res.json({ url: fileUrl(req.file), filename: req.file.filename });
   });
 });
 

@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star, Mail,
+  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
   ChevronLeft, ChevronRight, Home as HomeIcon, CheckCircle2,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -76,7 +76,7 @@ export default function ClassicTemplate(p: TemplateProps) {
               </>
             )}
 
-            {(hasPhone || hasWA || office.email) && (
+            {(hasPhone || hasWA) && (
               <>
                 <div className="cl-divider" />
                 <h3 className="cl-sub">بيانات التواصل</h3>
@@ -88,10 +88,6 @@ export default function ClassicTemplate(p: TemplateProps) {
                   {hasWA && (
                     <li><span className="cl-ci cl-ci-wa"><MessageCircle size={16} /></span>
                       <button className="cl-contact-row" onClick={onWhatsApp}>{office.whatsapp || "واتساب"}</button></li>
-                  )}
-                  {office.email && (
-                    <li><span className="cl-ci"><Mail size={16} /></span>
-                      <a className="cl-contact-row" href={`mailto:${office.email}`}>{office.email}</a></li>
                   )}
                 </ul>
               </>

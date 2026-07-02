@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MapPin, Building2, ShieldCheck, Star, Mail,
+  Phone, MapPin, Building2, ShieldCheck, Star,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -46,7 +46,6 @@ export default function MinimalTemplate(p: TemplateProps) {
           <div className="mn-contact">
             {hasPhone && <button className="mn-btn mn-btn-call" onClick={onCall}><Phone size={16} strokeWidth={1.75} /> اتصال</button>}
             {hasWA && <button className="mn-btn mn-btn-wa" onClick={onWhatsApp}>واتساب</button>}
-            {office.email && <a className="mn-btn mn-btn-mail" href={`mailto:${office.email}`}><Mail size={16} strokeWidth={1.75} /> بريد</a>}
           </div>
 
           {office.coverImage && (

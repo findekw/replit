@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star, Mail,
+  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -40,12 +40,11 @@ export default function ModernTemplate(p: TemplateProps) {
       </section>
 
       {/* Floating contact bar */}
-      {(hasWA || hasPhone || office.email) && (
+      {(hasWA || hasPhone) && (
         <div className="tm-contact-wrap">
           <div className="tm-contact">
             {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp}><MessageCircle size={20} /> تواصل واتساب</button>}
             {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall}><Phone size={20} /> اتصال</button>}
-            {office.email && <a className="tm-iconbtn" href={`mailto:${office.email}`} title="البريد الإلكتروني"><Mail size={20} /></a>}
           </div>
         </div>
       )}

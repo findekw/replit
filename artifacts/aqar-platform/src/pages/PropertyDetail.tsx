@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function buildWhatsAppUrl(whatsapp: string, title: string, propertyUrl: string) {
-  const msg = `السلام عليكم،\nاستفسار عن هذا الإعلان:\n\n${title}\n\nFinde:\n${propertyUrl}`;
+  const msg = `السلام عليكم، ممكن ترسل تفاصيل هذا الإعلان في فايند وشكراً\n${title}\n${propertyUrl}`;
   return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -59,6 +59,8 @@ const styles = `
 .pd-thumb { flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #111827; transition: border-color .15s; }
 .pd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd-thumb.active { border-color: #667EEA; }
+.pd-video { margin-top: 14px; border-radius: 16px; overflow: hidden; background: #0F172A; border: 1px solid #EEF1F5; }
+.pd-video video { width: 100%; max-height: 460px; display: block; background: #0F172A; }
 
 /* Header card */
 .pd-head { padding: 24px; }
@@ -222,6 +224,7 @@ export default function PropertyDetail() {
     : property.primaryImage
     ? [property.primaryImage]
     : [];
+  const videoUrl = (property as unknown as { videoUrl?: string | null }).videoUrl ?? null;
 
   const propertyUrl = typeof window !== "undefined" ? window.location.href : "";
   const statusColor = STATUS_COLORS[property.status] ?? "#64748B";
@@ -304,6 +307,11 @@ export default function PropertyDetail() {
                         <img src={src} alt="" />
                       </button>
                     ))}
+                  </div>
+                )}
+                {videoUrl && (
+                  <div className="pd-video">
+                    <video src={videoUrl} controls preload="metadata" />
                   </div>
                 )}
               </div>

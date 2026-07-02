@@ -343,7 +343,7 @@ router.get("/properties/:id", async (req, res): Promise<void> => {
     }
   }
 
-  res.json(GetPropertyResponse.parse({
+  const parsedProperty = GetPropertyResponse.parse({
     ...buildPropertyObject(row.property, {
       governorateName: row.governorateName ?? null,
       areaName: row.areaName ?? null,
@@ -359,7 +359,12 @@ router.get("/properties/:id", async (req, res): Promise<void> => {
     })),
     amenities: row.property.amenities,
     office: officeObj,
-  }));
+  });
+
+  res.json({
+    ...parsedProperty,
+    videoUrl: row.property.videoUrl ?? null,
+  });
 });
 
 router.get("/properties/:id/similar", async (req, res): Promise<void> => {
@@ -427,6 +432,10 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   const areaSize = body.areaSize ? Number(body.areaSize) : null;
   const bedrooms = body.bedrooms ? Number(body.bedrooms) : null;
   const bathrooms = body.bathrooms ? Number(body.bathrooms) : null;
+  const furnished = body.furnished ? String(body.furnished).trim() : null;
+  const amenities = Array.isArray(body.amenities)
+    ? body.amenities.map((a) => String(a).trim()).filter(Boolean).slice(0, 30)
+    : [];
   const governorateId = body.governorateId ? Number(body.governorateId) : null;
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
@@ -441,6 +450,7 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
   if (!governorateId) errors.push("يرجى اختيار المحافظة");
   if (!areaId) errors.push("يرجى اختيار المنطقة");
+  if (!descriptionAr || descriptionAr.length < 10) errors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
 
   if (errors.length > 0) {
     res.status(400).json({ error: "بيانات غير صالحة", details: errors });
@@ -475,6 +485,8 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
         areaSize,
         bedrooms,
         bathrooms,
+        furnished,
+        amenities,
         governorateId,
         areaId,
         officeId,
@@ -513,6 +525,10 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   const areaSize = body.areaSize ? Number(body.areaSize) : null;
   const bedrooms = body.bedrooms ? Number(body.bedrooms) : null;
   const bathrooms = body.bathrooms ? Number(body.bathrooms) : null;
+  const furnished = body.furnished ? String(body.furnished).trim() : null;
+  const amenities = Array.isArray(body.amenities)
+    ? body.amenities.map((a) => String(a).trim()).filter(Boolean).slice(0, 30)
+    : [];
   const governorateId = body.governorateId ? Number(body.governorateId) : null;
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
@@ -527,6 +543,7 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   if (!price || price <= 0) errors.push("السعر يجب أن يكون رقماً موجباً");
   if (!governorateId) errors.push("يرجى اختيار المحافظة");
   if (!areaId) errors.push("يرجى اختيار المنطقة");
+  if (!descriptionAr || descriptionAr.length < 10) errors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
 
   if (errors.length > 0) { res.status(400).json({ error: "بيانات غير صالحة", details: errors }); return; }
 
@@ -536,7 +553,7 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   try {
     const [updated] = await db.update(propertiesTable).set({
       titleAr, title: titleAr, descriptionAr, description: descriptionAr,
-      status, type, price, areaSize, bedrooms, bathrooms, governorateId, areaId,
+      status, type, price, areaSize, bedrooms, bathrooms, furnished, amenities, governorateId, areaId,
       updatedAt: new Date(),
     }).where(eq(propertiesTable.id, propId)).returning();
 
@@ -545,6 +562,47 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   } catch {
     res.status(500).json({ error: "فشل تحديث الإعلان، حاول مرة أخرى" });
   }
+});
+
+// PUT /api/properties/:id/video — attach or replace an optional property video
+router.put("/properties/:id/video", async (req: Request, res: Response): Promise<void> => {
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
+  if (prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح بتعديل هذا الإعلان" }); return; }
+
+  const videoUrl = String((req.body as Record<string, unknown>).videoUrl ?? "").trim();
+  if (!videoUrl.startsWith("/api/uploads/") && !videoUrl.startsWith("http://") && !videoUrl.startsWith("https://")) {
+    res.status(400).json({ error: "رابط الفيديو غير صالح" });
+    return;
+  }
+
+  const [updated] = await db.update(propertiesTable).set({
+    videoUrl,
+    updatedAt: new Date(),
+  }).where(eq(propertiesTable.id, propId)).returning({ id: propertiesTable.id, videoUrl: propertiesTable.videoUrl });
+
+  res.json({ property: updated });
+});
+
+// DELETE /api/properties/:id/video — remove the optional property video
+router.delete("/properties/:id/video", async (req: Request, res: Response): Promise<void> => {
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+  if (!prop || prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
+
+  await db.update(propertiesTable).set({ videoUrl: null, updatedAt: new Date() }).where(eq(propertiesTable.id, propId));
+  res.json({ message: "تم حذف الفيديو" });
 });
 
 // DELETE /api/properties/:id — delete property and its images (authenticated owner)

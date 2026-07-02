@@ -12,7 +12,7 @@ import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, CheckCircle, AlertCircle, ArrowRight,
-  Camera, X, ImagePlus, Upload, Star
+  Camera, X, ImagePlus, Upload, Star, ChevronDown, Video, Trash2
 } from "lucide-react";
 import { Link } from "wouter";
 import { LocationCombobox } from "@/components/LocationCombobox";
@@ -28,13 +28,35 @@ import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const FURNISHED_OPTIONS = ["مفروش", "غير مفروش", "شبه مفروش"];
+const AMENITY_OPTIONS = [
+  "مواقف سيارات",
+  "مصعد",
+  "بلكونة",
+  "مسبح",
+  "حديقة",
+  "أمن",
+  "غرفة خادمة",
+  "تكييف مركزي",
+  "إطلالة بحرية",
+  "مطبخ مجهز",
+];
 
 interface UploadedImage {
   id: string;
   dbId?: number;
   previewUrl: string;
   isPrimary: boolean;
+  saving: boolean;
+  saved: boolean;
+  error: string | null;
+}
+
+interface UploadedVideo {
+  previewUrl: string;
   saving: boolean;
   saved: boolean;
   error: string | null;
@@ -56,6 +78,9 @@ export default function DashboardAddListing() {
   const [areaSize, setAreaSize] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
+  const [furnished, setFurnished] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [showExtras, setShowExtras] = useState(false);
   const [governorateId, setGovernorateId] = useState("");
   const [areaId, setAreaId] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
@@ -65,13 +90,15 @@ export default function DashboardAddListing() {
 
   // Step 2 state: image upload
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [uploadedVideo, setUploadedVideo] = useState<UploadedVideo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: govs } = useListGovernorates();
   const areas = governorateId ? getAreasByGovId(Number(governorateId)) : [];
 
-  const isUploading = uploadedImages.some((img) => img.saving);
+  const isUploading = uploadedImages.some((img) => img.saving) || uploadedVideo?.saving === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +109,7 @@ export default function DashboardAddListing() {
     if (!price || Number(price) <= 0) clientErrors.push("يرجى إدخال سعر صحيح");
     if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
     if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
+    if (descriptionAr.trim().length < 10) clientErrors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
 
     if (clientErrors.length > 0) { setErrors(clientErrors); return; }
 
@@ -102,9 +130,11 @@ export default function DashboardAddListing() {
           areaSize: areaSize ? Number(areaSize) : undefined,
           bedrooms: bedrooms ? Number(bedrooms) : undefined,
           bathrooms: bathrooms ? Number(bathrooms) : undefined,
+          furnished: furnished || undefined,
+          amenities,
           governorateId: governorateId ? Number(governorateId) : undefined,
           areaId: areaId ? Number(areaId) : undefined,
-          descriptionAr: descriptionAr.trim() || undefined,
+          descriptionAr: descriptionAr.trim(),
         }),
       });
 
@@ -220,6 +250,76 @@ export default function DashboardAddListing() {
     }
   }
 
+  function toggleAmenity(value: string) {
+    setAmenities((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  }
+
+  async function handleVideoFile(file: File) {
+    if (!propertyId) return;
+
+    const previewUrl = URL.createObjectURL(file);
+
+    if (!ALLOWED_VIDEO_TYPES.has(file.type)) {
+      setUploadedVideo({ previewUrl, saving: false, saved: false, error: "نوع الفيديو غير مدعوم (MP4, WEBM, MOV فقط)" });
+      return;
+    }
+
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      setUploadedVideo({ previewUrl, saving: false, saved: false, error: "حجم الفيديو كبير (الحد الأقصى 50 ميغابايت)" });
+      return;
+    }
+
+    setUploadedVideo({ previewUrl, saving: true, saved: false, error: null });
+
+    try {
+      const formData = new FormData();
+      formData.append("video", file);
+
+      const uploadRes = await fetch(`${BASE}/api/uploads/video`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json().catch(() => ({}));
+        setUploadedVideo({ previewUrl, saving: false, saved: false, error: errData.error || "فشل رفع الفيديو" });
+        return;
+      }
+
+      const { url } = (await uploadRes.json()) as { url: string };
+      const saveRes = await fetch(`${BASE}/api/properties/${propertyId}/video`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ videoUrl: url }),
+      });
+
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json().catch(() => ({}));
+        setUploadedVideo({ previewUrl, saving: false, saved: false, error: saveErr.error || "فشل حفظ الفيديو" });
+        return;
+      }
+
+      setUploadedVideo({ previewUrl, saving: false, saved: true, error: null });
+    } catch {
+      setUploadedVideo({ previewUrl, saving: false, saved: false, error: "خطأ في الاتصال، حاول مرة أخرى" });
+    }
+  }
+
+  async function removeVideo() {
+    if (propertyId) {
+      await fetch(`${BASE}/api/properties/${propertyId}/video`, {
+        method: "DELETE",
+        credentials: "include",
+      }).catch(() => {});
+    }
+    if (uploadedVideo?.previewUrl) URL.revokeObjectURL(uploadedVideo.previewUrl);
+    setUploadedVideo(null);
+  }
+
   async function removeImage(id: string) {
     const img = uploadedImages.find((i) => i.id === id);
     if (img?.dbId && propertyId) {
@@ -266,7 +366,7 @@ export default function DashboardAddListing() {
     navigate("/dashboard/listings");
   }
 
-  // ─── Step 2: Image Upload ───────────────────────────────────────────────────
+  // ─── Step 2: Media Upload ───────────────────────────────────────────────────
   if (step === 2) {
     const savedCount = uploadedImages.filter((img) => img.saved).length;
     return (
@@ -275,8 +375,8 @@ export default function DashboardAddListing() {
           <div className="flex items-center gap-3 mb-6">
             <Camera className="h-6 w-6 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">أضف صور الإعلان</h1>
-              <p style={{ fontSize: 15, color: "#0f172a" }}>الصور تزيد من احتمالية التواصل بـ 3 أضعاف</p>
+              <h1 className="text-2xl font-bold text-foreground">أضف الصور والفيديو</h1>
+              <p style={{ fontSize: 15, color: "#0f172a" }}>الصور مهمة، والفيديو اختياري إذا كان متوفرًا</p>
             </div>
           </div>
 
@@ -286,7 +386,7 @@ export default function DashboardAddListing() {
             <span style={{ fontSize: 14, color: "#0f172a" }}>تم إنشاء الإعلان</span>
             <div className="flex-1 h-0.5 bg-border mx-1" />
             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-xs font-bold">2</div>
-            <span className="text-sm font-medium text-foreground">إضافة الصور</span>
+            <span className="text-sm font-medium text-foreground">الصور والفيديو</span>
           </div>
 
           {/* Upload zone */}
@@ -393,6 +493,57 @@ export default function DashboardAddListing() {
             </div>
           )}
 
+          {/* Optional video */}
+          <div className="bg-card border rounded-2xl p-4 mb-5">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <Video className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">فيديو الإعلان <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></p>
+                  <p style={{ fontSize: 12.5, color: "#64748b" }}>MP4, WEBM, MOV — حتى 50MB</p>
+                </div>
+              </div>
+              {!uploadedVideo && (
+                <Button type="button" variant="outline" className="gap-2" onClick={() => videoInputRef.current?.click()}>
+                  <Upload className="h-4 w-4" />
+                  اختر فيديو
+                </Button>
+              )}
+            </div>
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleVideoFile(file);
+                e.currentTarget.value = "";
+              }}
+            />
+            {uploadedVideo && (
+              <div className="rounded-xl border overflow-hidden bg-muted">
+                <div className="relative">
+                  <video src={uploadedVideo.previewUrl} controls className="w-full max-h-72 bg-black" />
+                  {uploadedVideo.saving && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="h-7 w-7 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-3 p-3">
+                  <p className="text-sm" style={{ color: uploadedVideo.error ? "#dc2626" : "#0f172a" }}>
+                    {uploadedVideo.error ?? (uploadedVideo.saved ? "تم حفظ الفيديو" : "جاهز للحفظ")}
+                  </p>
+                  <Button type="button" variant="ghost" className="gap-2" onClick={removeVideo} disabled={uploadedVideo.saving}>
+                    <Trash2 className="h-4 w-4" />
+                    إزالة
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               className="flex-1 gap-2"
@@ -456,38 +607,29 @@ export default function DashboardAddListing() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
-          {/* Section: Basic Info */}
+          {/* Section: Search-like flow */}
           <div className="bg-card border rounded-2xl p-6 space-y-4">
-            <h2 className="font-semibold text-lg text-foreground border-b pb-3">المعلومات الأساسية</h2>
+            <h2 className="font-semibold text-lg text-foreground border-b pb-3">ابدأ مثل البحث عن عقار</h2>
 
             <div>
-              <Label htmlFor="titleAr">عنوان الإعلان <span className="text-destructive">*</span></Label>
-              <Input
-                id="titleAr"
-                placeholder="مثال: شقة 3 غرف في السالمية"
-                value={titleAr}
-                onChange={(e) => setTitleAr(e.target.value)}
-                className="mt-1"
-                disabled={submitting}
-                data-testid="input-listing-title"
-              />
+              <Label>نوع العرض <span className="text-destructive">*</span></Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {PROPERTY_STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => { setStatus(s); setType(""); }}
+                    className={`h-11 rounded-xl border text-sm font-bold transition-colors ${status === s ? "bg-primary text-white border-primary" : "bg-muted/60 text-foreground border-border hover:border-primary/40"}`}
+                    disabled={submitting}
+                    data-testid={`status-${s}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="status">نوع العرض <span className="text-destructive">*</span></Label>
-                <Select value={status} onValueChange={(v) => { setStatus(v); setType(""); }}>
-                  <SelectTrigger id="status" className="mt-1" data-testid="select-listing-status">
-                    <SelectValue placeholder="اختر نوع العرض" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROPERTY_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label className="mb-1 block">نوع العقار <span className="text-destructive">*</span></Label>
                 <LocationCombobox
@@ -500,55 +642,6 @@ export default function DashboardAddListing() {
                   disabled={!status}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="price">السعر <span className="text-destructive">*</span></Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="0"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="flex-1"
-                  min={0}
-                  disabled={submitting}
-                  data-testid="input-listing-price"
-                />
-                <div className="flex items-center px-4 bg-muted border border-input rounded-md text-sm font-semibold select-none" style={{ color: "#0f172a" }}>
-                  KWD
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Details */}
-          <div className="bg-card border rounded-2xl p-6 space-y-4">
-            <h2 className="font-semibold text-lg text-foreground border-b pb-3">التفاصيل</h2>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="areaSize">المساحة (م²)</Label>
-                <Input id="areaSize" type="number" placeholder="0" value={areaSize}
-                  onChange={(e) => setAreaSize(e.target.value)} className="mt-1" min={0}
-                  disabled={submitting} data-testid="input-listing-area" />
-              </div>
-              <div>
-                <Label htmlFor="bedrooms">غرف النوم</Label>
-                <Input id="bedrooms" type="number" placeholder="0" value={bedrooms}
-                  onChange={(e) => setBedrooms(e.target.value)} className="mt-1" min={0}
-                  disabled={submitting} data-testid="input-listing-bedrooms" />
-              </div>
-              <div>
-                <Label htmlFor="bathrooms">دورات المياه</Label>
-                <Input id="bathrooms" type="number" placeholder="0" value={bathrooms}
-                  onChange={(e) => setBathrooms(e.target.value)} className="mt-1" min={0}
-                  disabled={submitting} data-testid="input-listing-bathrooms" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="mb-1 block">المحافظة <span className="text-destructive">*</span></Label>
                 <LocationCombobox
@@ -579,16 +672,129 @@ export default function DashboardAddListing() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Section: Price and optional specs */}
+          <div className="bg-card border rounded-2xl p-6 space-y-4">
+            <h2 className="font-semibold text-lg text-foreground border-b pb-3">السعر والمواصفات</h2>
 
             <div>
-              <Label htmlFor="descriptionAr">وصف العقار</Label>
+              <Label htmlFor="price">السعر <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="0"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="flex-1"
+                  min={0}
+                  disabled={submitting}
+                  data-testid="input-listing-price"
+                />
+                <div className="flex items-center px-4 bg-muted border border-input rounded-md text-sm font-semibold select-none" style={{ color: "#0f172a" }}>
+                  KWD
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="areaSize">المساحة <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
+                <Input id="areaSize" type="number" placeholder="م²" value={areaSize}
+                  onChange={(e) => setAreaSize(e.target.value)} className="mt-1" min={0}
+                  disabled={submitting} data-testid="input-listing-area" />
+              </div>
+              <div>
+                <Label htmlFor="bedrooms">عدد الغرف <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
+                <Input id="bedrooms" type="number" placeholder="0" value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)} className="mt-1" min={0}
+                  disabled={submitting} data-testid="input-listing-bedrooms" />
+              </div>
+              <div>
+                <Label htmlFor="bathrooms">عدد الحمامات <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
+                <Input id="bathrooms" type="number" placeholder="0" value={bathrooms}
+                  onChange={(e) => setBathrooms(e.target.value)} className="mt-1" min={0}
+                  disabled={submitting} data-testid="input-listing-bathrooms" />
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-muted/30">
+              <button
+                type="button"
+                onClick={() => setShowExtras((v) => !v)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right"
+                disabled={submitting}
+              >
+                <span className="font-semibold text-foreground">خيارات إضافية <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showExtras ? "rotate-180" : ""}`} />
+              </button>
+
+              {showExtras && (
+                <div className="px-4 pb-4 space-y-4">
+                  <div>
+                    <Label className="mb-1 block">حالة التأثيث</Label>
+                    <Select value={furnished || "none"} onValueChange={(v) => setFurnished(v === "none" ? "" : v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر الحالة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">غير محدد</SelectItem>
+                        {FURNISHED_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="mb-2 block">مميزات العقار</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {AMENITY_OPTIONS.map((option) => {
+                        const active = amenities.includes(option);
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => toggleAmenity(option)}
+                            className={`min-h-10 rounded-lg border px-3 text-sm font-semibold transition-colors ${active ? "bg-primary/10 text-primary border-primary/40" : "bg-white text-foreground border-border hover:border-primary/40"}`}
+                          >
+                            {option}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section: Content */}
+          <div className="bg-card border rounded-2xl p-6 space-y-4">
+            <h2 className="font-semibold text-lg text-foreground border-b pb-3">محتوى الإعلان</h2>
+
+            <div>
+              <Label htmlFor="titleAr">عنوان الإعلان <span className="text-destructive">*</span></Label>
+              <Input
+                id="titleAr"
+                placeholder="مثال: شقة 3 غرف في السالمية"
+                value={titleAr}
+                onChange={(e) => setTitleAr(e.target.value)}
+                className="mt-1"
+                disabled={submitting}
+                data-testid="input-listing-title"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="descriptionAr">وصف الإعلان <span className="text-destructive">*</span></Label>
               <Textarea
                 id="descriptionAr"
-                placeholder="اكتب وصفاً تفصيلياً للعقار..."
+                placeholder="اكتب وصفاً واضحاً للإعلان..."
                 value={descriptionAr}
                 onChange={(e) => setDescriptionAr(e.target.value)}
                 className="mt-1 resize-none"
-                rows={4}
+                rows={5}
                 disabled={submitting}
                 data-testid="input-listing-description"
               />
@@ -603,7 +809,7 @@ export default function DashboardAddListing() {
             <Button type="submit" disabled={submitting} className="gap-2" data-testid="button-submit-listing">
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" />جارٍ الإضافة...</>
-              ) : "التالي: إضافة الصور"}
+              ) : "التالي: الصور والفيديو"}
             </Button>
           </div>
         </form>

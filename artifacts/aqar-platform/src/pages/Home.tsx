@@ -3,11 +3,9 @@ import { Link, useLocation } from "wouter";
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
-import { OfficeCard } from "@/components/OfficeCard";
 import { getApiBase } from "@/lib/apiBase";
 import {
   useGetLatestProperties,
-  useGetFeaturedOffices,
   useGetPlatformStats,
 } from "@workspace/api-client-react";
 
@@ -67,15 +65,12 @@ export default function Home() {
   const areasByProvince = province ? AREAS[province] ?? [] : [];
 
   const { data: latest } = useGetLatestProperties({ limit: 8 } as any);
-  const { data: offices } = useGetFeaturedOffices();
   const { data: stats } = useGetPlatformStats();
 
   const latestList = (latest as any[]) ?? [];
-  const officeList = (offices as any[]) ?? [];
 
   // ── Admin-managed hero banners ──
   const [slides, setSlides] = useState<HeroSlide[]>([]);
-  const [slideIdx, setSlideIdx] = useState(0);
 
   useEffect(() => {
     fetch(`${HOME_BASE}/api/hero-slides`)
@@ -84,14 +79,7 @@ export default function Home() {
       .catch(() => setSlides([]));
   }, []);
 
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const t = setInterval(() => setSlideIdx(i => (i + 1) % slides.length), 5500);
-    return () => clearInterval(t);
-  }, [slides.length]);
-
-  const current = slides[slideIdx] ?? null;
-  const heroTitle = current?.title || "لاقِ عقارك من مكاتب موثوقة";
+  const current = slides[0] ?? null;
   const heroSubtitle = current?.subtitle || "آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد";
 
   // ── Scroll-reveal: fade sections in as they enter the viewport ──
@@ -103,7 +91,7 @@ export default function Home() {
     }, { threshold: 0.12 });
     els.forEach(e => io.observe(e));
     return () => io.disconnect();
-  }, [latestList.length, officeList.length]);
+  }, [latestList.length]);
 
   function handleStatusChange(s: string) { setStatus(s); setType(""); }
 
@@ -200,10 +188,9 @@ export default function Home() {
         .fh-hero-bg { position:absolute; inset:0; z-index:0; }
         .fh-hero-slide {
           position:absolute; inset:0; background-size:cover; background-position:center;
-          opacity:0; transition:opacity 1.1s ease; will-change:opacity, transform;
+          opacity:1; transform:scale(1.04); filter:blur(1px); will-change:auto;
         }
-        .fh-hero-slide.active { opacity:1; animation:fh-kenburns 14s ease-out forwards; }
-        @keyframes fh-kenburns { from { transform:scale(1.04); } to { transform:scale(1.15); } }
+        .fh-hero-slide.active { opacity:1; }
         .fh-hero-overlay {
           position:absolute; inset:0; z-index:1; pointer-events:none;
           background:
@@ -219,10 +206,6 @@ export default function Home() {
           box-shadow:0 6px 18px rgba(0,0,0,0.18); transition:transform .18s, box-shadow .18s;
         }
         .fh-hero-cta:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,0.22); }
-        /* carousel dots */
-        .fh-dots { display:flex; gap:8px; justify-content:center; margin-top:26px; }
-        .fh-dot { width:9px; height:9px; border-radius:999px; border:none; cursor:pointer; background:rgba(255,255,255,0.4); transition:all .2s; padding:0; }
-        .fh-dot.on { background:#fff; width:26px; }
         /* hero entrance */
         .fh-anim-1 { animation:fh-rise .7s cubic-bezier(.22,1,.36,1) both; }
         .fh-anim-2 { animation:fh-rise .7s cubic-bezier(.22,1,.36,1) .12s both; }
@@ -351,11 +334,11 @@ export default function Home() {
         {/* ===== HERO + SEARCH ===== */}
         <section className="fh-hero">
           <div className="fh-hero-bg">
-            {(slides.length ? slides : [{ id: 0, imageUrl: DEFAULT_HERO_IMG } as HeroSlide]).map((s, i) => (
+            {[(slides[0] ?? { id: 0, imageUrl: DEFAULT_HERO_IMG } as HeroSlide)].map((s) => (
               <div
                 key={s.id}
-                className={`fh-hero-slide${i === slideIdx ? " active" : ""}`}
-                style={{ backgroundImage: `url(${s.imageUrl})` }}
+                className="fh-hero-slide active"
+                style={{ backgroundImage: `url(${s.imageUrl || DEFAULT_HERO_IMG})` }}
               />
             ))}
           </div>
@@ -407,13 +390,6 @@ export default function Home() {
               <span><MessageCircle size={15} /> تواصل مباشر بدون وسيط</span>
             </div>
 
-            {slides.length > 1 && (
-              <div className="fh-dots">
-                {slides.map((_, i) => (
-                  <button key={i} className={`fh-dot${i === slideIdx ? " on" : ""}`} onClick={() => setSlideIdx(i)} aria-label={`بانر ${i + 1}`} />
-                ))}
-              </div>
-            )}
           </div>
         </section>
 
@@ -465,19 +441,6 @@ export default function Home() {
             ))}
           </div>
         </section>
-
-        {/* ===== TRUSTED OFFICES ===== */}
-        {officeList.length > 0 && (
-          <section className="fh-section fh-reveal">
-            <div className="fh-sec-head">
-              <div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">مكاتب موثوقة</h2></div>
-              <Link href="/offices" className="fh-sec-link">كل المكاتب <ArrowLeft size={15} /></Link>
-            </div>
-            <div className="fh-grid">
-              {officeList.slice(0, 4).map((o: any) => <OfficeCard key={o.id} office={o} />)}
-            </div>
-          </section>
-        )}
 
         {/* ===== OFFICE CTA ===== */}
         <section className="fh-cta fh-reveal">

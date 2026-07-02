@@ -20,6 +20,7 @@ export const propertiesTable = pgTable("properties", {
   bathrooms: integer("bathrooms"),
   furnished: text("furnished"), // مفروش | غير مفروش | شبه مفروش
   amenities: text("amenities").array().notNull().default([]),
+  videoUrl: text("video_url"),
   featured: boolean("featured").notNull().default(false),
   active: boolean("active").notNull().default(true),
   approvalStatus: text("approval_status").notNull().default("pending"),

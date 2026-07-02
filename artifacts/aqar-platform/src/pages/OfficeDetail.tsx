@@ -142,12 +142,6 @@ export default function OfficeDetail() {
           <div className="space-y-5">
             <div className="bg-card border rounded-2xl p-5 space-y-4">
               <h3 className="font-bold text-lg border-b pb-3">معلومات التواصل</h3>
-              {office.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <a href={`mailto:${office.email}`} className="text-primary hover:underline break-all">{office.email}</a>
-                </div>
-              )}
               {office.website && (
                 <div className="flex items-center gap-2 text-sm">
                   <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
