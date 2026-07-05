@@ -8,6 +8,7 @@ import {
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
+import { LogoImg } from "@/components/LogoImg";
 
 /**
  * MODERN — bold marketplace look: deep navy→indigo gradient hero, big logo tile,
@@ -26,7 +27,7 @@ export default function ModernTemplate(p: TemplateProps) {
         <div className="tm-hero-scrim" />
         <div className="tm-hero-inner">
           <div className="tm-logo">
-            {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={46} style={{ color: "#111827" }} />}
+            <LogoImg src={office.logo} alt={office.nameAr} fallback={<Building2 size={46} style={{ color: "#111827" }} />} />
           </div>
           <div className="tm-hero-text">
             <h1 className="tm-name">{office.nameAr}</h1>

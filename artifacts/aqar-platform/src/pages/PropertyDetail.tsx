@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { useGetProperty, useGetSimilarProperties } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
+import { LogoImg } from "@/components/LogoImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Map, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
@@ -417,11 +418,12 @@ export default function PropertyDetail() {
                 <div className="pd-card pd-office">
                   <a href={`/${property.office.slug}`} style={{ textDecoration: "none" }}>
                     <div className="pd-office-head">
-                      {property.office.logo ? (
-                        <img src={property.office.logo} alt={property.office.nameAr} className="pd-office-logo" />
-                      ) : (
-                        <div className="pd-office-logo-ph"><Building2 size={26} color="#fff" /></div>
-                      )}
+                      <LogoImg
+                        src={property.office.logo}
+                        alt={property.office.nameAr}
+                        className="pd-office-logo"
+                        fallback={<div className="pd-office-logo-ph"><Building2 size={26} color="#fff" /></div>}
+                      />
                       <div style={{ minWidth: 0 }}>
                         <div className="pd-office-name">{property.office.nameAr}</div>
                         {property.office.governorateName && (

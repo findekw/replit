@@ -1,6 +1,7 @@
 import { Office } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Building2 } from "lucide-react";
+import { LogoImg } from "@/components/LogoImg";
 
 interface OfficeCardProps {
   office: Office;
@@ -42,15 +43,12 @@ export function OfficeCard({ office }: OfficeCardProps) {
               boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
             }}
           >
-            {office.logo ? (
-              <img
-                src={office.logo}
-                alt={office.nameAr}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <Building2 style={{ width: 30, height: 30, color: "#111827" }} />
-            )}
+            <LogoImg
+              src={office.logo}
+              alt={office.nameAr}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              fallback={<Building2 style={{ width: 30, height: 30, color: "#111827" }} />}
+            />
           </div>
         </div>
 

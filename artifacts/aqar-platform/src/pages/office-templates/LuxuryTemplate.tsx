@@ -8,6 +8,7 @@ import {
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
+import { LogoImg } from "@/components/LogoImg";
 
 /**
  * LUXURY — "فخم": dark editorial agency look. Centered full-bleed dark hero with a
@@ -29,7 +30,7 @@ export default function LuxuryTemplate(p: TemplateProps) {
         <div className="lx-hero-inner">
           <div className="lx-logo-ring">
             <div className="lx-logo">
-              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={40} style={{ color: "#C9A227" }} />}
+              <LogoImg src={office.logo} alt={office.nameAr} fallback={<Building2 size={40} style={{ color: "#C9A227" }} />} />
             </div>
           </div>
 

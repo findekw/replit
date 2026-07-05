@@ -3,6 +3,7 @@ import { useRoute } from "wouter";
 import { useGetOffice, useGetOfficeProperties, getGetOfficeQueryKey } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
+import { LogoImg } from "@/components/LogoImg";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Phone, MessageCircle, Globe, Instagram, Twitter, MapPin } from "lucide-react";
@@ -61,11 +62,12 @@ export default function OfficeDetail() {
         {/* Office header */}
         <div className="flex flex-col md:flex-row gap-5 -mt-12 mb-8">
           <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-4 border-background bg-card flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
-            {office.logo ? (
-              <img src={office.logo} alt={office.nameAr} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl font-black text-primary">{office.nameAr.charAt(0)}</span>
-            )}
+            <LogoImg
+              src={office.logo}
+              alt={office.nameAr}
+              className="w-full h-full object-cover"
+              fallback={<span className="text-3xl font-black text-primary">{office.nameAr.charAt(0)}</span>}
+            />
           </div>
           <div className="mt-12 md:mt-8 flex-1">
             <h1 className="text-2xl font-bold text-foreground mb-1">{office.nameAr}</h1>

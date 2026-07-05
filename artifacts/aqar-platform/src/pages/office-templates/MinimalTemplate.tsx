@@ -8,6 +8,7 @@ import {
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
+import { LogoImg } from "@/components/LogoImg";
 
 /**
  * MINIMAL — ultra-clean Scandinavian/editorial look: pure white, big bold black
@@ -25,7 +26,7 @@ export default function MinimalTemplate(p: TemplateProps) {
         {/* Masthead */}
         <header className="mn-head">
           <div className="mn-logo">
-            {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={26} strokeWidth={1.5} style={{ color: "#0F172A" }} />}
+            <LogoImg src={office.logo} alt={office.nameAr} fallback={<Building2 size={26} strokeWidth={1.5} style={{ color: "#0F172A" }} />} />
           </div>
 
           <div className="mn-head-meta">

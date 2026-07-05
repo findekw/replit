@@ -8,6 +8,7 @@ import {
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
+import { LogoImg } from "@/components/LogoImg";
 
 /**
  * CLASSIC — corporate / trust look: solid navy top bar with logo + trust badges
@@ -27,7 +28,7 @@ export default function ClassicTemplate(p: TemplateProps) {
         <div className="cl-topbar-inner">
           <div className="cl-brand">
             <div className="cl-brand-logo">
-              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={34} style={{ color: "#111827" }} />}
+              <LogoImg src={office.logo} alt={office.nameAr} fallback={<Building2 size={34} style={{ color: "#111827" }} />} />
             </div>
             <div className="cl-brand-text">
               <h1 className="cl-name">{office.nameAr}</h1>
@@ -64,7 +65,7 @@ export default function ClassicTemplate(p: TemplateProps) {
         <aside className="cl-sidebar">
           <div className="cl-card cl-info">
             <div className="cl-info-logo">
-              {office.logo ? <img src={office.logo} alt={office.nameAr} /> : <Building2 size={40} style={{ color: "#111827" }} />}
+              <LogoImg src={office.logo} alt={office.nameAr} fallback={<Building2 size={40} style={{ color: "#111827" }} />} />
             </div>
             <h2 className="cl-info-name">{office.nameAr}</h2>
 
