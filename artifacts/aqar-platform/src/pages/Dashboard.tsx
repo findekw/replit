@@ -458,8 +458,8 @@ export default function Dashboard() {
     return null;
   }
 
-  const slugLocked = slugEdits >= 2;
-  const slugEditsLeft = Math.max(0, 2 - slugEdits);
+  // The slug (username) is chosen once — at registration or first setup — then fixed.
+  const slugLocked = !!snapshot.slug;
 
   return (
     <DashboardLayout>
@@ -789,11 +789,11 @@ export default function Dashboard() {
                     <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>رابط الصفحة</span>
                     {slugLocked ? (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "#6b7280", background: "#f3f4f6", padding: "2px 8px", borderRadius: 6 }}>
-                        <Lock style={{ width: 10, height: 10 }} /> مُقفل — وصلت للحد الأقصى
+                        <Lock style={{ width: 10, height: 10 }} /> ثابت — لا يمكن تغييره
                       </span>
                     ) : (
-                      <span style={{ fontSize: 11, color: slugEditsLeft === 1 ? "#d97706" : "#9ca3af", background: slugEditsLeft === 1 ? "#fffbeb" : "#f3f4f6", padding: "2px 8px", borderRadius: 6 }}>
-                        متبقي {slugEditsLeft === 1 ? "تعديل واحد" : "تعديلين"}
+                      <span style={{ fontSize: 11, color: "#d97706", background: "#fffbeb", padding: "2px 8px", borderRadius: 6 }}>
+                        اختره بعناية — لا يمكن تغييره لاحقًا
                       </span>
                     )}
                   </div>

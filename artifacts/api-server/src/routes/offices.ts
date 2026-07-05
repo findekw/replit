@@ -561,10 +561,11 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
     updates.landingTemplate = landingTemplate;
   }
 
-  // Slug update — validate format and enforce 2-edit limit
+  // Slug (username) is chosen once — at registration or the first time it's set —
+  // then it is fixed and can no longer be changed by the office.
   if (slug !== undefined && slug !== current.slug) {
-    if (newSlugEdits >= 2) {
-      res.status(400).json({ field: "slug", error: "لقد استنفدت عدد مرات تعديل الرابط (مرتان فقط)" }); return;
+    if (current.slug) {
+      res.status(400).json({ field: "slug", error: "لا يمكن تغيير رابط الصفحة بعد تحديده" }); return;
     }
     const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/;
     if (!SLUG_RE.test(slug)) {
