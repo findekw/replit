@@ -325,7 +325,7 @@ router.get("/offices/:id/properties", async (req, res): Promise<void> => {
   // page/limit, so status/type would otherwise be silently dropped).
   const statusFilter = String((req.query as Record<string, unknown>).status ?? "").trim();
   const typeFilter = String((req.query as Record<string, unknown>).type ?? "").trim();
-  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل", "طلب"];
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
 
   const conditions = [eq(propertiesTable.officeId, officeId)];
   if (!isOwner) conditions.push(eq(propertiesTable.active, true));

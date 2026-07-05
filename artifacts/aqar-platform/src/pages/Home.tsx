@@ -17,8 +17,7 @@ interface HeroSlide { id: number; imageUrl: string; title: string | null; subtit
 const TYPES_BY_STATUS: Record<string, string[]> = {
   "للإيجار": ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
   "للبيع":   ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
-  "للبدل":   ["بيت", "ارض", "شقة"],
-  "طلب":     ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
+  "للبدل":   ["بيت", "قسيمة", "ارض", "شقة", "طلب"],
 };
 
 const AREAS: Record<string, string[]> = {
@@ -105,7 +104,7 @@ export default function Home() {
   const [userPickedStatus, setUserPickedStatus] = useState(false);
   useEffect(() => {
     if (userPickedStatus) return;
-    const order = ["للإيجار", "للبيع", "للبدل", "طلب"];
+    const order = ["للإيجار", "للبيع", "للبدل"];
     const t = setInterval(() => {
       setStatus((prev) => order[(order.indexOf(prev) + 1) % order.length]);
       setType("");
@@ -382,7 +381,7 @@ export default function Home() {
 
             <div className="fh-card fh-anim-3">
               <div className="fh-tabs">
-                {["للإيجار", "للبيع", "للبدل", "طلب"].map(s => (
+                {["للإيجار", "للبيع", "للبدل"].map(s => (
                   <button key={s} className={`fh-tab${status === s ? " active" : ""}`} onClick={() => handleStatusChange(s)}>{s}</button>
                 ))}
               </div>

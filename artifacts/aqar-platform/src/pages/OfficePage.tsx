@@ -12,7 +12,7 @@ import MinimalTemplate from "./office-templates/MinimalTemplate";
 import ClassicTemplate from "./office-templates/ClassicTemplate";
 
 const BASE = getApiBase();
-const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل", "طلب"] as const;
+const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل"] as const;
 // Common property types offered as a quick filter on the office page.
 const PROPERTY_TYPES = ["شقة", "بيت", "دور", "ارض", "عمارة", "محل", "مكتب", "مخزن", "شاليه", "مزرعة", "قسيمة"] as const;
 

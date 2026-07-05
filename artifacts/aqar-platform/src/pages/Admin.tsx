@@ -139,7 +139,6 @@ function formatDate(iso: string) {
 function typeLabel(status: string): { text: string; color: string } {
   if (status === "للبيع")   return { text: "للبيع",  color: "#667EEA" };
   if (status === "للبدل")   return { text: "للبدل",  color: "#7c3aed" };
-  if (status === "طلب")     return { text: "طلب",    color: "#0891b2" };
   return { text: "للإيجار", color: "#059669" };
 }
 
