@@ -1,4 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
+import { ShieldAlert } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -39,8 +40,10 @@ export default function Disclaimer() {
       <div dir="rtl" className="min-h-screen bg-white">
         <div className="bg-[#0b1220] text-white py-14 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <img src="/logo-white.png" alt="Finde" className="h-8 mx-auto mb-5" />
-            <h1 className="text-3xl font-black mb-2">إخلاء المسؤولية</h1>
+            <div className="w-14 h-14 rounded-2xl bg-white/10 ring-1 ring-white/15 shadow-lg flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert className="h-7 w-7 text-white" />
+            </div>
+            <h1 className="text-3xl font-black mb-2 text-white">إخلاء المسؤولية</h1>
             <p className="text-white/70 text-sm">آخر تحديث: يناير 2025</p>
           </div>
         </div>

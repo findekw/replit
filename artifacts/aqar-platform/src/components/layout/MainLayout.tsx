@@ -333,8 +333,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             display: flex;
             gap: 14px;
             justify-content: center;
-            margin-top: 26px;
-            padding-top: 18px;
+            margin-top: 38px;
+            padding-top: 22px;
             border-top: 1px solid rgba(255,255,255,0.08);
           }
           .ft-social-btn {

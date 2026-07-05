@@ -101,7 +101,19 @@ export default function Home() {
     return () => io.disconnect();
   }, [latestList.length]);
 
-  function handleStatusChange(s: string) { setStatus(s); setType(""); }
+  // Auto-cycle the search tabs to draw attention, until the user picks one.
+  const [userPickedStatus, setUserPickedStatus] = useState(false);
+  useEffect(() => {
+    if (userPickedStatus) return;
+    const order = ["للإيجار", "للبيع", "للبدل", "طلب"];
+    const t = setInterval(() => {
+      setStatus((prev) => order[(order.indexOf(prev) + 1) % order.length]);
+      setType("");
+    }, 2000);
+    return () => clearInterval(t);
+  }, [userPickedStatus]);
+
+  function handleStatusChange(s: string) { setUserPickedStatus(true); setStatus(s); setType(""); }
 
   const [sheetOpen, setSheetOpen]                   = useState<"type" | "gov" | "area" | null>(null);
   const [sheetQuery, setSheetQuery]                 = useState("");
@@ -252,7 +264,8 @@ export default function Home() {
         .fh-tabs { display:flex; gap:8px; margin-bottom:16px; background:#F1F5F9; padding:5px; border-radius:14px; }
         .fh-tab { flex:1; padding:11px 6px; border-radius:10px; border:none; background:transparent; font-size:14px; font-weight:700; color:#64748B; cursor:pointer; transition:all .18s ease; font-family:inherit; }
         .fh-tab:hover { color:#667EEA; }
-        .fh-tab.active { background:#fff; color:#111827; box-shadow:0 4px 12px rgba(15,23,42,0.10); }
+        .fh-tab.active { background:#667EEA; color:#fff; box-shadow:0 6px 16px rgba(102,126,234,0.35); }
+        .fh-tab.active:hover { color:#fff; }
         .fh-fields { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
         .fh-field { width:100%; height:52px; border:1.5px solid #E6EAF1; border-radius:13px; background:#F8FAFC; display:flex; align-items:center; justify-content:space-between; padding:0 15px; font-size:15px; font-weight:600; color:#111827; cursor:pointer; font-family:inherit; transition:border-color .18s, background .18s, box-shadow .18s; }
         .fh-field:hover:not(:disabled) { border-color:#C7D2FE; }

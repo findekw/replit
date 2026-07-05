@@ -227,7 +227,7 @@ const CSS = `
 .cl-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .cl-tab { padding: 9px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; background: #fff; color: #475569; border: 1px solid #D9E0EA; }
 .cl-tab:hover { border-color: #667EEA; color: #667EEA; }
-.cl-tab-on { background: #111827; color: #fff; border-color: #111827; }
+.cl-tab-on { background: #667EEA; color: #fff; border-color: #667EEA; }
 .cl-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
 @media (min-width: 640px) { .cl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .cl-empty { text-align: center; padding: 60px 20px; }
