@@ -15,6 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
   "للإيجار": "#667EEA",
   "للبيع": "#667EEA",
   "للبدل": "#f97316",
+  "طلب": "#0891B2",
 };
 
 function buildWhatsAppUrl(whatsapp: string, title: string, propertyUrl: string) {

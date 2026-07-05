@@ -11,6 +11,7 @@ const STATUS_BG: Record<string, string> = {
   "للإيجار": "#667EEA",
   "للبيع":   "#111827",
   "للبدل":   "#EA580C",
+  "طلب":     "#0891B2",
 };
 
 const SAVED_KEY = "finde_saved";

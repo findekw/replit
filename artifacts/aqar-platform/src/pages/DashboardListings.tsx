@@ -17,6 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   "للإيجار": "bg-indigo-50 text-indigo-700 border border-indigo-100",
   "للبيع": "bg-emerald-50 text-emerald-700 border border-emerald-100",
   "للبدل": "bg-amber-50 text-amber-700 border border-amber-100",
+  "طلب": "bg-cyan-50 text-cyan-700 border border-cyan-100",
 };
 
 export default function DashboardListings() {

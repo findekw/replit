@@ -440,7 +440,7 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
 
-  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل", "طلب"];
   const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"];
 
   const errors: string[] = [];
@@ -533,7 +533,7 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
 
-  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
+  const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل", "طلب"];
   const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"];
 
   const errors: string[] = [];

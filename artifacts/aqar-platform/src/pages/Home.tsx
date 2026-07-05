@@ -18,6 +18,7 @@ const TYPES_BY_STATUS: Record<string, string[]> = {
   "للإيجار": ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
   "للبيع":   ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
   "للبدل":   ["بيت", "ارض", "شقة"],
+  "طلب":     ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
 };
 
 const AREAS: Record<string, string[]> = {
@@ -68,6 +69,13 @@ export default function Home() {
   const { data: stats } = useGetPlatformStats();
 
   const latestList = (latest as any[]) ?? [];
+
+  // Store the visible listing IDs so the property page can offer السابق/التالي navigation.
+  useEffect(() => {
+    if (latestList.length > 0) {
+      try { localStorage.setItem("aqar_search_ids", JSON.stringify(latestList.slice(0, 8).map((p: any) => p.id))); } catch {}
+    }
+  }, [latestList]);
 
   // ── Admin-managed hero banners ──
   const [slides, setSlides] = useState<HeroSlide[]>([]);
@@ -361,7 +369,7 @@ export default function Home() {
 
             <div className="fh-card fh-anim-3">
               <div className="fh-tabs">
-                {["للإيجار", "للبيع", "للبدل"].map(s => (
+                {["للإيجار", "للبيع", "للبدل", "طلب"].map(s => (
                   <button key={s} className={`fh-tab${status === s ? " active" : ""}`} onClick={() => handleStatusChange(s)}>{s}</button>
                 ))}
               </div>

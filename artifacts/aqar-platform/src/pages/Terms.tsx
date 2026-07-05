@@ -1,6 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Link } from "wouter";
-import { FileText } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -55,11 +54,9 @@ export default function Terms() {
     <MainLayout>
       <div dir="rtl" className="min-h-screen bg-white">
         {/* Header */}
-        <div className="bg-[hsl(221,54%,23%)] text-white py-14 px-4">
+        <div className="bg-[#0b1220] text-white py-14 px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
+            <img src="/logo-white.png" alt="Finde" className="h-8 mx-auto mb-5" />
             <h1 className="text-3xl font-black mb-2">الشروط والأحكام</h1>
             <p className="text-white/70 text-sm">آخر تحديث: يناير 2025</p>
           </div>

@@ -11,7 +11,7 @@ export const propertiesTable = pgTable("properties", {
   titleAr: text("title_ar").notNull(),
   description: text("description"),
   descriptionAr: text("description_ar"),
-  status: text("status").notNull(), // للإيجار | للبيع | للبدل
+  status: text("status").notNull(), // للإيجار | للبيع | للبدل | طلب
   type: text("type").notNull(), // بيت | شقة | قسيمة | ارض | دور | محل | مكتب | مخزن | مستودع | شاليه | استراحة | مزرعة | عمارة | مجمع
   price: integer("price").notNull().default(0),
   currency: text("currency").notNull().default("KWD"),

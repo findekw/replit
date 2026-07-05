@@ -50,7 +50,7 @@ const INPUT_STYLE: React.CSSProperties = {
   textAlign: "right",
 };
 
-const STATUS_OPTIONS = ["", "للإيجار", "للبيع", "للبدل"] as const;
+const STATUS_OPTIONS = ["", "للإيجار", "للبيع", "للبدل", "طلب"] as const;
 const BEDROOM_OPTIONS = ["", "1", "2", "3", "4", "5"] as const;
 
 function StatusChips({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -655,7 +655,7 @@ export default function Properties() {
               display: "flex", borderBottom: "1px solid #f1f5f9",
               padding: "0 12px", overflowX: "auto", scrollbarWidth: "none",
             }}>
-              {["", "للإيجار", "للبيع", "للبدل"].map(s => (
+              {["", "للإيجار", "للبيع", "للبدل", "طلب"].map(s => (
                 <button
                   key={s}
                   className="prop-status-tab"

@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { trackInteraction } from "@/lib/trackInteraction";
 import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MainLayout from "@/components/layout/MainLayout";
 import { getApiBase } from "@/lib/apiBase";
 import { resolveTemplateKey, type OfficeData, type OfficeProperty, type TemplateProps } from "./office-templates/types";
 import ModernTemplate from "./office-templates/ModernTemplate";
@@ -11,7 +12,7 @@ import MinimalTemplate from "./office-templates/MinimalTemplate";
 import ClassicTemplate from "./office-templates/ClassicTemplate";
 
 const BASE = getApiBase();
-const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل"] as const;
+const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل", "طلب"] as const;
 // Common property types offered as a quick filter on the office page.
 const PROPERTY_TYPES = ["شقة", "بيت", "دور", "ارض", "عمارة", "محل", "مكتب", "مخزن", "شاليه", "مزرعة", "قسيمة"] as const;
 
@@ -65,6 +66,13 @@ export default function OfficePage() {
 
   useEffect(() => { setPage(1); }, [activeTab, activeType]);
 
+  // Store the visible listing IDs so the property page can offer السابق/التالي navigation.
+  useEffect(() => {
+    if (properties.length > 0) {
+      try { localStorage.setItem("aqar_search_ids", JSON.stringify(properties.map((p) => p.id))); } catch {}
+    }
+  }, [properties]);
+
   // Document title for SEO / sharing
   useEffect(() => {
     if (office) {
@@ -84,23 +92,27 @@ export default function OfficePage() {
 
   if (notFound) {
     return (
-      <div dir="rtl" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 16px", fontFamily: "'Cairo', sans-serif", background: "#F6F8FC" }}>
-        <Building2 className="h-16 w-16" style={{ color: "#cbd5e1", marginBottom: 16 }} />
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 8 }}>الصفحة غير موجودة</h1>
-        <p style={{ color: "#64748B", marginBottom: 24 }}>لم يتم العثور على هذا المكتب على المنصة</p>
-        <Button onClick={() => navigate("/offices")}>تصفّح جميع المكاتب</Button>
-      </div>
+      <MainLayout>
+        <div dir="rtl" style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "60px 16px", fontFamily: "'Cairo', sans-serif", background: "#F6F8FC" }}>
+          <Building2 className="h-16 w-16" style={{ color: "#cbd5e1", marginBottom: 16 }} />
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 8 }}>الصفحة غير موجودة</h1>
+          <p style={{ color: "#64748B", marginBottom: 24 }}>لم يتم العثور على هذا المكتب على المنصة</p>
+          <Button onClick={() => navigate("/offices")}>تصفّح جميع المكاتب</Button>
+        </div>
+      </MainLayout>
     );
   }
 
   if (loadingOffice || !office) {
     return (
-      <div dir="rtl" style={{ minHeight: "100vh", background: "#F6F8FC", fontFamily: "'Cairo', sans-serif" }}>
-        <div style={{ height: 300, background: "linear-gradient(135deg,#16203a,#667EEA)" }} />
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: 24, display: "flex", gap: 16, flexWrap: "wrap" }}>
-          {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} style={{ flex: "1 1 280px", height: 280, background: "#e9eef5", borderRadius: 18 }} />)}
+      <MainLayout>
+        <div dir="rtl" style={{ minHeight: "60vh", background: "#F6F8FC", fontFamily: "'Cairo', sans-serif" }}>
+          <div style={{ height: 300, background: "linear-gradient(135deg,#16203a,#667EEA)" }} />
+          <div style={{ maxWidth: 1180, margin: "0 auto", padding: 24, display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} style={{ flex: "1 1 280px", height: 280, background: "#e9eef5", borderRadius: 18 }} />)}
+          </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -115,5 +127,9 @@ export default function OfficePage() {
     onWhatsApp, onCall, statusTabs: STATUS_TABS, hasWA, hasPhone,
   };
 
-  return <Template {...props} />;
+  return (
+    <MainLayout>
+      <Template {...props} />
+    </MainLayout>
+  );
 }
