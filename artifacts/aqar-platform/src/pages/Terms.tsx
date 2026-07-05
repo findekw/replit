@@ -1,6 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Link } from "wouter";
-import { FileText } from "lucide-react";
+import { FileText, ArrowRight } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -81,7 +81,11 @@ export default function Terms() {
           </div>
 
           <div className="mt-12 pt-8 border-t text-center">
-            <Link href="/register" className="text-sm text-primary hover:underline">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#667EEA] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#5568d8] hover:shadow-md"
+            >
+              <ArrowRight className="h-4 w-4" />
               العودة إلى صفحة التسجيل
             </Link>
           </div>

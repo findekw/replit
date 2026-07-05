@@ -278,14 +278,34 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             )}
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            className="flex md:hidden items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:text-[#0f172a] hover:bg-slate-100 transition-all duration-200"
-            onClick={() => setMobileOpen(true)}
-            aria-label="فتح القائمة"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+          {/* Mobile actions: surface the dashboard link so it's visible without opening the menu */}
+          <div className="flex md:hidden items-center gap-2">
+            {!isLoading && admin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1 text-[13px] font-bold px-3 py-2 rounded-lg text-slate-700 bg-slate-100"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                لوحة الإدارة
+              </Link>
+            )}
+            {!isLoading && !admin && officeId && (
+              <Link
+                href="/dashboard"
+                className="text-[13px] font-bold text-white px-3.5 py-2 rounded-lg"
+                style={{ background: ACCENT }}
+              >
+                لوحة التحكم
+              </Link>
+            )}
+            <button
+              className="flex items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:text-[#0f172a] hover:bg-slate-100 transition-all duration-200"
+              onClick={() => setMobileOpen(true)}
+              aria-label="فتح القائمة"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </header>
 
