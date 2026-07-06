@@ -47,7 +47,7 @@ const _AREA_ID: { name: string; id: number; govId: number }[] = [
 const FEAT_COLOR = "#667EEA";
 const FEAT_BG = "#EEF2FF";
 const FEATURES = [
-  { icon: <ShieldCheck size={26} strokeWidth={2} />, label: "مكاتب موثوقة ومرخّصة", desc: "كل الإعلانات من مكاتب عقارية حقيقية تمت مراجعتها", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية مباشرة", desc: "كل الإعلانات من مكاتب عقارية في الكويت بدون وسطاء", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "كلّم المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: FEAT_COLOR, bg: FEAT_BG },
@@ -87,7 +87,7 @@ export default function Home() {
   }, []);
 
   const current = slides[0] ?? null;
-  const heroSubtitle = current?.subtitle || "آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية مرخّصة — كل الكويت في مكان واحد";
+  const heroSubtitle = current?.subtitle || "آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية — كل الكويت في مكان واحد";
 
   // ── Scroll-reveal: fade sections in as they enter the viewport ──
   useEffect(() => {
@@ -367,7 +367,7 @@ export default function Home() {
           <div className="fh-hero-inner">
             <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
             <h1 className="fh-headline fh-anim-1">
-              {current?.title ? current.title : <>لاقِ عقارك من <span className="hl">مكاتب موثوقة</span></>}
+              {current?.title ? current.title : <>لاقِ عقارك من <span className="hl">مكاتب عقارية</span></>}
             </h1>
             <p className="fh-subtitle fh-anim-2">{heroSubtitle}</p>
 
@@ -403,7 +403,7 @@ export default function Home() {
             </div>
 
             <div className="fh-trust">
-              <span><ShieldCheck size={15} /> مكاتب موثّقة</span>
+              <span><Building2 size={15} /> مكاتب عقارية</span>
               <i className="dot" />
               <span><TrendingUp size={15} /> عقارات محدّثة يوميًا</span>
               <i className="dot" />
@@ -417,7 +417,7 @@ export default function Home() {
         <div className="fh-stats">
           <div className="fh-stats-grid">
             <div className="fh-stat"><div className="fh-stat-ic"><Building2 size={19} /></div><div className="fh-stat-num">{(stats?.totalProperties ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">عقار معروض</div></div>
-            <div className="fh-stat"><div className="fh-stat-ic"><ShieldCheck size={19} /></div><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب موثوق</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><Building2 size={19} /></div><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب عقاري</div></div>
             <div className="fh-stat"><div className="fh-stat-ic"><MapPin size={19} /></div><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
           </div>
         </div>

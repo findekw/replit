@@ -320,7 +320,6 @@ export default function PropertyDetail() {
                   )}
                   <div className="pd-badges">
                     <span className="pd-badge" style={{ background: statusColor }}>{property.status}</span>
-                    {property.featured && <span className="pd-badge pd-badge-featured">مميز</span>}
                   </div>
                 </div>
                 {images.length > 1 && (

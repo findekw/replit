@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MapPin, Building2, ShieldCheck, Star,
+  Phone, MapPin, Building2,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -32,12 +32,6 @@ export default function MinimalTemplate(p: TemplateProps) {
           <div className="mn-head-meta">
             {office.governorateName && (
               <div className="mn-context"><MapPin size={13} strokeWidth={1.75} /> {office.governorateName}</div>
-            )}
-            {(office.verified || office.featured) && (
-              <div className="mn-flags">
-                {office.verified && <span className="mn-flag"><ShieldCheck size={13} strokeWidth={1.75} /> موثّق</span>}
-                {office.featured && <span className="mn-flag"><Star size={13} strokeWidth={1.75} /> مميز</span>}
-              </div>
             )}
           </div>
 

@@ -52,8 +52,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
           <div className="property-badges">
             <span className="property-badge" style={{ background: STATUS_BG[property.status] ?? "#475569" }}>{property.status}</span>
-            {property.featured && <span className="property-badge property-badge-feat">مميّز</span>}
-            {isNew && !property.featured && <span className="property-badge" style={{ background: "#059669" }}>جديد</span>}
+            {isNew && <span className="property-badge" style={{ background: "#059669" }}>جديد</span>}
           </div>
 
           <button type="button" className={`property-save${saved ? " on" : ""}`} onClick={toggleSave} aria-label="حفظ" title={saved ? "إزالة من المحفوظات" : "حفظ"}>

@@ -2,8 +2,8 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
-  ChevronLeft, ChevronRight, Home as HomeIcon, CheckCircle2,
+  Phone, MessageCircle, MapPin, Building2,
+  ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
@@ -33,8 +33,6 @@ export default function ClassicTemplate(p: TemplateProps) {
             <div className="cl-brand-text">
               <h1 className="cl-name">{office.nameAr}</h1>
               <div className="cl-badges">
-                {office.verified && <span className="cl-badge cl-badge-ok"><ShieldCheck size={13} /> موثّق</span>}
-                {office.featured && <span className="cl-badge cl-badge-feat"><Star size={13} /> مميز</span>}
                 {office.governorateName && <span className="cl-badge"><MapPin size={13} /> {office.governorateName}</span>}
               </div>
             </div>
@@ -53,7 +51,6 @@ export default function ClassicTemplate(p: TemplateProps) {
       <div className="cl-strip">
         <div className="cl-strip-inner">
           {office.governorateName && <span className="cl-strip-item"><MapPin size={14} /> {office.governorateName}</span>}
-          {office.verified && <><span className="cl-strip-dot">•</span><span className="cl-strip-item"><ShieldCheck size={14} /> مكتب موثّق</span></>}
           <span className="cl-strip-dot">•</span>
           <span className="cl-strip-item"><Building2 size={14} /> {office.activeListings} عقار متاح</span>
         </div>
@@ -94,16 +91,6 @@ export default function ClassicTemplate(p: TemplateProps) {
               </>
             )}
 
-            {(office.verified || office.featured) && (
-              <>
-                <div className="cl-divider" />
-                <h3 className="cl-sub">شهادات الثقة</h3>
-                <div className="cl-trust">
-                  {office.verified && <span className="cl-trust-badge cl-trust-ok"><CheckCircle2 size={15} /> مكتب موثّق</span>}
-                  {office.featured && <span className="cl-trust-badge cl-trust-feat"><Star size={15} /> مكتب مميز</span>}
-                </div>
-              </>
-            )}
           </div>
         </aside>
 

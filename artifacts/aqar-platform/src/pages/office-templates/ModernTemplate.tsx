@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
+  Phone, MessageCircle, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -32,8 +32,6 @@ export default function ModernTemplate(p: TemplateProps) {
           <div className="tm-hero-text">
             <h1 className="tm-name">{office.nameAr}</h1>
             <div className="tm-badges">
-              {office.verified && <span className="tm-badge tm-badge-ok"><ShieldCheck size={15} /> موثّق</span>}
-              {office.featured && <span className="tm-badge tm-badge-feat"><Star size={15} /> مميز</span>}
               {office.governorateName && <span className="tm-badge"><MapPin size={15} /> {office.governorateName}</span>}
             </div>
           </div>

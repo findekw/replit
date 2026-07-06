@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2, ShieldCheck, Star,
+  Phone, MessageCircle, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
@@ -43,8 +43,6 @@ export default function LuxuryTemplate(p: TemplateProps) {
           )}
 
           <div className="lx-badges">
-            {office.verified && <span className="lx-badge"><ShieldCheck size={14} /> موثّق</span>}
-            {office.featured && <span className="lx-badge"><Star size={14} /> مميز</span>}
             {office.governorateName && <span className="lx-badge"><MapPin size={14} /> {office.governorateName}</span>}
           </div>
 
