@@ -209,4 +209,5 @@ const CSS = `
 .mn-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 10px; padding: 12px 16px; background: #fff; border-top: 1px solid #ECEFF3; }
 .mn-sticky-spacer { height: 76px; }
 @media (min-width: 1024px) { .mn-sticky, .mn-sticky-spacer { display: none; } }
+@media (max-width: 1023px) { .mn-contact { display: none; } }
 `;

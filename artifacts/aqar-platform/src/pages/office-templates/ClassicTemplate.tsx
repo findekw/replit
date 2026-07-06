@@ -248,4 +248,5 @@ const CSS = `
 .cl-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); border-top: 1px solid #E2E8F0; box-shadow: 0 -4px 20px rgba(15,23,42,0.1); }
 .cl-sticky-spacer { height: 80px; }
 @media (min-width: 980px) { .cl-sticky, .cl-sticky-spacer { display: none; } }
+@media (max-width: 979px) { .cl-topbar-actions { display: none; } }
 `;

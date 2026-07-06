@@ -222,4 +222,5 @@ const CSS = `
 .lx-sticky .lx-btn { flex: 1; }
 .lx-sticky-spacer { height: 80px; }
 @media (min-width: 1024px){ .lx-sticky, .lx-sticky-spacer { display: none; } }
+@media (max-width: 1023px){ .lx-hero-cta { display: none; } }
 `;

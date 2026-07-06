@@ -175,4 +175,5 @@ const CSS = `
 .tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
 .tm-sticky-spacer { height: 80px; }
 @media (min-width: 1024px){ .tm-sticky, .tm-sticky-spacer { display: none; } }
+@media (max-width: 1023px){ .tm-contact-wrap { display: none; } }
 `;

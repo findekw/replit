@@ -156,6 +156,28 @@ export default function PropertyDetail() {
 
   const [imgIndex, setImgIndex] = useState(0);
 
+  // ── Report listing ──
+  const REPORT_REASONS = ["معلومات غير صحيحة", "إعلان مكرر", "العقار غير متاح / مباع", "سعر غير صحيح", "صور مضللة", "احتيال أو نصب", "أخرى"];
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportNote, setReportNote] = useState("");
+  const [reportState, setReportState] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  function openReport() { setReportReason(""); setReportNote(""); setReportState("idle"); setReportOpen(true); }
+  async function submitReport() {
+    if (!reportReason) return;
+    setReportState("sending");
+    try {
+      const res = await fetch(`${BASE}/api/properties/${id}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reportReason, note: reportNote }),
+      });
+      if (!res.ok) throw new Error();
+      setReportState("done");
+    } catch { setReportState("error"); }
+  }
+
   // Dynamic page title + meta description for SEO / sharing
   useEffect(() => {
     if (!property) return;
@@ -454,7 +476,7 @@ export default function PropertyDetail() {
                   onClick={() => navigator.share?.({ url: window.location.href, title: property.titleAr })}>
                   <Share2 size={16} /> مشاركة
                 </button>
-                <button className="pd-share-btn pd-share-icon" data-testid="button-report" aria-label="إبلاغ">
+                <button className="pd-share-btn pd-share-icon" data-testid="button-report" aria-label="إبلاغ" onClick={openReport}>
                   <Flag size={16} />
                 </button>
               </div>
@@ -476,6 +498,82 @@ export default function PropertyDetail() {
               <MessageCircle size={18} /> واتساب
             </button>
           )}
+        </div>
+      )}
+
+      {/* Report dialog */}
+      {reportOpen && (
+        <div
+          dir="rtl"
+          onClick={() => setReportOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Cairo', sans-serif" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 18, padding: 22, width: "100%", maxWidth: 440, boxShadow: "0 24px 60px rgba(15,23,42,0.3)", maxHeight: "90vh", overflowY: "auto" }}
+          >
+            {reportState === "done" ? (
+              <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <div style={{ width: 54, height: 54, borderRadius: "50%", background: "#ECFDF5", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                  <Check size={28} style={{ color: "#059669" }} />
+                </div>
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#111827", margin: "0 0 6px" }}>تم استلام بلاغك</h3>
+                <p style={{ fontSize: 13.5, color: "#64748B", margin: "0 0 18px", lineHeight: 1.7 }}>شكرًا لك، سيقوم فريق المنصة بمراجعة البلاغ.</p>
+                <button onClick={() => setReportOpen(false)} style={{ background: "#667EEA", color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>تم</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Flag size={18} style={{ color: "#EF4444" }} />
+                  <h3 style={{ fontSize: 17, fontWeight: 800, color: "#111827", margin: 0 }}>الإبلاغ عن الإعلان</h3>
+                </div>
+                <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 16px", lineHeight: 1.7 }}>اختر سبب الإبلاغ وسيصل إلى فريق المنصة للمراجعة.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                  {REPORT_REASONS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setReportReason(r)}
+                      style={{
+                        textAlign: "right", padding: "11px 14px", borderRadius: 10, cursor: "pointer",
+                        border: `1.5px solid ${reportReason === r ? "#667EEA" : "#E2E8F0"}`,
+                        background: reportReason === r ? "#EEF2FE" : "#fff",
+                        color: reportReason === r ? "#3730A3" : "#334155",
+                        fontWeight: reportReason === r ? 700 : 600, fontSize: 14, fontFamily: "inherit", transition: "all .12s",
+                      }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={reportNote}
+                  onChange={(e) => setReportNote(e.target.value)}
+                  placeholder="تفاصيل إضافية (اختياري)"
+                  rows={3}
+                  maxLength={500}
+                  style={{ width: "100%", border: "1.5px solid #E2E8F0", borderRadius: 10, padding: "10px 12px", fontSize: 13.5, fontFamily: "inherit", resize: "vertical", outline: "none", marginBottom: 14, color: "#111827" }}
+                />
+                {reportState === "error" && (
+                  <p style={{ color: "#EF4444", fontSize: 13, margin: "0 0 12px" }}>حدث خطأ، حاول مرة أخرى.</p>
+                )}
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={submitReport}
+                    disabled={!reportReason || reportState === "sending"}
+                    style={{ flex: 1, background: !reportReason ? "#C7D2FE" : "#EF4444", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 14.5, cursor: !reportReason || reportState === "sending" ? "not-allowed" : "pointer", fontFamily: "inherit" }}
+                  >
+                    {reportState === "sending" ? "جارٍ الإرسال..." : "إرسال البلاغ"}
+                  </button>
+                  <button
+                    onClick={() => setReportOpen(false)}
+                    style={{ background: "#fff", color: "#64748B", border: "1.5px solid #E2E8F0", borderRadius: 10, padding: "12px 18px", fontWeight: 700, fontSize: 14.5, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </MainLayout>

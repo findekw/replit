@@ -20,7 +20,7 @@ import {
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus, CreditCard,
-  Image as ImageIcon, Plus, Upload, Loader2,
+  Image as ImageIcon, Plus, Upload, Loader2, Flag,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -111,6 +111,18 @@ interface ConfirmState {
   action: "approve" | "reject";
 }
 
+interface AdminReport {
+  id: number;
+  propertyId: number | null;
+  officeId: number | null;
+  reason: string;
+  note: string | null;
+  status: string;
+  createdAt: string;
+  propertyTitle: string | null;
+  officeName: string | null;
+}
+
 async function adminFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { credentials: "include" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -163,8 +175,13 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "subscriptions" | "tools">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "tools">("offices");
   const [confirm, setConfirm]             = useState<ConfirmState | null>(null);
+
+  /* ── Reports tab state ── */
+  const [reports, setReports]             = useState<AdminReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [reportBusy, setReportBusy]       = useState<number | null>(null);
 
   /* ── Tools tab state ── */
   const [admins, setAdmins]               = useState<AdminUser[]>([]);
@@ -211,6 +228,36 @@ export default function Admin() {
       setLoadingListings(false);
     }
   }, [toast]);
+
+  const loadReports = useCallback(async () => {
+    setLoadingReports(true);
+    try {
+      const data = await adminFetch<{ reports: AdminReport[] }>("/api/admin/reports");
+      setReports(data.reports);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل البلاغات", variant: "destructive" });
+    } finally {
+      setLoadingReports(false);
+    }
+  }, [toast]);
+
+  async function updateReportStatus(id: number, status: string) {
+    setReportBusy(id);
+    try {
+      const res = await fetch(`${BASE}/api/admin/reports/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحديث حالة البلاغ", variant: "destructive" });
+    } finally {
+      setReportBusy(null);
+    }
+  }
 
   const loadAdmins = useCallback(async () => {
     setLoadingAdmins(true);
@@ -278,6 +325,11 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === "subscriptions" && user) loadSubscriptions();
   }, [activeTab, user, loadSubscriptions]);
+
+  // Load reports when that tab is opened
+  useEffect(() => {
+    if (activeTab === "reports" && user) loadReports();
+  }, [activeTab, user, loadReports]);
 
   async function clearDemoData() {
     setConfirmClearDemo(false);
@@ -675,6 +727,7 @@ export default function Admin() {
           {([
             { key: "offices"       as const, icon: Users,      label: "طلبات تسجيل المكاتب", count: offices.length },
             { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
+            { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
             { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
             { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
           ]).map(({ key, icon: Icon, label, count }) => {
@@ -1009,6 +1062,89 @@ export default function Admin() {
                               <CheckCircle style={{ width: 14, height: 14 }} />
                               إلغاء الحظر
                             </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════ REPORTS TAB ═══════════════ */}
+        {activeTab === "reports" && (
+          <div className="adm-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <div className="flex items-center gap-2">
+                <Flag className="h-4.5 w-4.5" style={{ color: NAVY }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>بلاغات الإعلانات</h3>
+                {reports.filter((r) => r.status === "جديد").length > 0 && (
+                  <span className="adm-chip" style={{ background: "#FEF6E7", color: AMBER }}>{reports.filter((r) => r.status === "جديد").length} بلاغ جديد</span>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" onClick={loadReports} className="gap-1.5" style={{ color: BODY }}>
+                <RefreshCw className="h-3.5 w-3.5" />تحديث
+              </Button>
+            </div>
+
+            {loadingReports ? (
+              <div className="p-5 space-y-3">
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-20" style={{ color: BODY }}>
+                <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "#E7F6F0" }}>
+                  <CheckCircle className="h-7 w-7" style={{ color: GREEN }} />
+                </div>
+                <p className="font-bold" style={{ color: NAVY }}>لا توجد بلاغات</p>
+                <p className="text-sm mt-1">لم يتم الإبلاغ عن أي إعلان حتى الآن</p>
+              </div>
+            ) : (
+              <div className="divide-y" style={{ borderColor: BORDER }}>
+                {reports.map((r) => {
+                  const sc = r.status === "جديد"
+                    ? { bg: "#FEF6E7", fg: AMBER }
+                    : r.status === "تمت المراجعة"
+                      ? { bg: "#ECEFFB", fg: BLUE }
+                      : { bg: "#F1F5F9", fg: BODY };
+                  return (
+                    <div key={r.id} className="px-5 py-4" style={{ borderColor: BORDER }}>
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                            <span className="adm-chip" style={{ background: "#FEECEC", color: RED }}>
+                              <Flag className="h-3 w-3" /> {r.reason}
+                            </span>
+                            <span className="adm-chip" style={{ background: sc.bg, color: sc.fg }}>{r.status}</span>
+                          </div>
+                          <div className="text-sm font-bold" style={{ color: NAVY }}>
+                            {r.propertyId ? (
+                              <a href={`/properties/${r.propertyId}`} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: BLUE }}>
+                                {r.propertyTitle || `إعلان #${r.propertyId}`}
+                              </a>
+                            ) : (
+                              <span>{r.propertyTitle || "إعلان محذوف"}</span>
+                            )}
+                          </div>
+                          <div className="text-xs mt-0.5" style={{ color: BODY }}>
+                            {r.officeName ? `المكتب: ${r.officeName}` : ""}{r.officeName ? " · " : ""}{formatDate(r.createdAt)}
+                          </div>
+                          {r.note && (
+                            <p className="text-sm mt-2 p-2.5 rounded-lg" style={{ background: "#F8FAFC", color: "#334155" }}>{r.note}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5 flex-shrink-0">
+                          {r.status !== "تمت المراجعة" && (
+                            <Button size="sm" variant="outline" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "تمت المراجعة")} className="gap-1.5 text-xs">
+                              <CheckCircle className="h-3.5 w-3.5" /> تمت المراجعة
+                            </Button>
+                          )}
+                          {r.status !== "مغلق" && (
+                            <Button size="sm" variant="ghost" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "مغلق")} className="gap-1.5 text-xs" style={{ color: BODY }}>
+                              <XCircle className="h-3.5 w-3.5" /> إغلاق
+                            </Button>
                           )}
                         </div>
                       </div>

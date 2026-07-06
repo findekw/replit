@@ -12,6 +12,7 @@ import storageRouter from "./storage";
 import subscriptionRouter from "./subscription";
 import uploadsRouter from "./uploads";
 import heroRouter from "./hero";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(storageRouter);
 router.use(subscriptionRouter);
 router.use(uploadsRouter);
 router.use(heroRouter);
+router.use(reportsRouter);
 
 export default router;

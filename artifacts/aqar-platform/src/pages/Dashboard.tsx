@@ -770,7 +770,14 @@ export default function Dashboard() {
                         </a>
                       </div>
                     </div>
-                  ) : (
+                  ) : null}
+                  {snapshot.slug && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, fontSize: 11.5, color: "#94a3b8" }}>
+                      <Lock style={{ width: 11, height: 11 }} />
+                      هذا رابطك الثابت ولا يمكن تغييره
+                    </div>
+                  )}
+                  {!snapshot.slug && (
                     <div style={{
                       background: "#F9FAFB", border: "1px dashed #D1D9E6",
                       borderRadius: 14, padding: "16px",
@@ -1071,7 +1078,7 @@ export default function Dashboard() {
                     width: 46, height: 46, borderRadius: 14,
                     background: `linear-gradient(135deg, ${fg}, ${g2})`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: `0 8px 18px ${fg}40`,
+                    boxShadow: `0 2px 6px ${fg}26`,
                   }}>
                     <Icon className="h-[22px] w-[22px]" style={{ color: "#fff" }} />
                   </div>
@@ -1084,7 +1091,7 @@ export default function Dashboard() {
                   {/* corner accent */}
                   <div style={{
                     position: "absolute", insetInlineStart: -24, bottom: -24, width: 88, height: 88,
-                    borderRadius: "50%", background: bg, opacity: 0.55, pointerEvents: "none",
+                    borderRadius: "50%", background: bg, opacity: 0.35, pointerEvents: "none",
                   }} />
                 </div>
               ))

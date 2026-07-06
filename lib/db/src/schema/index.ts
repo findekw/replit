@@ -6,3 +6,4 @@ export * from "./users";
 export * from "./admins";
 export * from "./officeUsers";
 export * from "./hero";
+export * from "./reports";
