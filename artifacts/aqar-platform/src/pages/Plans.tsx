@@ -208,7 +208,7 @@ export default function Plans() {
               <div className="price-old">29 د.ك / شهرياً</div>
               <div className="price-new">14.5 <span>د.ك / شهرياً</span></div>
               <div className="pricing-desc">كل ما تحتاجه لإدارة وعرض عقاراتك في مكان واحد</div>
-              <div className="trial-line">👇 جرب المنصة مجانًا لمدة 7 أيام بدون دفع</div>
+              <div className="trial-line">👇 جرب المنصة مجانًا لمدة 14 يومًا بدون دفع</div>
               <button
                 className="cta-btn"
                 onClick={handleCTA}

@@ -65,8 +65,8 @@ function StatusChips({ value, onChange }: { value: string; onChange: (v: string)
             style={{
               height: "38px",
               borderRadius: "10px",
-              border: active ? "2px solid #667EEA" : "1.5px solid #94A3B8",
-              background: active ? "#667EEA" : "#F5F7FA",
+              border: active ? "2px solid #667EEA" : "1.5px solid #E2E8F0",
+              background: active ? "#667EEA" : "#F8FAFC",
               color: active ? "#ffffff" : "#0f172a",
               fontWeight: active ? 700 : 600,
               fontSize: "13px",
@@ -98,8 +98,8 @@ function BedroomsChips({ value, onChange }: { value: string; onChange: (v: strin
             style={{
               height: "36px",
               borderRadius: "10px",
-              border: active ? "2px solid #667EEA" : "1.5px solid #94A3B8",
-              background: active ? "#667EEA" : "#F5F7FA",
+              border: active ? "2px solid #667EEA" : "1.5px solid #E2E8F0",
+              background: active ? "#667EEA" : "#F8FAFC",
               color: active ? "#ffffff" : "#0f172a",
               fontWeight: active ? 700 : 600,
               fontSize: "13px",

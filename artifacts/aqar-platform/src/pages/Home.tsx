@@ -49,7 +49,7 @@ const FEAT_BG = "#EEF2FF";
 const FEATURES = [
   { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية مباشرة", desc: "كل الإعلانات من مكاتب عقارية في الكويت بدون وسطاء", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: FEAT_COLOR, bg: FEAT_BG },
-  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "كلّم المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "تواصل مع المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: FEAT_COLOR, bg: FEAT_BG },
 ];
 
@@ -367,7 +367,7 @@ export default function Home() {
           <div className="fh-hero-inner">
             <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
             <h1 className="fh-headline fh-anim-1">
-              {current?.title ? current.title : <>لاقِ عقارك من <span className="hl">مكاتب عقارية</span></>}
+              {current?.title ? current.title : <>ابحث عن عقارك لدى <span className="hl">مكاتب عقارية</span></>}
             </h1>
             <p className="fh-subtitle fh-anim-2">{heroSubtitle}</p>
 
@@ -450,7 +450,7 @@ export default function Home() {
 
         {/* ===== WHY FINDE ===== */}
         <section className="fh-section fh-reveal">
-          <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">ليه فايند؟</h2></div></div>
+          <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">لماذا فايند؟</h2></div></div>
           <div className="fh-feat-grid">
             {FEATURES.map(f => (
               <div key={f.label} className="fh-feat">
@@ -466,10 +466,10 @@ export default function Home() {
         <section className="fh-cta fh-reveal">
           <div className="fh-cta-box">
             <div className="fh-cta-inner">
-              <span className="fh-cta-pill"><Star size={13} /> مجاني بالكامل</span>
-              <h2>عندك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
-              <p>سجّل مكتبك مجانًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ تستقبل العملاء مباشرة.</p>
-              <Link href="/register" className="fh-cta-btn">أضف مكتبك مجانًا <ArrowLeft size={16} /></Link>
+              <span className="fh-cta-pill"><Star size={13} /> تجربة مجانية 14 يومًا</span>
+              <h2>لديك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
+              <p>سجّل مكتبك وابدأ تجربة مجانية لمدة 14 يومًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ باستقبال العملاء مباشرة.</p>
+              <Link href="/register" className="fh-cta-btn">ابدأ تجربتك المجانية <ArrowLeft size={16} /></Link>
             </div>
           </div>
         </section>

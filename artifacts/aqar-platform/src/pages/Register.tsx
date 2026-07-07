@@ -637,7 +637,7 @@ export default function Register() {
               : "ابدأ التجربة المجانية"}
           </Button>
           <p className="text-center text-xs text-muted-foreground mt-2">
-            تجربة مجانية 7 أيام — بدون دفع — بدون التزام
+            تجربة مجانية 14 يومًا — بدون دفع — بدون التزام
           </p>
         </form>
 

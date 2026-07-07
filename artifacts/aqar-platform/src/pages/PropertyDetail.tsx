@@ -5,7 +5,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Map, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
 
@@ -73,9 +73,6 @@ const styles = `
 .pd-loc { display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 14px; }
 .pd-ref { font-size: 12px; color: #94A3B8; margin-top: 10px; }
 
-.pd-maplink { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: #667EEA; text-decoration: none; font-family: inherit; transition: all .15s; }
-.pd-maplink:hover { background: #667EEA; border-color: #667EEA; color: #fff; }
-.pd-maplink svg { flex-shrink: 0; }
 
 .pd-specs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #EEF1F5; }
 .pd-spec { display: flex; align-items: center; gap: 7px; background: #F5F7FA; border: 1px solid #EEF1F5; border-radius: 12px; padding: 9px 14px; font-size: 14px; font-weight: 600; color: #111827; }
@@ -358,20 +355,6 @@ export default function PropertyDetail() {
                   <MapPin size={16} color="#667EEA" />
                   <span>{[property.governorateName, property.areaName].filter(Boolean).join("، ")}</span>
                 </div>
-
-                {(property.areaName || property.governorateName) && (
-                  <a
-                    className="pd-maplink"
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      [property.areaName, property.governorateName, "الكويت"].filter(Boolean).join("، ")
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Map size={16} />
-                    الموقع على الخريطة
-                  </a>
-                )}
 
                 <div className="pd-specs">
                   {property.bedrooms != null && (
