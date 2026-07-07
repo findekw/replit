@@ -58,8 +58,9 @@ async function reconcilePayment(pay: typeof paymentsTable.$inferSelect): Promise
     const expected = filsToKwdString(pay.amountFils);
     const amountOk = st.totalPrice != null && Number(st.totalPrice) === Number(expected);
     const refOk = st.orderRef === pay.orderRef;
-    if (!amountOk || !refOk) {
-      logger.error({ orderRef: pay.orderRef, st: { amount: st.totalPrice, ref: st.orderRef }, expected }, "payment verify mismatch");
+    const currencyOk = !st.currency || st.currency === pay.currency;
+    if (!amountOk || !refOk || !currencyOk) {
+      logger.error({ orderRef: pay.orderRef, st: { amount: st.totalPrice, ref: st.orderRef, currency: st.currency }, expected }, "payment verify mismatch");
       return "pending";
     }
     await db.update(paymentsTable).set({ rawStatus: st.result ?? "CAPTURED" }).where(eq(paymentsTable.id, pay.id));
