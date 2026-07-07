@@ -1169,7 +1169,7 @@ export default function Admin() {
                   <h3 className="text-base font-bold" style={{ color: NAVY }}>اشتراكات المكاتب</h3>
                 </div>
                 <p className="text-sm mt-1" style={{ color: BODY }}>
-                  المكاتب تشترك وتدفع إلكترونياً عبر UPayments. تقدر كمان تفعّل اشتراك يدوياً أو تمنح/تمدّد تجربة مجانية من هنا.
+                  تشترك المكاتب وتدفع إلكترونياً عبر UPayments. يمكنك أيضاً تفعيل اشتراك يدوياً أو منح/تمديد تجربة مجانية من هنا.
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={loadSubscriptions} className="gap-1.5" style={{ color: BODY }}>

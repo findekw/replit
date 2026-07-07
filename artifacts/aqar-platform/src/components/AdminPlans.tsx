@@ -115,7 +115,7 @@ export default function AdminPlans() {
       ) : plans.length === 0 ? (
         <div style={{ padding: "32px 20px", textAlign: "center", color: "#64748B" }}>
           <p style={{ fontWeight: 700, color: "#1A2238" }}>لا توجد باقات بعد</p>
-          <p style={{ fontSize: 13, marginTop: 4 }}>أضف باقة عشان تظهر للمكاتب في صفحة الاشتراك.</p>
+          <p style={{ fontSize: 13, marginTop: 4 }}>أضف باقة لتظهر للمكاتب في صفحة الاشتراك.</p>
         </div>
       ) : (
         <div style={{ padding: 16, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>

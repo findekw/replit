@@ -157,7 +157,6 @@ export default function Dashboard() {
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [requestingSubscription, setRequestingSubscription] = useState(false);
 
   /* Load subscription status */
   useEffect(() => {
@@ -199,17 +198,6 @@ export default function Dashboard() {
       })
       .catch(() => {});
   }, [officeId]);
-
-  async function requestSubscription() {
-    setRequestingSubscription(true);
-    try {
-      const res = await fetch(`${BASE}/api/subscription/request`, {
-        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) { setSubStatus("pending_payment"); toast({ title: "تم استلام طلبك", description: "تواصل معنا لإكمال الدفع" }); }
-    } catch { toast({ title: "حدث خطأ", variant: "destructive" }); }
-    finally { setRequestingSubscription(false); }
-  }
 
   function copyPageLink() {
     if (!officeSlug) return;
