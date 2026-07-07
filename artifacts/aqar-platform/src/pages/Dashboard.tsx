@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Building, Eye, Users, Star, Phone, MessageCircle, TrendingUp,
+  Building, Eye, Star, Phone, MessageCircle, TrendingUp,
   Plus, Copy, Check, ExternalLink, Camera, Loader2, Edit2,
   Clock, Crown, AlertTriangle, CheckCircle2, Save, X, Lock
 } from "lucide-react";
@@ -16,14 +16,6 @@ import { BRAND_DOMAIN } from "@/lib/utils";
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
-
-const LEAD_STATUS_COLORS: Record<string, string> = {
-  "جديد": "bg-indigo-100 text-indigo-800",
-  "مهتم": "bg-indigo-50 text-indigo-700",
-  "تم التواصل": "bg-indigo-100 text-indigo-800",
-  "غير جاد": "bg-gray-100 text-gray-700",
-  "مغلق": "bg-red-100 text-red-800",
-};
 
 const NAVY = "hsl(221,54%,23%)";
 
@@ -377,8 +369,6 @@ export default function Dashboard() {
     { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
-    { label: "إجمالي العملاء", value: stats.totalLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
-    { label: "عملاء جدد", value: stats.newLeads, icon: Users, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
   ] : [];
@@ -1099,52 +1089,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ─── Leads + Top Properties ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-          {/* Recent Leads */}
-          <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <span style={{ width: 36, height: 36, borderRadius: 11, background: "linear-gradient(135deg,#059669,#10B981)", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 16px rgba(5,150,105,0.3)" }}>
-                  <Users className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
-                </span>
-                <h2 className="font-bold" style={{ fontSize: 16.5, color: "#111827" }}>أحدث العملاء</h2>
-              </div>
-              <Link href="/dashboard/leads" className="text-sm font-semibold hover:underline" style={{ color: "#667EEA" }}>عرض الكل</Link>
-            </div>
-            {isLoading ? (
-              <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
-            ) : (stats?.recentLeads ?? []).length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-8 w-8 mx-auto mb-2" style={{ color: "#94A3B8" }} />
-                <p style={{ fontSize: 15, color: "#111827", fontWeight: 700 }}>لا توجد عملاء حتى الآن</p>
-                <p className="mt-1" style={{ fontSize: 13, color: "#64748B" }}>ستظهر هنا طلبات العملاء على عقاراتك</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {(stats?.recentLeads ?? []).map(lead => (
-                  <div
-                    key={lead.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl"
-                    style={{ background: "#F8FAFC", border: "1px solid #EEF1F5" }}
-                    data-testid={`lead-${lead.id}`}
-                  >
-                    <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-                      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#ECFDF5", color: "#059669", fontWeight: 800, fontSize: 15 }}>
-                        {(lead.customerName?.trim()?.[0] ?? "؟").toUpperCase()}
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="font-bold text-sm" style={{ color: "#111827" }}>{lead.customerName}</div>
-                        <div className="text-xs" style={{ color: "#64748B", direction: "ltr", textAlign: "right" }}>{lead.phone}</div>
-                      </div>
-                    </div>
-                    <Badge className={LEAD_STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-700"}>{lead.status}</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* ─── Top Properties ─── */}
+        <div className="grid grid-cols-1 gap-5">
 
           {/* Top Properties */}
           <div style={{ background: "#fff", border: "1px solid #EAEEF5", borderRadius: 18, padding: 24, boxShadow: "0 8px 24px rgba(15,23,42,0.06)" }}>
