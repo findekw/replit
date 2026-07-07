@@ -13,6 +13,7 @@ import subscriptionRouter from "./subscription";
 import uploadsRouter from "./uploads";
 import heroRouter from "./hero";
 import reportsRouter from "./reports";
+import paymentsRouter from "./payments";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(subscriptionRouter);
 router.use(uploadsRouter);
 router.use(heroRouter);
 router.use(reportsRouter);
+router.use(paymentsRouter);
 
 export default router;

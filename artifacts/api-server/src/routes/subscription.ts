@@ -21,6 +21,7 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
       subscriptionStatus: officesTable.subscriptionStatus,
       trialStartedAt: officesTable.trialStartedAt,
       trialEndsAt: officesTable.trialEndsAt,
+      subscriptionEndsAt: officesTable.subscriptionEndsAt,
     })
     .from(officesTable)
     .where(eq(officesTable.id, officeId));
@@ -50,11 +51,21 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     trialDaysLeft = 0;
   }
 
+  // Auto-expire a paid subscription once its period has ended.
+  if (status === "active" && office.subscriptionEndsAt && office.subscriptionEndsAt < now) {
+    await db
+      .update(officesTable)
+      .set({ subscriptionStatus: "expired" })
+      .where(eq(officesTable.id, officeId));
+    status = "expired";
+  }
+
   res.json({
     subscriptionPlan: office.subscriptionPlan,
     subscriptionStatus: status,
     trialStartedAt: office.trialStartedAt?.toISOString() ?? null,
     trialEndsAt: office.trialEndsAt?.toISOString() ?? null,
+    subscriptionEndsAt: office.subscriptionEndsAt?.toISOString() ?? null,
     trialDaysLeft,
     canPublish: status === "trial" || status === "active",
   });

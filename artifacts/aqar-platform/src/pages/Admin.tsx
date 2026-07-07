@@ -4,6 +4,7 @@ import { useAdminAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import AdminPlans from "@/components/AdminPlans";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -1158,6 +1159,8 @@ export default function Admin() {
 
         {/* ═══════════════ SUBSCRIPTIONS TAB ═══════════════ */}
         {activeTab === "subscriptions" && (
+          <>
+          <AdminPlans />
           <div className="adm-card overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
               <div>
@@ -1166,7 +1169,7 @@ export default function Admin() {
                   <h3 className="text-base font-bold" style={{ color: NAVY }}>اشتراكات المكاتب</h3>
                 </div>
                 <p className="text-sm mt-1" style={{ color: BODY }}>
-                  فعّل اشتراك المكاتب الدافعة يدوياً، أو امنح/مدّد تجربة مجانية. الدفع الإلكتروني غير مفعّل بعد — يتم التحصيل خارج المنصة.
+                  المكاتب تشترك وتدفع إلكترونياً عبر UPayments. تقدر كمان تفعّل اشتراك يدوياً أو تمنح/تمدّد تجربة مجانية من هنا.
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={loadSubscriptions} className="gap-1.5" style={{ color: BODY }}>
@@ -1266,6 +1269,7 @@ export default function Admin() {
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* ═══════════════ TOOLS TAB ═══════════════ */}

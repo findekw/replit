@@ -17,7 +17,7 @@ router.get("/plans", async (_req, res): Promise<void> => {
       id: p.id,
       name: p.name,
       nameAr: p.nameAr,
-      price: p.price,
+      price: p.price / 1000, // stored in fils, exposed as KWD
       currency: p.currency,
       maxListings: p.maxListings,
       featuredListings: p.featuredListings,

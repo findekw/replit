@@ -17,6 +17,7 @@ import DashboardAnalytics from "@/pages/DashboardAnalytics";
 import DashboardAddListing from "@/pages/DashboardAddListing";
 import DashboardEditListing from "@/pages/DashboardEditListing";
 import DashboardLanding from "@/pages/DashboardLanding";
+import Subscribe from "@/pages/Subscribe";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AdminLogin from "@/pages/AdminLogin";
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/dashboard/leads" component={DashboardLeads} />
       <Route path="/dashboard/analytics" component={DashboardAnalytics} />
       <Route path="/dashboard/landing" component={DashboardLanding} />
+      <Route path="/dashboard/subscribe" component={Subscribe} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/office/login" component={Login} />

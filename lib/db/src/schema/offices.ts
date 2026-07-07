@@ -7,8 +7,9 @@ export const subscriptionPlansTable = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   nameAr: text("name_ar").notNull(),
-  price: integer("price").notNull().default(0),
+  price: integer("price").notNull().default(0), // stored in fils (KWD * 1000)
   currency: text("currency").notNull().default("KWD"),
+  durationDays: integer("duration_days").notNull().default(30), // subscription length granted on payment
   maxListings: integer("max_listings").notNull().default(10),
   featuredListings: integer("featured_listings").notNull().default(0),
   hasLeadDashboard: boolean("has_lead_dashboard").notNull().default(false),
@@ -47,6 +48,7 @@ export const officesTable = pgTable("offices", {
   subscriptionStatus: text("subscription_status").notNull().default("trial"),
   trialStartedAt: timestamp("trial_started_at", { withTimezone: true }),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  subscriptionEndsAt: timestamp("subscription_ends_at", { withTimezone: true }),
   slugEdits: integer("slug_edits").notNull().default(0),
   landingTemplate: text("landing_template").notNull().default("classic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable } from "@workspace/db";
+import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, subscriptionPlansTable } from "@workspace/db";
 import { eq, and, desc, sql, like, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
@@ -47,7 +47,7 @@ router.post("/admin/offices/:id/approve", requireAdmin, async (req: Request, res
   }
   try {
     const trialStartedAt = new Date();
-    const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
     await db.update(officesTable).set({
       active: true,
       subscriptionPlan: "basic",
@@ -229,7 +229,7 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
     const updates: Record<string, unknown> = { subscriptionStatus: status };
     if (status === "trial") {
       updates.trialStartedAt = new Date();
-      updates.trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      updates.trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
     }
     // Activating a paid subscription should also make the office visible.
     if (status === "active") updates.active = true;
@@ -464,6 +464,90 @@ router.post("/admin/demo-data/clear", requireAdmin, async (_req: Request, res: R
     res.json({ message: `تم مسح ${ids.length} عقار تجريبي`, deletedProperties: ids.length, deletedLeads: delLeads.length });
   } catch (err) {
     console.error("clear demo error:", err);
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── Subscription plans (packages) — admin CRUD ───────────────────────────────
+// Prices are entered/returned in KWD but stored in fils (KWD * 1000) so decimals
+// like 14.5 are exact.
+function planFromBody(body: any): {
+  ok: true; value: Record<string, unknown>;
+} | { ok: false; error: string } {
+  const nameAr = String(body?.nameAr ?? "").trim();
+  if (nameAr.length < 2) return { ok: false, error: "اسم الباقة مطلوب" };
+  const priceKwd = Number(body?.priceKwd ?? body?.price);
+  if (!isFinite(priceKwd) || priceKwd < 0) return { ok: false, error: "سعر غير صالح" };
+  const durationDays = Math.max(1, Math.round(Number(body?.durationDays) || 30));
+  const maxListings = Math.max(0, Math.round(Number(body?.maxListings) || 10));
+  const featuredListings = Math.max(0, Math.round(Number(body?.featuredListings) || 0));
+  const features = Array.isArray(body?.features) ? body.features.map((f: unknown) => String(f)).filter(Boolean) : [];
+  return {
+    ok: true,
+    value: {
+      name: String(body?.name ?? nameAr).trim() || nameAr,
+      nameAr,
+      price: Math.round(priceKwd * 1000),
+      currency: "KWD",
+      durationDays,
+      maxListings,
+      featuredListings,
+      hasLeadDashboard: !!body?.hasLeadDashboard,
+      hasAnalytics: !!body?.hasAnalytics,
+      hasWhatsappSupport: !!body?.hasWhatsappSupport,
+      hasPriorityPlacement: !!body?.hasPriorityPlacement,
+      hasCustomProfile: !!body?.hasCustomProfile,
+      features,
+      active: body?.active !== false,
+    },
+  };
+}
+
+function planToApi(p: typeof subscriptionPlansTable.$inferSelect) {
+  return { ...p, priceKwd: p.price / 1000 };
+}
+
+router.get("/admin/plans", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const plans = await db.select().from(subscriptionPlansTable).orderBy(subscriptionPlansTable.price);
+    res.json({ plans: plans.map(planToApi) });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/admin/plans", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const parsed = planFromBody(req.body);
+  if (!parsed.ok) { res.status(400).json({ error: parsed.error }); return; }
+  try {
+    const [created] = await db.insert(subscriptionPlansTable).values(parsed.value as any).returning();
+    res.status(201).json({ plan: planToApi(created), message: "تم إنشاء الباقة" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.put("/admin/plans/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const parsed = planFromBody(req.body);
+  if (!parsed.ok) { res.status(400).json({ error: parsed.error }); return; }
+  try {
+    const [updated] = await db.update(subscriptionPlansTable).set(parsed.value as any).where(eq(subscriptionPlansTable.id, id)).returning();
+    if (!updated) { res.status(404).json({ error: "الباقة غير موجودة" }); return; }
+    res.json({ plan: planToApi(updated), message: "تم تحديث الباقة" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.delete("/admin/plans/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  try {
+    await db.delete(subscriptionPlansTable).where(eq(subscriptionPlansTable.id, id));
+    res.json({ message: "تم حذف الباقة" });
+  } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });

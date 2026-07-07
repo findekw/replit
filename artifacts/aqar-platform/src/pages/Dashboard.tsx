@@ -405,9 +405,11 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <Button size="sm" className={`gap-2 flex-shrink-0 ${urgent ? "bg-orange-500 hover:bg-orange-600" : "bg-indigo-600 hover:bg-indigo-700"} text-white`} onClick={requestSubscription} disabled={requestingSubscription}>
-            <Crown className="h-3.5 w-3.5" />اشترك الآن
-          </Button>
+          <Link href="/dashboard/subscribe">
+            <Button size="sm" className={`gap-2 flex-shrink-0 ${urgent ? "bg-orange-500 hover:bg-orange-600" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}>
+              <Crown className="h-3.5 w-3.5" />اشترك الآن
+            </Button>
+          </Link>
         </div>
       );
     }
@@ -421,11 +423,11 @@ export default function Dashboard() {
               <p className="text-xs text-indigo-600 mt-0.5">تم استلام طلبك. تواصل معنا لإكمال الدفع وتفعيل اشتراكك</p>
             </div>
           </div>
-          <a href={`https://wa.me/96595005151?text=${encodeURIComponent("مرحبا، اريد الاشتراك في المنصة وتفعيل حسابي")}`} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0">
-              <MessageCircle className="h-3.5 w-3.5" />تواصل عبر واتساب
+          <Link href="/dashboard/subscribe">
+            <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white flex-shrink-0">
+              <Crown className="h-3.5 w-3.5" />أكمل الدفع
             </Button>
-          </a>
+          </Link>
         </div>
       );
     }
@@ -439,9 +441,11 @@ export default function Dashboard() {
               <p className="text-xs text-red-600 mt-0.5">اشترك الآن لتفعيل إعلاناتك وإضافة إعلانات جديدة</p>
             </div>
           </div>
-          <Button size="sm" className="gap-2 bg-red-600 hover:bg-red-700 text-white flex-shrink-0" onClick={requestSubscription} disabled={requestingSubscription}>
-            <Crown className="h-3.5 w-3.5" />اشترك الآن
-          </Button>
+          <Link href="/dashboard/subscribe">
+            <Button size="sm" className="gap-2 bg-red-600 hover:bg-red-700 text-white flex-shrink-0">
+              <Crown className="h-3.5 w-3.5" />اشترك الآن
+            </Button>
+          </Link>
         </div>
       );
     }
@@ -1016,10 +1020,11 @@ export default function Dashboard() {
             </div>
             {subStatus !== "active" && subStatus !== "pending_payment" && (
               <div className="mt-4 pt-4 border-t">
-                <Button size="sm" className="gap-2 bg-[#667EEA] hover:bg-indigo-700 text-white" onClick={requestSubscription} disabled={requestingSubscription}>
-                  <Crown className="h-3.5 w-3.5" />
-                  {requestingSubscription ? "جارٍ الإرسال..." : "اشترك الآن — 10 د.ك / شهر"}
-                </Button>
+                <Link href="/dashboard/subscribe">
+                  <Button size="sm" className="gap-2 bg-[#667EEA] hover:bg-indigo-700 text-white">
+                    <Crown className="h-3.5 w-3.5" />اشترك الآن
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
