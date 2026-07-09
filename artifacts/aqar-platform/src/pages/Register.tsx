@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Eye, EyeOff, CheckCircle,
-  Loader2, Link2, Check, X, Home,
+  Loader2, Link2, Check, X, Home, MailCheck,
 } from "lucide-react";
 import { authApi } from "@/lib/auth";
 import { useOfficeAuth } from "@/lib/AuthContext";
 
 type Role = "user" | "office";
-type FormState = "idle" | "loading" | "success" | "error";
+type FormState = "idle" | "loading" | "verify" | "verifying" | "success" | "error";
 type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -202,6 +202,10 @@ export default function Register() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [formState, setFormState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const slugCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -266,11 +270,20 @@ export default function Register() {
         name: name.trim(), email: email.trim(), phone: fullPhone, password,
         ...(slug ? { slug } : {}),
       });
-      await refetch();
-      setFormState("success");
+      setVerificationEmail(result.email ?? email.trim());
+      setOtp("");
+      setOtpMessage("");
+      setFormState("verify");
       setMessage(result.message);
-      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err: any) {
+      if (err?.requiresEmailVerification) {
+        setVerificationEmail(err.email ?? email.trim());
+        setOtp("");
+        setOtpMessage(err?.error ?? "تعذر إرسال الرمز. اطلب إرسال رمز جديد بعد التأكد من إعدادات البريد.");
+        setMessage("");
+        setFormState("verify");
+        return;
+      }
       setFormState("error");
       if (err?.details?.length) {
         const errsFromServer: Record<string, string> = {};
@@ -279,6 +292,40 @@ export default function Register() {
       } else {
         setFieldErrors({ server: err?.error ?? "حدث خطأ غير متوقع، حاول مرة أخرى" });
       }
+    }
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      setOtpMessage("أدخل رمز التفعيل المكون من 6 أرقام");
+      return;
+    }
+    setFormState("verifying");
+    setOtpMessage("");
+    try {
+      const result = await authApi.office.verifyEmail({ email: verificationEmail, otp });
+      await refetch();
+      setFormState("success");
+      setMessage(result.message);
+      setTimeout(() => navigate("/dashboard"), 1200);
+    } catch (err: any) {
+      setFormState("verify");
+      setOtpMessage(err?.error ?? "رمز التفعيل غير صحيح، حاول مرة أخرى");
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResendLoading(true);
+    setOtpMessage("");
+    try {
+      const result = await authApi.office.resendVerification({ email: verificationEmail });
+      setOtp("");
+      setOtpMessage(result.message);
+    } catch (err: any) {
+      setOtpMessage(err?.error ?? "تعذر إرسال رمز جديد، حاول مرة أخرى");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -292,6 +339,89 @@ export default function Register() {
           <p className="text-sm text-muted-foreground mt-2">
             {role === "office" ? "جارٍ تحويلك للوحة التحكم..." : "جارٍ تحويلك للصفحة الرئيسية..."}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (formState === "verify" || formState === "verifying") {
+    return (
+      <div
+        dir="rtl"
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          minHeight: "100svh",
+          padding: "max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom))",
+          background: "linear-gradient(135deg, #111827, #667EEA)",
+        }}
+      >
+        <div
+          className="w-full max-w-md"
+          style={{
+            background: "#ffffff",
+            borderRadius: 20,
+            padding: 24,
+            boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+          }}
+        >
+          <div className="text-center mb-6">
+            <MailCheck className="h-16 w-16 text-primary mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-foreground">فعّل بريدك الإلكتروني</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              أرسلنا رمز التفعيل إلى <span dir="ltr" className="font-semibold text-foreground">{verificationEmail}</span>
+            </p>
+          </div>
+
+          {message && (
+            <div className="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-sm text-indigo-700">
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyEmail} className="space-y-4" noValidate>
+            <div>
+              <Label htmlFor="otp" className="mb-1 block">رمز التفعيل</Label>
+              <Input
+                id="otp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="000000"
+                value={otp}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+                  setOtpMessage("");
+                }}
+                disabled={formState === "verifying"}
+                className="h-14 text-center text-lg font-bold tracking-[0.28em]"
+                dir="ltr"
+                data-testid="input-register-otp"
+              />
+              {otpMessage && <p className="text-sm mt-2" style={{ color: otpMessage.includes("تم") || otpMessage.includes("مفعل") ? "#16a34a" : "#ef4444" }}>{otpMessage}</p>}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={formState === "verifying"} data-testid="button-verify-email">
+              {formState === "verifying"
+                ? <><Loader2 className="h-4 w-4 ml-2 animate-spin" />جارٍ التفعيل...</>
+                : "تفعيل الحساب"}
+            </Button>
+
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={resendLoading || formState === "verifying"}
+              className="w-full text-sm font-semibold text-primary hover:underline disabled:opacity-60"
+            >
+              {resendLoading ? "جارٍ إرسال رمز جديد..." : "إرسال رمز جديد"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="w-full text-xs text-muted-foreground hover:text-foreground"
+            >
+              العودة لتسجيل الدخول
+            </button>
+          </form>
         </div>
       </div>
     );

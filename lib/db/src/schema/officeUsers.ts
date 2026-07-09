@@ -15,6 +15,11 @@ export const officeUsersTable = pgTable("office_users", {
   passwordHash: text("password_hash").notNull(),
   status: text("status").notNull().default("pending"),
   officeId: integer("office_id").references(() => officesTable.id),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }).defaultNow(),
+  emailOtpHash: text("email_otp_hash"),
+  emailOtpExpiresAt: timestamp("email_otp_expires_at", { withTimezone: true }),
+  emailOtpSentAt: timestamp("email_otp_sent_at", { withTimezone: true }),
+  emailOtpAttempts: integer("email_otp_attempts").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

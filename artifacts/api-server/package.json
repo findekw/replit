@@ -23,6 +23,7 @@
     "express-session": "^1.19.0",
     "google-auth-library": "^10.6.2",
     "multer": "^2.1.1",
+    "nodemailer": "^6.10.1",
     "pino": "^9",
     "pino-http": "^10"
   },
@@ -36,6 +37,7 @@
     "@types/express-session": "^1.18.2",
     "@types/multer": "^2.1.0",
     "@types/node": "catalog:",
+    "@types/nodemailer": "^6.4.24",
     "esbuild": "^0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "pino-pretty": "^13",

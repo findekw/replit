@@ -3,9 +3,22 @@ import { db, adminsTable, officeUsersTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getSessionId } from "./session";
 
-// Strip the password hash before returning any identity object to the client.
-export function safe<T extends { passwordHash?: string }>(row: T): Omit<T, "passwordHash"> {
-  const { passwordHash: _pw, ...rest } = row;
+// Strip secrets before returning any identity object to the client.
+export function safe<T extends {
+  passwordHash?: string;
+  emailOtpHash?: string | null;
+  emailOtpExpiresAt?: Date | null;
+  emailOtpSentAt?: Date | null;
+  emailOtpAttempts?: number;
+}>(row: T): Omit<T, "passwordHash" | "emailOtpHash" | "emailOtpExpiresAt" | "emailOtpSentAt" | "emailOtpAttempts"> {
+  const {
+    passwordHash: _pw,
+    emailOtpHash: _otpHash,
+    emailOtpExpiresAt: _otpExpiresAt,
+    emailOtpSentAt: _otpSentAt,
+    emailOtpAttempts: _otpAttempts,
+    ...rest
+  } = row;
   return rest;
 }
 

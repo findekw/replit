@@ -18,6 +18,7 @@ export interface OfficeIdentity {
   phone: string | null;
   status: string;
   officeId: number | null;
+  emailVerifiedAt?: string | null;
   createdAt: string;
 }
 
@@ -32,6 +33,8 @@ export interface AdminIdentity {
 export interface AuthError {
   error: string;
   details?: string[];
+  requiresEmailVerification?: boolean;
+  email?: string;
 }
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -66,7 +69,11 @@ export const authApi = {
   },
   office: {
     register: (body: { name: string; email: string; phone: string; password: string; slug?: string; officeDescription?: string }) =>
-      apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string }>("/api/auth/office/register", body),
+      apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string; requiresEmailVerification?: boolean; email?: string }>("/api/auth/office/register", body),
+    verifyEmail: (body: { email: string; otp: string }) =>
+      apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string }>("/api/auth/office/verify-email", body),
+    resendVerification: (body: { email: string }) =>
+      apiPost<{ message: string }>("/api/auth/office/resend-verification", body),
     login: (body: { email: string; password: string }) =>
       apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string }>("/api/auth/office/login", body),
     logout: () => apiPost<{ message: string }>("/api/auth/office/logout", {}),

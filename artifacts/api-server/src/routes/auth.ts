@@ -2,10 +2,12 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, adminsTable, officeUsersTable, officesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { randomInt } from "node:crypto";
 import type { Request, Response } from "express";
 import { logger } from "../lib/logger";
 import { setSession, clearSession, getSessionId } from "../lib/session";
 import { safe } from "../lib/authHelpers";
+import { sendOfficeVerificationOtp } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -44,9 +46,35 @@ setInterval(() => {
 }, LOGIN_WINDOW_MS).unref?.();
 
 const RESERVED_SLUGS = ["properties", "offices", "admin", "login", "register", "plans", "dashboard", "api", "health", "by-slug", "office-pages", "office"];
+const OFFICE_OTP_TTL_MS = Number(process.env.EMAIL_OTP_TTL_MINUTES || 10) * 60 * 1000;
+const OFFICE_OTP_RESEND_MS = 60 * 1000;
+const OFFICE_OTP_MAX_ATTEMPTS = 5;
 
 function isValidSlug(slug: string): boolean {
   return /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug);
+}
+
+function generateOtp(): string {
+  return String(randomInt(100000, 1000000));
+}
+
+async function issueOfficeEmailOtp(officeUser: { id: number; email: string; name: string }): Promise<boolean> {
+  const otp = generateOtp();
+  const otpHash = await bcrypt.hash(otp, 10);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + OFFICE_OTP_TTL_MS);
+
+  await db
+    .update(officeUsersTable)
+    .set({
+      emailOtpHash: otpHash,
+      emailOtpExpiresAt: expiresAt,
+      emailOtpSentAt: now,
+      emailOtpAttempts: 0,
+    })
+    .where(eq(officeUsersTable.id, officeUser.id));
+
+  return sendOfficeVerificationOtp({ to: officeUser.email, name: officeUser.name, otp });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -171,20 +199,122 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
 
     const passwordHash = await bcrypt.hash(password, 12);
     const [newOfficeUser] = await db.insert(officeUsersTable).values({
-      name, email, phone, passwordHash, status: "pending", officeId: newOffice?.id ?? null,
+      name, email, phone, passwordHash, status: "pending", officeId: newOffice?.id ?? null, emailVerifiedAt: null,
     }).returning();
     if (!newOfficeUser) { res.status(500).json({ error: "فشل إنشاء الحساب، حاول مرة أخرى" }); return; }
 
-    setSession(res, "office", newOfficeUser.id);
+    const sent = await issueOfficeEmailOtp(newOfficeUser);
+    if (!sent) {
+      res.status(500).json({
+        error: "تم إنشاء الحساب، لكن تعذر إرسال رمز التفعيل. تأكد من إعدادات البريد ثم اطلب رمزًا جديدًا.",
+        requiresEmailVerification: true,
+        email,
+      });
+      return;
+    }
+
     res.status(201).json({
       officeUser: safe(newOfficeUser),
       officeId: newOffice?.id ?? null,
-      message: "تم تقديم طلب التسجيل بنجاح. سيتم مراجعة حسابك وتفعيله خلال 24 ساعة.",
+      requiresEmailVerification: true,
+      email,
+      message: "تم إرسال رمز تفعيل إلى بريدك الإلكتروني. أدخل الرمز لإكمال إنشاء الحساب.",
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("unique") || msg.includes("duplicate")) res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" });
     else res.status(500).json({ error: "حدث خطأ في الخادم، حاول مرة أخرى" });
+  }
+});
+
+router.post("/auth/office/verify-email", async (req: Request, res: Response): Promise<void> => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const otp = String(req.body?.otp ?? "").trim();
+  if (!isValidEmail(email) || !/^\d{6}$/.test(otp)) {
+    res.status(400).json({ error: "رمز التفعيل أو البريد الإلكتروني غير صالح" });
+    return;
+  }
+
+  try {
+    const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.email, email)).limit(1);
+    if (!ou) { res.status(400).json({ error: "رمز التفعيل غير صحيح" }); return; }
+    if (ou.status === "banned") { res.status(403).json({ error: "تم تعليق هذا الحساب، تواصل مع الدعم" }); return; }
+    if (ou.emailVerifiedAt) {
+      setSession(res, "office", ou.id);
+      res.json({ officeUser: safe(ou), officeId: ou.officeId, message: "البريد الإلكتروني مفعل بالفعل" });
+      return;
+    }
+    if (!ou.emailOtpHash || !ou.emailOtpExpiresAt) {
+      res.status(400).json({ error: "لا يوجد رمز تفعيل صالح. اطلب إرسال رمز جديد." });
+      return;
+    }
+    if (new Date(ou.emailOtpExpiresAt).getTime() < Date.now()) {
+      res.status(400).json({ error: "انتهت صلاحية رمز التفعيل. اطلب رمزًا جديدًا." });
+      return;
+    }
+    if ((ou.emailOtpAttempts ?? 0) >= OFFICE_OTP_MAX_ATTEMPTS) {
+      res.status(429).json({ error: "محاولات كثيرة جدًا. اطلب رمزًا جديدًا." });
+      return;
+    }
+
+    const ok = await bcrypt.compare(otp, ou.emailOtpHash);
+    if (!ok) {
+      await db
+        .update(officeUsersTable)
+        .set({ emailOtpAttempts: (ou.emailOtpAttempts ?? 0) + 1 })
+        .where(eq(officeUsersTable.id, ou.id));
+      res.status(400).json({ error: "رمز التفعيل غير صحيح" });
+      return;
+    }
+
+    const [verified] = await db
+      .update(officeUsersTable)
+      .set({
+        emailVerifiedAt: new Date(),
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpSentAt: null,
+        emailOtpAttempts: 0,
+      })
+      .where(eq(officeUsersTable.id, ou.id))
+      .returning();
+
+    setSession(res, "office", ou.id);
+    res.json({
+      officeUser: safe(verified ?? ou),
+      officeId: (verified ?? ou).officeId,
+      message: "تم تفعيل البريد الإلكتروني بنجاح. حسابك الآن قيد مراجعة الإدارة.",
+    });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم، حاول مرة أخرى" });
+  }
+});
+
+router.post("/auth/office/resend-verification", async (req: Request, res: Response): Promise<void> => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  if (!isValidEmail(email)) { res.status(400).json({ error: "البريد الإلكتروني غير صالح" }); return; }
+
+  try {
+    const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.email, email)).limit(1);
+    if (!ou) {
+      res.json({ message: "إذا كان البريد مسجلًا لدينا، سيتم إرسال رمز تفعيل جديد." });
+      return;
+    }
+    if (ou.status === "banned") { res.status(403).json({ error: "تم تعليق هذا الحساب، تواصل مع الدعم" }); return; }
+    if (ou.emailVerifiedAt) { res.json({ message: "البريد الإلكتروني مفعل بالفعل" }); return; }
+    if (ou.emailOtpSentAt && Date.now() - new Date(ou.emailOtpSentAt).getTime() < OFFICE_OTP_RESEND_MS) {
+      res.status(429).json({ error: "انتظر دقيقة قبل طلب رمز جديد" });
+      return;
+    }
+
+    const sent = await issueOfficeEmailOtp(ou);
+    if (!sent) {
+      res.status(500).json({ error: "تعذر إرسال رمز التفعيل. حاول مرة أخرى لاحقًا." });
+      return;
+    }
+    res.json({ message: "تم إرسال رمز تفعيل جديد إلى بريدك الإلكتروني" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم، حاول مرة أخرى" });
   }
 });
 
@@ -199,6 +329,19 @@ router.post("/auth/office/login", loginLimiter, async (req: Request, res: Respon
       res.status(401).json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }); return;
     }
     if (ou.status === "banned") { res.status(403).json({ error: "تم تعليق هذا الحساب، تواصل مع الدعم" }); return; }
+    if (!ou.emailVerifiedAt) {
+      const shouldSend = !ou.emailOtpHash || !ou.emailOtpExpiresAt || new Date(ou.emailOtpExpiresAt).getTime() < Date.now();
+      if (shouldSend) {
+        const sent = await issueOfficeEmailOtp(ou);
+        if (!sent) { res.status(500).json({ error: "تعذر إرسال رمز التفعيل. حاول مرة أخرى لاحقًا." }); return; }
+      }
+      res.status(403).json({
+        error: "يجب تفعيل البريد الإلكتروني قبل تسجيل الدخول. أرسلنا لك رمز التفعيل.",
+        requiresEmailVerification: true,
+        email: ou.email,
+      });
+      return;
+    }
 
     setSession(res, "office", ou.id);
     logger.info({ officeUserId: ou.id, officeId: ou.officeId }, "Office login success");
