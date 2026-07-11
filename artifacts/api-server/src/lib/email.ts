@@ -45,7 +45,7 @@ export async function sendOfficeVerificationOtp(input: SendOfficeOtpInput): Prom
   const from = process.env.SMTP_FROM || user;
   const subject = "رمز تفعيل حسابك في Finde";
   const safeName = escapeHtml(input.name);
-  const text = `مرحباً ${input.name}\n\nرمز تفعيل حسابك هو: ${input.otp}\n\nالرمز صالح لمدة 10 دقائق.`;
+  const text = `مرحباً ${input.name}\n\nرمز تفعيل حسابك هو: ${input.otp}\n\nالرمز صالح لمدة 10 دقائق.\n\nهذه رسالة آلية من نظام Finde، وهذا البريد لا يستقبل الردود — من فضلك لا ترد عليها.`;
   const html = `
     <div dir="rtl" style="margin:0;padding:0;background:#F6F8FC;font-family:Arial,Tahoma,sans-serif;color:#111827">
       <div style="width:100%;max-width:520px;margin:0 auto;padding:22px 14px;box-sizing:border-box">
@@ -55,13 +55,25 @@ export async function sendOfficeVerificationOtp(input: SendOfficeOtpInput): Prom
           <div style="font-size:15px;line-height:1.8;margin:0 0 14px;color:#334155">استخدم الرمز التالي لتفعيل بريدك الإلكتروني:</div>
           <div dir="ltr" style="display:block;width:100%;box-sizing:border-box;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:14px;padding:16px 8px;text-align:center;font-size:30px;font-weight:800;letter-spacing:7px;color:#4B66E0;margin:16px 0">${input.otp}</div>
           <div style="font-size:13px;line-height:1.8;color:#64748B">الرمز صالح لمدة 10 دقائق. إذا لم تطلب إنشاء حساب، يمكنك تجاهل هذه الرسالة.</div>
+          <div style="font-size:12px;line-height:1.8;color:#94A3B8;margin-top:8px;border-top:1px solid #EEF2F7;padding-top:10px">هذه رسالة آلية من نظام Finde، وهذا البريد لا يستقبل الردود — من فضلك لا ترد عليها.</div>
         </div>
       </div>
     </div>
   `;
 
   try {
-    await transporter.sendMail({ from, to: input.to, subject, text, html });
+    await transporter.sendMail({
+      from,
+      to: input.to,
+      subject,
+      text,
+      html,
+      // Automated, unmonitored mailbox — signal to mail clients / auto-responders.
+      headers: {
+        "Auto-Submitted": "auto-generated",
+        "X-Auto-Response-Suppress": "All",
+      },
+    });
     return true;
   } catch (err) {
     logger.error({ err, to: input.to }, "Failed to send office verification OTP");
