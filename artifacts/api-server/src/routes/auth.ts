@@ -159,6 +159,8 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
   const phone = String(body.phone ?? "").trim() || null;
   const password = String(body.password ?? "");
   const providedSlug = String(body.slug ?? "").trim().toLowerCase();
+  const licenseNumber = body.licenseNumber ? String(body.licenseNumber).trim().slice(0, 60) : null;
+  const commercialReg = body.commercialReg ? String(body.commercialReg).trim().slice(0, 60) : null;
 
   const errors: string[] = [];
   if (name.length < 2) errors.push("الاسم يجب أن يكون حرفين على الأقل");
@@ -194,6 +196,8 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
     const [newOffice] = await db.insert(officesTable).values({
       name, nameAr: name, slug, phone: phone ?? null, email,
       active: false, featured: false, verified: false,
+      ...(licenseNumber ? { licenseNumber } : {}),
+      ...(commercialReg ? { commercialReg } : {}),
       ...(officeDesc ? { descriptionAr: officeDesc, description: officeDesc } : {}),
     }).returning({ id: officesTable.id });
 

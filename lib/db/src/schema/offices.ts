@@ -37,6 +37,10 @@ export const officesTable = pgTable("offices", {
   website: text("website"),
   instagram: text("instagram"),
   twitter: text("twitter"),
+  // Optional legal identifiers (Kuwait). Kept nullable — offices may fill them
+  // later; displayed on the office page for trust/compliance.
+  licenseNumber: text("license_number"),
+  commercialReg: text("commercial_reg"),
   governorateId: integer("governorate_id").references(() => governoratesTable.id),
   planId: integer("plan_id").references(() => subscriptionPlansTable.id),
   verified: boolean("verified").notNull().default(false),

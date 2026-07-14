@@ -68,7 +68,7 @@ export const authApi = {
     me: () => apiGet<{ user: UserIdentity }>("/api/auth/user/me"),
   },
   office: {
-    register: (body: { name: string; email: string; phone: string; password: string; slug?: string; officeDescription?: string }) =>
+    register: (body: { name: string; email: string; phone: string; password: string; slug?: string; officeDescription?: string; licenseNumber?: string; commercialReg?: string }) =>
       apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string; requiresEmailVerification?: boolean; email?: string }>("/api/auth/office/register", body),
     verifyEmail: (body: { email: string; otp: string }) =>
       apiPost<{ officeUser: OfficeIdentity; officeId: number | null; message: string }>("/api/auth/office/verify-email", body),

@@ -56,11 +56,21 @@ export default function ModernTemplate(p: TemplateProps) {
           {office.governorateName && <div className="tm-stat"><div className="tm-stat-n" style={{ fontSize: 20 }}>{office.governorateName}</div><div className="tm-stat-l">الموقع</div></div>}
         </div>
 
-        {/* About */}
-        {office.descriptionAr && (
+        {/* About + legal identifiers */}
+        {(office.descriptionAr || office.licenseNumber || office.commercialReg) && (
           <section className="tm-card tm-about">
-            <h2 className="tm-h2">نبذة عن المكتب</h2>
-            <p>{office.descriptionAr}</p>
+            {office.descriptionAr && (
+              <>
+                <h2 className="tm-h2">نبذة عن المكتب</h2>
+                <p>{office.descriptionAr}</p>
+              </>
+            )}
+            {(office.licenseNumber || office.commercialReg) && (
+              <div className="tm-legal">
+                {office.licenseNumber && <span className="tm-legal-item">رقم الترخيص: <b dir="ltr">{office.licenseNumber}</b></span>}
+                {office.commercialReg && <span className="tm-legal-item">السجل التجاري: <b dir="ltr">{office.commercialReg}</b></span>}
+              </div>
+            )}
           </section>
         )}
 
@@ -154,6 +164,10 @@ const CSS = `
 .tm-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 20px; box-shadow: 0 6px 22px rgba(15,23,42,0.05); }
 .tm-about { padding: 26px 28px; margin-bottom: 28px; }
 .tm-about p { color: #475569; line-height: 2; font-size: 15.5px; margin: 14px 0 0; }
+.tm-legal { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #EEF1F5; }
+.tm-legal:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.tm-legal-item { font-size: 13.5px; color: #64748B; font-weight: 600; }
+.tm-legal-item b { color: #111827; font-weight: 800; }
 .tm-h2 { font-size: 22px; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.3px; }
 .tm-listhead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .tm-tabs { display: flex; gap: 8px; flex-wrap: wrap; }

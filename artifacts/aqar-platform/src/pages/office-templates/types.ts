@@ -11,6 +11,8 @@ export interface OfficeData {
   phone: string | null;
   whatsapp: string | null;
   email: string | null;
+  licenseNumber: string | null;
+  commercialReg: string | null;
   governorateName: string | null;
   verified: boolean;
   featured: boolean;

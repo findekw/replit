@@ -193,6 +193,8 @@ export default function Register() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [commercialReg, setCommercialReg] = useState("");
   const [slug, setSlug] = useState("");
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -265,6 +267,8 @@ export default function Register() {
       const result = await authApi.office.register({
         name: name.trim(), email: email.trim(), phone: fullPhone, password,
         ...(slug ? { slug } : {}),
+        ...(licenseNumber.trim() ? { licenseNumber: licenseNumber.trim() } : {}),
+        ...(commercialReg.trim() ? { commercialReg: commercialReg.trim() } : {}),
       });
       setVerificationEmail(result.email ?? email.trim());
       setOtp("");
@@ -719,6 +723,39 @@ export default function Register() {
               testId="input-register-confirm-password"
             />
             <FieldError msg={fieldErrors.confirmPassword} />
+          </div>
+
+          {/* Optional legal identifiers — build trust on the office page */}
+          <div>
+            <Label htmlFor="licenseNumber" className="mb-1 block">
+              رقم الترخيص <span className="text-muted-foreground font-normal">(اختياري)</span>
+            </Label>
+            <Input
+              id="licenseNumber"
+              placeholder="رقم ترخيص المكتب العقاري"
+              value={licenseNumber}
+              onChange={(e) => setLicenseNumber(e.target.value.slice(0, 60))}
+              disabled={formState === "loading"}
+              dir="rtl"
+              data-testid="input-register-license"
+            />
+          </div>
+          <div>
+            <Label htmlFor="commercialReg" className="mb-1 block">
+              رقم السجل التجاري <span className="text-muted-foreground font-normal">(اختياري)</span>
+            </Label>
+            <Input
+              id="commercialReg"
+              placeholder="رقم السجل التجاري"
+              value={commercialReg}
+              onChange={(e) => setCommercialReg(e.target.value.slice(0, 60))}
+              disabled={formState === "loading"}
+              dir="rtl"
+              data-testid="input-register-commercial"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              يظهران في صفحة مكتبك لتعزيز الثقة — ويمكن إضافتهما لاحقًا.
+            </p>
           </div>
 
           {/* Terms */}

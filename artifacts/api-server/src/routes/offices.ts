@@ -44,6 +44,8 @@ function buildOfficeObject(o: typeof officesTable.$inferSelect, extras: {
     website: o.website ?? null,
     instagram: o.instagram ?? null,
     twitter: o.twitter ?? null,
+    licenseNumber: (o as { licenseNumber?: string | null }).licenseNumber ?? null,
+    commercialReg: (o as { commercialReg?: string | null }).commercialReg ?? null,
     governorateId: o.governorateId ?? null,
     governorateName: extras.governorateName ?? null,
     verified: o.verified,
