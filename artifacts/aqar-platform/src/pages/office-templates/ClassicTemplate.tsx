@@ -37,13 +37,8 @@ export default function ClassicTemplate(p: TemplateProps) {
               </div>
             </div>
           </div>
-
-          {(hasWA || hasPhone) && (
-            <div className="cl-topbar-actions">
-              {hasPhone && <button className="cl-btn cl-btn-call" onClick={onCall}><Phone size={18} /> اتصال</button>}
-              {hasWA && <button className="cl-btn cl-btn-wa" onClick={onWhatsApp}><MessageCircle size={18} /> واتساب</button>}
-            </div>
-          )}
+          {/* Contact intentionally lives only in the sidebar info card (+ mobile
+              sticky bar) — the old top-bar buttons duplicated it left/right. */}
         </div>
       </header>
 

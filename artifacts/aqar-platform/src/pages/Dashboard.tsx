@@ -142,11 +142,13 @@ export default function Dashboard() {
   const [draftPhone, setDraftPhone] = useState("");
   const [draftWhatsapp, setDraftWhatsapp] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
+  const [draftLicense, setDraftLicense] = useState("");
+  const [draftCommercialReg, setDraftCommercialReg] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingProfile, setSavingProfile] = useState(false);
 
   /* snapshot for cancel */
-  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "" });
+  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "" });
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -175,7 +177,7 @@ export default function Dashboard() {
     if (!officeId) return;
     fetch(`${BASE}/api/offices/${officeId}`, { credentials: "include" })
       .then(r => r.json())
-      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null }) => {
+      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null; licenseNumber?: string | null; commercialReg?: string | null }) => {
         const name = data.nameAr ?? "";
         const slug = data.slug ?? "";
         const rawPhone = data.phone ?? "";
@@ -183,6 +185,8 @@ export default function Dashboard() {
         const rawWa = data.whatsapp ?? "";
         const wa = rawWa.startsWith("965") && rawWa.length > 8 ? rawWa.slice(3) : rawWa;
         const desc = data.descriptionAr ?? "";
+        const lic = data.licenseNumber ?? "";
+        const creg = data.commercialReg ?? "";
         const edits = data.slugEdits ?? 0;
         setOfficeNameAr(name);
         setOfficeSlug(slug || null);
@@ -194,7 +198,9 @@ export default function Dashboard() {
         setDraftPhone(phone);
         setDraftWhatsapp(wa);
         setDraftDescription(desc);
-        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc });
+        setDraftLicense(lic);
+        setDraftCommercialReg(creg);
+        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg });
       })
       .catch(() => {});
   }, [officeId]);
@@ -284,6 +290,8 @@ export default function Dashboard() {
     setDraftPhone(snapshot.phone);
     setDraftWhatsapp(snapshot.whatsapp);
     setDraftDescription(snapshot.description);
+    setDraftLicense(snapshot.licenseNumber);
+    setDraftCommercialReg(snapshot.commercialReg);
     setErrors({});
     setEditMode(true);
   }
@@ -294,6 +302,8 @@ export default function Dashboard() {
     setDraftPhone(snapshot.phone);
     setDraftWhatsapp(snapshot.whatsapp);
     setDraftDescription(snapshot.description);
+    setDraftLicense(snapshot.licenseNumber);
+    setDraftCommercialReg(snapshot.commercialReg);
     setErrors({});
     setEditMode(false);
   }
@@ -311,6 +321,8 @@ export default function Dashboard() {
         phone: draftPhone,
         whatsapp: draftWhatsapp,
         officeDescription: draftDescription.trim(),
+        licenseNumber: draftLicense.trim(),
+        commercialReg: draftCommercialReg.trim(),
       };
       if (draftSlug !== snapshot.slug) payload.slug = draftSlug;
 
@@ -329,7 +341,7 @@ export default function Dashboard() {
         return;
       }
       /* update local state */
-      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim() };
+      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim(), licenseNumber: draftLicense.trim(), commercialReg: draftCommercialReg.trim() };
       setSnapshot(newSnap);
       setOfficeNameAr(draftNameAr.trim());
       setOfficeSlug(draftSlug || null);
@@ -680,6 +692,48 @@ export default function Dashboard() {
                 }}>
                   {snapshot.description}
                 </p>
+              )
+            )}
+
+            {/* ── Legal identifiers (optional) ── */}
+            {editMode ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 7 }}>
+                    رقم الترخيص <span style={{ color: "#9ca3af", fontWeight: 400 }}>(اختياري)</span>
+                  </div>
+                  <input
+                    value={draftLicense}
+                    onChange={e => setDraftLicense(e.target.value.slice(0, 60))}
+                    placeholder="رقم ترخيص المكتب العقاري"
+                    dir="rtl"
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, background: "#fff", color: "#111827", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                    onFocus={e => (e.currentTarget.style.borderColor = "#3b82f6")}
+                    onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 7 }}>
+                    رقم السجل التجاري <span style={{ color: "#9ca3af", fontWeight: 400 }}>(اختياري)</span>
+                  </div>
+                  <input
+                    value={draftCommercialReg}
+                    onChange={e => setDraftCommercialReg(e.target.value.slice(0, 60))}
+                    placeholder="رقم السجل التجاري"
+                    dir="rtl"
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, background: "#fff", color: "#111827", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                    onFocus={e => (e.currentTarget.style.borderColor = "#3b82f6")}
+                    onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                  <p style={{ fontSize: 11, color: "#9ca3af", margin: "6px 0 0" }}>يظهران في صفحة مكتبك لتعزيز الثقة.</p>
+                </div>
+              </div>
+            ) : (
+              (snapshot.licenseNumber || snapshot.commercialReg) && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px", fontSize: 13, color: "#64748B", fontWeight: 600 }}>
+                  {snapshot.licenseNumber && <span>رقم الترخيص: <b dir="ltr" style={{ color: "#111827" }}>{snapshot.licenseNumber}</b></span>}
+                  {snapshot.commercialReg && <span>السجل التجاري: <b dir="ltr" style={{ color: "#111827" }}>{snapshot.commercialReg}</b></span>}
+                </div>
               )
             )}
 
