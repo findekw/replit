@@ -344,6 +344,8 @@ export default function Home() {
         /* sheet */
         .fh-sheet-wrap { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; justify-content:flex-end; }
         .fh-sheet { position:relative; background:#fff; border-radius:22px 22px 0 0; height:80vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+        /* bottom fade hints that the list scrolls (more options below) */
+        .fh-sheet::after { content:""; position:absolute; left:0; right:0; bottom:0; height:46px; background:linear-gradient(rgba(255,255,255,0), #fff); pointer-events:none; z-index:2; }
         @media (min-width:769px){ .fh-sheet-wrap{ justify-content:center; align-items:center; } .fh-sheet{ border-radius:20px; height:auto; max-height:70vh; width:420px; } .fh-sheet-handle{ display:none; } }
         .fh-sheet-item { width:100%; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border:none; border-bottom:1px solid #F1F5F9; cursor:pointer; font-size:15px; color:#1E293B; background:transparent; text-align:right; font-family:inherit; }
         .fh-sheet-item:active { background:#F1F5F9; }
