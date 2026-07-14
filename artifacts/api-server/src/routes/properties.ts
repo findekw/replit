@@ -490,8 +490,10 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
         governorateId,
         areaId,
         officeId,
-        active: false,
-        approvalStatus: "pending",
+        // Auto-approve: new listings go live immediately (client decision — an
+        // AI moderation agent will handle review later). Admin can still hide.
+        active: true,
+        approvalStatus: "approved",
         featured: false,
       })
       .returning();
