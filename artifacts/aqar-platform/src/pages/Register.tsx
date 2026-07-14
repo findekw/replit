@@ -128,14 +128,10 @@ function phoneError(phone: string, maxDigits = DEFAULT_COUNTRY.maxDigits): strin
 
 const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
-const SPECIAL_RE = /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>\/?`~]/;
-
 function validatePassword(pw: string): string {
   if (ARABIC_RE.test(pw)) return "كلمة المرور لا تقبل أحرفًا عربية";
-  if (pw.length < 6 || pw.length > 14) return "كلمة المرور من 6 إلى 14 حرفًا";
-  if (!/[a-zA-Z]/.test(pw)) return "يجب أن تحتوي على حرف إنجليزي ورقم ورمز";
-  if (!/[0-9]/.test(pw)) return "يجب أن تحتوي على حرف إنجليزي ورقم ورمز";
-  if (!SPECIAL_RE.test(pw)) return "يجب أن تحتوي على رمز واحد على الأقل (مثل: !@#$)";
+  if (pw.length < 8) return "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
+  if (pw.length > 64) return "كلمة المرور طويلة جدًا";
   return "";
 }
 
@@ -705,7 +701,7 @@ export default function Register() {
             />
             {passwordFocused && !fieldErrors.password && validatePassword(password) !== "" && (
               <p className="text-xs text-muted-foreground mt-1">
-                من 6 إلى 14 حرفًا، تشمل حروف إنجليزية وأرقام ورمز
+                8 أحرف على الأقل
               </p>
             )}
             <FieldError msg={fieldErrors.password} />
