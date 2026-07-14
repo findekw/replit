@@ -114,7 +114,11 @@ async function getPrimaryImages(propertyIds: number[]): Promise<Record<number, s
 }
 
 router.get("/properties", async (req, res): Promise<void> => {
-  const parsed = ListPropertiesQueryParams.safeParse(req.query);
+  // type/areaId are read raw below to allow comma-separated multi-values; exclude
+  // them from the generated single-value schema (which coerces areaId to a number
+  // and would 400 on "12,17").
+  const { type: _t, areaId: _a, ...schemaQuery } = req.query as Record<string, unknown>;
+  const parsed = ListPropertiesQueryParams.safeParse(schemaQuery);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
