@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Clock, Plus, Home, Palette } from "lucide-react";
+import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Palette } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
@@ -22,8 +22,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { officeUser: user, logout } = useOfficeAuth();
-
-  const isPending = user?.status === "pending";
 
   const handleLogout = async () => {
     await logout();
@@ -156,12 +154,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <p className="dsh-office-email">{user.email}</p>
               </div>
             </div>
-            {isPending && (
-              <span className="dsh-pending">
-                <Clock className="h-3 w-3" />
-                قيد المراجعة
-              </span>
-            )}
           </div>
         )}
 
@@ -250,25 +242,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
           </Link>
         </header>
-
-        {/* Pending Banner */}
-        {isPending && (
-          <div className="dsh-pending-banner" data-testid="pending-banner">
-            <span style={{
-              width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              background: "rgba(63,91,216,0.12)", border: "1px solid rgba(63,91,216,0.2)",
-            }}>
-              <Clock className="h-5 w-5" style={{ color: "#667EEA" }} />
-            </span>
-            <div>
-              <span className="font-bold" style={{ color: "#111827" }}>حسابك قيد المراجعة</span>
-              <span className="text-sm mr-2" style={{ color: "#64748B" }}>
-                سيتم تفعيل حسابك خلال 24 ساعة. يمكنك إضافة إعلانات الآن وستُنشر بعد التفعيل.
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         <main className="flex-1 p-4 md:p-6">
