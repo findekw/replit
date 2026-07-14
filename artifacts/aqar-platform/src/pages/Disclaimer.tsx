@@ -1,5 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { ShieldAlert } from "lucide-react";
+import { Link } from "wouter";
+import { ShieldAlert, ArrowRight } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -60,6 +61,16 @@ export default function Disclaimer() {
                 <p className="text-muted-foreground text-sm leading-relaxed">{s.content}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-12 pt-8 border-t text-center">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#667EEA] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#5568d8] hover:shadow-md"
+            >
+              <ArrowRight className="h-4 w-4" />
+              العودة إلى صفحة التسجيل
+            </Link>
           </div>
         </div>
       </div>
