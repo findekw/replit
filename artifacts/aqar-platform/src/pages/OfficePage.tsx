@@ -118,7 +118,9 @@ export default function OfficePage() {
 
   const hasPhone = !!office.phone;
   const hasWA = !!(office.whatsapp || office.phone);
-  const Template = TEMPLATES[resolveTemplateKey(office.landingTemplate)] ?? ModernTemplate;
+  // Unified brand theme — per-office theme switching was removed (client decision:
+  // keep one consistent official look). Always render the Modern (flagship) template.
+  const Template = ModernTemplate;
 
   const props: TemplateProps = {
     office, properties, loadingProps, activeTab, setActiveTab,

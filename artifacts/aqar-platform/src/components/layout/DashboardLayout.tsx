@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Palette } from "lucide-react";
+import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
@@ -8,14 +8,12 @@ const NAV_ITEMS = [
   { label: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard },
   { label: "إعلاناتي", href: "/dashboard/listings", icon: Building },
   { label: "الإحصائيات", href: "/dashboard/analytics", icon: BarChart2 },
-  { label: "صفحة الهبوط", href: "/dashboard/landing", icon: Palette },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "لوحة التحكم",
   "/dashboard/listings": "إعلاناتي",
   "/dashboard/analytics": "الإحصائيات",
-  "/dashboard/landing": "صفحة الهبوط",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
