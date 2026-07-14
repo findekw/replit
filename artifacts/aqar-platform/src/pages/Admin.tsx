@@ -1396,7 +1396,7 @@ export default function Admin() {
                   type="password"
                   value={newAdmin.password}
                   onChange={(e) => setNewAdmin((s) => ({ ...s, password: e.target.value }))}
-                  placeholder="كلمة المرور"
+                  placeholder="كلمة المرور (8 أحرف على الأقل)"
                   className="adm-input"
                 />
                 <div className="sm:col-span-3">

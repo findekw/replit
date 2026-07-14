@@ -56,7 +56,7 @@ router.post("/admin/offices/:id/approve", requireAdmin, async (req: Request, res
       trialEndsAt,
     }).where(eq(officesTable.id, officeId));
     await db.update(officeUsersTable).set({ status: "active" }).where(eq(officeUsersTable.officeId, officeId));
-    res.json({ message: "تم تفعيل المكتب وبدأت التجربة المجانية (7 أيام)" });
+    res.json({ message: "تم تفعيل المكتب وبدأت التجربة المجانية (14 يومًا)" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
