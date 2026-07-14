@@ -29,6 +29,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Disclaimer from "@/pages/Disclaimer";
 import Contact from "@/pages/Contact";
+import Saved from "@/pages/Saved";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,6 +81,7 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/disclaimer" component={Disclaimer} />
       <Route path="/contact" component={Contact} />
+      <Route path="/saved" component={Saved} />
       <Route path="/office/:slug" component={OfficePage} />
       <Route path="/:slug" component={OfficePage} />
       <Route component={NotFound} />

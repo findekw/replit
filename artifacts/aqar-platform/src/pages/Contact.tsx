@@ -30,23 +30,27 @@ export default function Contact() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Email — blue */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-4">
-                <Mail className="h-6 w-6 text-indigo-600" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#667EEA" }}>
+                <Mail className="h-7 w-7 text-white" />
               </div>
               <h2 className="font-bold text-gray-900 text-base mb-1">البريد الإلكتروني</h2>
               <p className="text-gray-500 text-sm mb-4">راسلنا وسنرد عليك في أقرب وقت</p>
               <a
                 href="mailto:info@finde.co"
-                className="text-sm font-semibold text-indigo-600 hover:underline break-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90 break-all"
+                style={{ background: "#667EEA" }}
               >
+                <Mail className="h-4 w-4" />
                 info@finde.co
               </a>
             </div>
 
+            {/* WhatsApp — green */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-4">
-                <WhatsAppIcon className="h-6 w-6 text-green-500" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#25D366" }}>
+                <WhatsAppIcon className="h-7 w-7 text-white" />
               </div>
               <h2 className="font-bold text-gray-900 text-base mb-1">واتساب</h2>
               <p className="text-gray-500 text-sm mb-4">تواصل معنا مباشرةً للردّ السريع</p>
@@ -62,24 +66,23 @@ export default function Contact() {
               </a>
             </div>
 
+            {/* Instagram — red */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
-                <Instagram className="h-6 w-6 text-gray-700" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#E1306C" }}>
+                <Instagram className="h-7 w-7 text-white" />
               </div>
-              <h2 className="font-bold text-gray-900 text-base mb-1">مواقع التواصل الاجتماعي</h2>
+              <h2 className="font-bold text-gray-900 text-base mb-1">إنستقرام</h2>
               <p className="text-gray-500 text-sm mb-4">تابعنا وتواصل معنا عبر حساباتنا الرسمية</p>
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://www.instagram.com/finde.kw?utm_source=qr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ background: "#E1306C" }}
-                >
-                  <Instagram className="h-4 w-4" />
-                  إنستقرام
-                </a>
-              </div>
+              <a
+                href="https://www.instagram.com/finde.kw?utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+                style={{ background: "#E1306C" }}
+              >
+                <Instagram className="h-4 w-4" />
+                إنستقرام
+              </a>
             </div>
           </div>
         </div>

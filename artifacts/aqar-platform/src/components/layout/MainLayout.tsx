@@ -33,6 +33,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const navLinks = [
     { href: "/",           label: "الرئيسية" },
     { href: "/properties", label: "العقارات" },
+    { href: "/saved",      label: "المحفوظات" },
     { href: "/plans",      label: "الاشتراك" },
   ];
 
