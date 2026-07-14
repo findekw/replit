@@ -19,11 +19,12 @@ const BDAL_TYPES = ["بيت", "قسيمة", "ارض", "شقة", "طلب"];
 
 function parseParams(search: string) {
   const p = new URLSearchParams(search);
+  const csv = (v: string | null) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
   return {
     status: p.get("status") || "",
-    type: p.get("type") || "",
+    types: csv(p.get("type")),
     governorateId: p.get("governorateId") || "",
-    areaId: p.get("areaId") || "",
+    areaIds: csv(p.get("areaId")),
     keyword: p.get("keyword") || "",
   };
 }
@@ -164,9 +165,9 @@ export default function Properties() {
   const initial = parseParams(typeof window !== "undefined" ? window.location.search : "");
 
   const [status, setStatus] = useState(initial.status);
-  const [type, setType] = useState(initial.type);
+  const [types, setTypes] = useState<string[]>(initial.types);
   const [govId, setGovId] = useState(initial.governorateId);
-  const [areaId, setAreaId] = useState(initial.areaId);
+  const [areaIds, setAreaIds] = useState<string[]>(initial.areaIds);
   const [keyword] = useState(initial.keyword);
   const [furnished] = useState("");
   const [sort, setSort] = useState("newest");
@@ -202,9 +203,9 @@ export default function Properties() {
     sort: sort === "newest" ? undefined : sort,
   };
   if (status) params.status = status;
-  if (type) params.type = type;
+  if (types.length) params.type = types.join(",");
   if (govId) params.governorateId = parseInt(govId);
-  if (areaId) params.areaId = parseInt(areaId);
+  if (areaIds.length) params.areaId = areaIds.join(",");
   if (keyword) params.keyword = keyword;
   if (furnished) params.furnished = furnished;
   if (minPrice) params.minPrice = parseInt(minPrice);
@@ -238,10 +239,10 @@ export default function Properties() {
   const filteredSheetItems = sheetQuery.trim()
     ? sheetItems.filter(i => i.label.includes(sheetQuery.trim()))
     : sheetItems;
-  const currentSheetValue =
-    sheetOpen === "type" ? type :
-    sheetOpen === "gov"  ? govId :
-    sheetOpen === "area" ? areaId : "";
+  const sheetSelectedValues =
+    sheetOpen === "type" ? types :
+    sheetOpen === "gov"  ? (govId ? [govId] : []) :
+    sheetOpen === "area" ? areaIds : [];
 
   function openSheet(which: "type" | "gov" | "area") {
     setSheetQuery("");
@@ -276,20 +277,21 @@ export default function Properties() {
 
   function handleSheetSelect(value: string) {
     if (sheetOpen === "type") {
-      setType(value);
+      if (!value) { setTypes([]); setPage(1); return; }
+      setTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
       setPage(1);
-      closeSheet();
-      if (value) setTimeout(() => openSheet("gov"), 220);
+      // multi-select: keep the sheet open so the user can pick several
     } else if (sheetOpen === "gov") {
       setGovId(value);
-      setAreaId("");
+      setAreaIds([]);
       setPage(1);
       closeSheet();
       if (value) setTimeout(() => openSheet("area"), 220);
     } else if (sheetOpen === "area") {
-      setAreaId(value);
+      if (!value) { setAreaIds([]); setPage(1); return; }
+      setAreaIds((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
       setPage(1);
-      closeSheet();
+      // multi-select: keep the sheet open
     }
   }
 
@@ -362,7 +364,7 @@ export default function Properties() {
     govId ? (govorates ?? []).find((g) => String(g.id) === id)?.nameAr.replace("محافظة ", "") : null;
 
   const areaLabel = (areasData: typeof areas, id: string) =>
-    areaId ? (areasData ?? []).find((a) => String(a.id) === id)?.nameAr : null;
+    (areasData ?? []).find((a) => String(a.id) === id)?.nameAr ?? null;
 
   const priceChipLabel = () => {
     if (minPrice && maxPrice) return `${parseInt(minPrice).toLocaleString("en-US")} - ${parseInt(maxPrice).toLocaleString("en-US")} د.ك`;
@@ -380,9 +382,9 @@ export default function Properties() {
 
   const activeChips = [
     status ? { key: "status", label: status, clear: () => { setStatus(""); applyFilters(); } } : null,
-    type ? { key: "type", label: type, clear: () => { setType(""); applyFilters(); } } : null,
-    govId ? { key: "gov", label: govLabel(governorates, govId), clear: () => { setGovId(""); setAreaId(""); applyFilters(); } } : null,
-    areaId ? { key: "area", label: areaLabel(areas, areaId), clear: () => { setAreaId(""); applyFilters(); } } : null,
+    ...types.map((t) => ({ key: `type-${t}`, label: t, clear: () => { setTypes((p) => p.filter((v) => v !== t)); applyFilters(); } })),
+    govId ? { key: "gov", label: govLabel(governorates, govId), clear: () => { setGovId(""); setAreaIds([]); applyFilters(); } } : null,
+    ...areaIds.map((aid) => ({ key: `area-${aid}`, label: areaLabel(areas, aid), clear: () => { setAreaIds((p) => p.filter((v) => v !== aid)); applyFilters(); } })),
     (minPrice || maxPrice) ? { key: "price", label: priceChipLabel(), clear: () => { setMinPrice(""); setMaxPrice(""); applyFilters(); } } : null,
     (minArea || maxArea) ? { key: "areaSize", label: areaChipLabel(), clear: () => { setMinArea(""); setMaxArea(""); applyFilters(); } } : null,
     bedrooms ? { key: "bedrooms", label: `${bedrooms === "5" ? "5+" : bedrooms} غرف`, clear: () => { setBedrooms(""); applyFilters(); } } : null,
@@ -417,7 +419,7 @@ export default function Properties() {
               setTempStatus(v);
             }} />
           : <StatusChips value={status} onChange={(v) => {
-              if (v === "للبدل" && type && !BDAL_TYPES.includes(type)) setType("");
+              if (v === "للبدل") setTypes((p) => p.filter((t) => BDAL_TYPES.includes(t)));
               setStatus(v); applyFilters();
             }} />}
       </div>
@@ -427,7 +429,7 @@ export default function Properties() {
         <span style={LABEL_STYLE}>نوع العقار</span>
         {isMobile
           ? <LocationCombobox items={tempTypeItems} value={tempType} onChange={setTempType} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
-          : <LocationCombobox items={typeItems} value={type} onChange={(v) => { setType(v); applyFilters(); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="400px" emptyText="لا يوجد نوع" />}
+          : <LocationCombobox items={typeItems} value={types} onChange={(v) => { setTypes(v); applyFilters(); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="400px" emptyText="لا يوجد نوع" multiple />}
       </div>
 
       {/* المحافظة */}
@@ -435,7 +437,7 @@ export default function Properties() {
         <span style={LABEL_STYLE}>المحافظة</span>
         {isMobile
           ? <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaId(""); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
-          : <LocationCombobox items={govItems} value={govId} onChange={(v) => { setGovId(v); setAreaId(""); applyFilters(); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />}
+          : <LocationCombobox items={govItems} value={govId} onChange={(v) => { setGovId(v); setAreaIds([]); applyFilters(); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />}
       </div>
 
       {/* المنطقة */}
@@ -443,7 +445,7 @@ export default function Properties() {
         <span style={LABEL_STYLE}>المنطقة</span>
         {isMobile
           ? <LocationCombobox items={(mobileAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaId} onChange={setTempAreaId} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" />
-          : <LocationCombobox items={(areas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={areaId} onChange={(v) => { setAreaId(v); applyFilters(); }} placeholder={govId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!govId} showSearch listMaxHeight="280px" />}
+          : <LocationCombobox items={(areas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={areaIds} onChange={(v) => { setAreaIds(v); applyFilters(); }} placeholder={govId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!govId} showSearch listMaxHeight="280px" multiple />}
       </div>
 
       {/* عدد الغرف */}
@@ -660,7 +662,7 @@ export default function Properties() {
                   key={s}
                   className="prop-status-tab"
                   onClick={() => {
-                    if (s === "للبدل" && type && !BDAL_TYPES.includes(type)) setType("");
+                    if (s === "للبدل") setTypes((p) => p.filter((t) => BDAL_TYPES.includes(t)));
                     setStatus(s); applyFilters();
                   }}
                   style={{
@@ -678,13 +680,13 @@ export default function Properties() {
             <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "14px 14px 10px" }}>
               {/* Type */}
               <button
-                className={`prop-field-btn${type ? " has-value" : ""}`}
+                className={`prop-field-btn${types.length ? " has-value" : ""}`}
                 onClick={() => openSheet("type")}
               >
-                <span style={{ color: type ? "#1e293b" : "#94a3b8", fontWeight: type ? 600 : 400 }}>
-                  {type || "نوع العقار"}
+                <span style={{ color: types.length ? "#1e293b" : "#94a3b8", fontWeight: types.length ? 600 : 400 }}>
+                  {types.length === 0 ? "نوع العقار" : types.length === 1 ? types[0] : `${types.length} أنواع مختارة`}
                 </span>
-                <ChevronDown size={18} color={type ? "#667EEA" : "#94a3b8"} />
+                <ChevronDown size={18} color={types.length ? "#667EEA" : "#94a3b8"} />
               </button>
 
               {/* Governorate */}
@@ -702,16 +704,18 @@ export default function Properties() {
 
               {/* Area */}
               <button
-                className={`prop-field-btn${areaId ? " has-value" : ""}`}
+                className={`prop-field-btn${areaIds.length ? " has-value" : ""}`}
                 onClick={() => { if (govId) openSheet("area"); }}
                 disabled={!govId}
               >
-                <span style={{ color: areaId ? "#1e293b" : "#94a3b8", fontWeight: areaId ? 600 : 400 }}>
-                  {areaId
-                    ? (areas ?? []).find(a => String(a.id) === areaId)?.nameAr
-                    : govId ? "المنطقة" : "اختر المحافظة أولاً"}
+                <span style={{ color: areaIds.length ? "#1e293b" : "#94a3b8", fontWeight: areaIds.length ? 600 : 400 }}>
+                  {areaIds.length === 0
+                    ? (govId ? "المنطقة" : "اختر المحافظة أولاً")
+                    : areaIds.length === 1
+                    ? (areas ?? []).find(a => String(a.id) === areaIds[0])?.nameAr
+                    : `${areaIds.length} مناطق مختارة`}
                 </span>
-                <ChevronDown size={18} color={areaId ? "#667EEA" : "#94a3b8"} />
+                <ChevronDown size={18} color={areaIds.length ? "#667EEA" : "#94a3b8"} />
               </button>
 
               {/* Advanced filters row */}
@@ -778,7 +782,7 @@ export default function Properties() {
             {activeChips.length > 1 && (
               <button
                 onClick={() => {
-                  setStatus(""); setType(""); setGovId(""); setAreaId("");
+                  setStatus(""); setTypes([]); setGovId(""); setAreaIds([]);
                   setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms("");
                   applyFilters();
                 }}
@@ -1002,7 +1006,7 @@ export default function Properties() {
                 </div>
               ) : (
                 filteredSheetItems.map(item => {
-                  const isSel = currentSheetValue === item.value;
+                  const isSel = item.value === "" ? sheetSelectedValues.length === 0 : sheetSelectedValues.includes(item.value);
                   return (
                     <button
                       key={item.value}
@@ -1016,6 +1020,18 @@ export default function Properties() {
                 })
               )}
             </div>
+
+            {/* Multi-select sheets (type / area) get a done button since they don't auto-close */}
+            {(sheetOpen === "type" || sheetOpen === "area") && (
+              <div style={{ padding: "12px 16px", borderTop: "1px solid #f1f5f9", flexShrink: 0 }}>
+                <button
+                  onClick={closeSheet}
+                  style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "#667EEA", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", outline: "none" }}
+                >
+                  عرض النتائج
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

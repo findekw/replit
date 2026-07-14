@@ -121,7 +121,7 @@ router.get("/properties", async (req, res): Promise<void> => {
   }
 
   const {
-    status, type, governorateId, areaId,
+    status, governorateId,
     minPrice, maxPrice, bedrooms, bathrooms,
     furnished, featured, officeId, keyword,
     sort, page: rawPage, limit: rawLimit,
@@ -130,6 +130,11 @@ router.get("/properties", async (req, res): Promise<void> => {
   // minArea / maxArea are not yet in the generated OpenAPI schema — read directly
   const minArea = req.query["minArea"] != null ? Number(req.query["minArea"]) : null;
   const maxArea = req.query["maxArea"] != null ? Number(req.query["maxArea"]) : null;
+
+  // type / areaId accept multiple comma-separated values (multi-select filter);
+  // read raw from the query to bypass the single-value generated schema.
+  const types = String(req.query["type"] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+  const areaIds = String(req.query["areaId"] ?? "").split(",").map((a) => Number(a.trim())).filter((n) => Number.isFinite(n) && n > 0);
 
   const page = Number(rawPage ?? 1);
   const limit = Number(rawLimit ?? 12);
@@ -141,9 +146,11 @@ router.get("/properties", async (req, res): Promise<void> => {
   conditions.push(officeInGoodStanding()!);
 
   if (status != null) conditions.push(eq(propertiesTable.status, status));
-  if (type != null) conditions.push(eq(propertiesTable.type, type));
+  if (types.length === 1) conditions.push(eq(propertiesTable.type, types[0]));
+  else if (types.length > 1) conditions.push(inArray(propertiesTable.type, types));
   if (governorateId != null) conditions.push(eq(propertiesTable.governorateId, Number(governorateId)));
-  if (areaId != null) conditions.push(eq(propertiesTable.areaId, Number(areaId)));
+  if (areaIds.length === 1) conditions.push(eq(propertiesTable.areaId, areaIds[0]));
+  else if (areaIds.length > 1) conditions.push(inArray(propertiesTable.areaId, areaIds));
   if (minPrice != null) conditions.push(gte(propertiesTable.price, Number(minPrice)));
   if (maxPrice != null) conditions.push(lte(propertiesTable.price, Number(maxPrice)));
   if (minArea != null) conditions.push(gte(propertiesTable.areaSize, Number(minArea)));

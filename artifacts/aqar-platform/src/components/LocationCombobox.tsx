@@ -9,8 +9,8 @@ interface Item {
 
 interface LocationComboboxProps {
   items: Item[];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | string[];
+  onChange: (value: any) => void;
   placeholder: string;
   searchPlaceholder?: string;
   emptyText?: string;
@@ -19,6 +19,8 @@ interface LocationComboboxProps {
   listMaxHeight?: string;
   className?: string;
   triggerClassName?: string;
+  /** When true, value is a string[] and selecting toggles items (panel stays open). */
+  multiple?: boolean;
 }
 
 export function LocationCombobox({
@@ -33,12 +35,17 @@ export function LocationCombobox({
   listMaxHeight = "280px",
   className,
   triggerClassName,
+  multiple = false,
 }: LocationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedLabel = items.find((item) => item.value === value)?.label;
+  const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
+  const selectedLabels = items.filter((i) => selectedValues.includes(i.value)).map((i) => i.label);
+  const selectedLabel = multiple
+    ? (selectedLabels.length === 0 ? undefined : selectedLabels.length === 1 ? selectedLabels[0] : `${selectedLabels.length} مختارة`)
+    : selectedLabels[0];
   const filtered =
     showSearch && query.trim()
       ? items.filter((item) => item.label.includes(query.trim()))
@@ -67,9 +74,17 @@ export function LocationCombobox({
   }
 
   function select(item: Item) {
-    onChange(item.value === value ? "" : item.value);
-    setOpen(false);
-    setQuery("");
+    if (multiple) {
+      const next = selectedValues.includes(item.value)
+        ? selectedValues.filter((v) => v !== item.value)
+        : [...selectedValues, item.value];
+      onChange(next);
+      // keep the panel open so the user can pick several
+    } else {
+      onChange(item.value === value ? "" : item.value);
+      setOpen(false);
+      setQuery("");
+    }
   }
 
   const displayText = selectedLabel || placeholder;
@@ -204,7 +219,7 @@ export function LocationCombobox({
               </div>
             ) : (
               filtered.map((item) => {
-                const isSelected = value === item.value;
+                const isSelected = selectedValues.includes(item.value);
                 return (
                   <button
                     key={item.value}
