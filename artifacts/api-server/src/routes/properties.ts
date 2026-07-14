@@ -17,6 +17,22 @@ import {
 
 const router: IRouter = Router();
 
+// Freeze rule for public discovery: an office's listings are visible only while
+// the office is active AND its trial/subscription hasn't lapsed. Trial offices
+// freeze after trialEndsAt; subscribed offices freeze after subscriptionEndsAt.
+// NULL end dates mean "no expiry" (e.g. grandfathered/active offices). This is a
+// no-op for offices in good standing and hides ads (without deleting) once they
+// lapse — they return on renewal.
+function officeInGoodStanding() {
+  return and(
+    eq(officesTable.active, true),
+    sql`(
+      (${officesTable.subscriptionStatus} = 'trial' AND (${officesTable.trialEndsAt} IS NULL OR ${officesTable.trialEndsAt} > now()))
+      OR (${officesTable.subscriptionStatus} <> 'trial' AND (${officesTable.subscriptionEndsAt} IS NULL OR ${officesTable.subscriptionEndsAt} > now()))
+    )`,
+  );
+}
+
 // Returns an Arabic error string if the area does not belong to the governorate,
 // or null if the pair is valid. Both ids are expected to be non-null here.
 async function validateAreaInGovernorate(governorateId: number, areaId: number): Promise<string | null> {
@@ -120,10 +136,9 @@ router.get("/properties", async (req, res): Promise<void> => {
   const offset = (page - 1) * limit;
 
   const conditions = [eq(propertiesTable.active, true)];
-  // Freeze rule: only surface listings from offices in good standing (active).
-  // Deactivating an office (e.g. when a subscription lapses) hides its ads from
-  // public discovery without deleting them — they return when it's reactivated.
-  conditions.push(eq(officesTable.active, true));
+  // Freeze rule (see officeInGoodStanding): hide listings from offices that are
+  // inactive or whose trial/subscription has lapsed, from public discovery.
+  conditions.push(officeInGoodStanding()!);
 
   if (status != null) conditions.push(eq(propertiesTable.status, status));
   if (type != null) conditions.push(eq(propertiesTable.type, type));
@@ -202,7 +217,7 @@ router.get("/properties/featured", async (_req, res): Promise<void> => {
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
     .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
     .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
-    .where(and(eq(propertiesTable.active, true), eq(propertiesTable.featured, true), eq(officesTable.active, true)))
+    .where(and(eq(propertiesTable.active, true), eq(propertiesTable.featured, true), officeInGoodStanding()))
     .orderBy(desc(propertiesTable.createdAt))
     .limit(8);
 
@@ -242,7 +257,7 @@ router.get("/properties/latest", async (req, res): Promise<void> => {
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
     .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
     .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
-    .where(and(eq(propertiesTable.active, true), eq(officesTable.active, true)))
+    .where(and(eq(propertiesTable.active, true), officeInGoodStanding()))
     .orderBy(desc(propertiesTable.createdAt))
     .limit(limit);
 
