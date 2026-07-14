@@ -120,6 +120,10 @@ router.get("/properties", async (req, res): Promise<void> => {
   const offset = (page - 1) * limit;
 
   const conditions = [eq(propertiesTable.active, true)];
+  // Freeze rule: only surface listings from offices in good standing (active).
+  // Deactivating an office (e.g. when a subscription lapses) hides its ads from
+  // public discovery without deleting them — they return when it's reactivated.
+  conditions.push(eq(officesTable.active, true));
 
   if (status != null) conditions.push(eq(propertiesTable.status, status));
   if (type != null) conditions.push(eq(propertiesTable.type, type));
@@ -162,7 +166,7 @@ router.get("/properties", async (req, res): Promise<void> => {
       .orderBy(desc(propertiesTable.featured), orderBy)
       .limit(limit)
       .offset(offset),
-    db.select({ count: count() }).from(propertiesTable).where(whereClause),
+    db.select({ count: count() }).from(propertiesTable).leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id)).where(whereClause),
   ]);
 
   const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
@@ -198,7 +202,7 @@ router.get("/properties/featured", async (_req, res): Promise<void> => {
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
     .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
     .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
-    .where(and(eq(propertiesTable.active, true), eq(propertiesTable.featured, true)))
+    .where(and(eq(propertiesTable.active, true), eq(propertiesTable.featured, true), eq(officesTable.active, true)))
     .orderBy(desc(propertiesTable.createdAt))
     .limit(8);
 
@@ -238,7 +242,7 @@ router.get("/properties/latest", async (req, res): Promise<void> => {
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
     .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
     .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
-    .where(eq(propertiesTable.active, true))
+    .where(and(eq(propertiesTable.active, true), eq(officesTable.active, true)))
     .orderBy(desc(propertiesTable.createdAt))
     .limit(limit);
 
