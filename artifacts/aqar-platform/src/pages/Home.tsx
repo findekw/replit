@@ -47,9 +47,9 @@ const _AREA_ID: { name: string; id: number; govId: number }[] = [
 const FEAT_COLOR = "#667EEA";
 const FEAT_BG = "#EEF2FF";
 const FEATURES = [
-  { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية مباشرة", desc: "كل الإعلانات من مكاتب عقارية في الكويت بدون وسطاء", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية مرخّصة", desc: "كل الإعلانات من مكاتب عقارية مرخّصة في دولة الكويت", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: FEAT_COLOR, bg: FEAT_BG },
-  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "تواصل مع المكتب مباشرة عبر واتساب أو اتصال بدون وسيط", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "تواصل مع المكتب مباشرة عبر واتساب أو اتصال", color: FEAT_COLOR, bg: FEAT_BG },
   { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: FEAT_COLOR, bg: FEAT_BG },
 ];
 
@@ -407,7 +407,7 @@ export default function Home() {
               <i className="dot" />
               <span><TrendingUp size={15} /> عقارات محدّثة يوميًا</span>
               <i className="dot" />
-              <span><MessageCircle size={15} /> تواصل مباشر بدون وسيط</span>
+              <span><MessageCircle size={15} /> تواصل مباشر مع المكاتب</span>
             </div>
 
           </div>

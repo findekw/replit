@@ -54,7 +54,7 @@ const KuwaitFlag = () => (
     <rect width="900" height="200" fill="#007a3d" />
     <rect y="200" width="900" height="200" fill="#ffffff" />
     <rect y="400" width="900" height="200" fill="#ce1126" />
-    <polygon points="0,0 300,300 0,600" fill="#000000" />
+    <polygon points="0,0 225,200 225,400 0,600" fill="#000000" />
   </svg>
 );
 

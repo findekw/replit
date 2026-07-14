@@ -51,7 +51,7 @@ function KuwaitFlag() {
       <rect width="900" height="200" fill="#007a3d" />
       <rect y="200" width="900" height="200" fill="#ffffff" />
       <rect y="400" width="900" height="200" fill="#ce1126" />
-      <polygon points="0,0 300,300 0,600" fill="#000000" />
+      <polygon points="0,0 225,200 225,400 0,600" fill="#000000" />
     </svg>
   );
 }
@@ -367,7 +367,6 @@ export default function Dashboard() {
   const statCards = stats ? [
     { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
-    { label: "الإعلانات المميزة", value: stats.featuredListings, icon: Star, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
