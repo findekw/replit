@@ -295,9 +295,11 @@ router.get("/offices/:id", async (req, res): Promise<void> => {
       totalViews: row.office.totalViews,
       totalLeads: Number(leadCount?.total ?? 0),
     }),
-    // landingTemplate isn't part of the generated zod response schema yet, so
-    // re-attach it after parse (the parse strips unknown keys).
+    // These aren't part of the generated zod response schema yet, so re-attach
+    // after parse (the parse strips unknown keys).
     landingTemplate: officeBase.landingTemplate,
+    licenseNumber: officeBase.licenseNumber,
+    commercialReg: officeBase.commercialReg,
   });
 });
 
@@ -524,8 +526,8 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
   if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
-  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate } = req.body as {
-    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string;
+  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate, licenseNumber, commercialReg } = req.body as {
+    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string; licenseNumber?: string; commercialReg?: string;
   };
 
   // Fetch current office to check slugEdits
@@ -562,6 +564,8 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   if (landingTemplate !== undefined && LANDING_TEMPLATES.includes(landingTemplate)) {
     updates.landingTemplate = landingTemplate;
   }
+  if (licenseNumber !== undefined) updates.licenseNumber = licenseNumber.trim().slice(0, 60) || null;
+  if (commercialReg !== undefined) updates.commercialReg = commercialReg.trim().slice(0, 60) || null;
 
   // Slug (username) is chosen once — at registration or the first time it's set —
   // then it is fixed and can no longer be changed by the office.

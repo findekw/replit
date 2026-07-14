@@ -74,6 +74,17 @@ export default function ClassicTemplate(p: TemplateProps) {
               </>
             )}
 
+            {(office.licenseNumber || office.commercialReg) && (
+              <>
+                <div className="cl-divider" />
+                <h3 className="cl-sub">التوثيق</h3>
+                <div style={{ fontSize: 14, color: "#475569", lineHeight: 2 }}>
+                  {office.licenseNumber && <div>رقم الترخيص: <b dir="ltr" style={{ color: "#0f172a" }}>{office.licenseNumber}</b></div>}
+                  {office.commercialReg && <div>السجل التجاري: <b dir="ltr" style={{ color: "#0f172a" }}>{office.commercialReg}</b></div>}
+                </div>
+              </>
+            )}
+
             {(hasPhone || hasWA) && (
               <>
                 <div className="cl-divider" />

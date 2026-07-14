@@ -56,6 +56,17 @@ export default function MinimalTemplate(p: TemplateProps) {
           </section>
         )}
 
+        {/* Legal identifiers */}
+        {(office.licenseNumber || office.commercialReg) && (
+          <section className="mn-section">
+            <div className="mn-eyebrow">التوثيق</div>
+            <div style={{ color: "#475569", fontSize: 15, lineHeight: 2, fontWeight: 500 }}>
+              {office.licenseNumber && <div>رقم الترخيص: <b dir="ltr" style={{ color: "#0f172a" }}>{office.licenseNumber}</b></div>}
+              {office.commercialReg && <div>السجل التجاري: <b dir="ltr" style={{ color: "#0f172a" }}>{office.commercialReg}</b></div>}
+            </div>
+          </section>
+        )}
+
         {/* Stats — plain numerals, no boxes */}
         <section className="mn-stats">
           <div className="mn-stat">

@@ -71,6 +71,17 @@ export default function LuxuryTemplate(p: TemplateProps) {
           </section>
         )}
 
+        {/* Legal identifiers */}
+        {(office.licenseNumber || office.commercialReg) && (
+          <section className="lx-about">
+            <div className="lx-label"><span className="lx-label-line" /> التوثيق</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 28px", fontSize: 14 }}>
+              {office.licenseNumber && <span style={{ opacity: 0.85 }}>رقم الترخيص: <b dir="ltr">{office.licenseNumber}</b></span>}
+              {office.commercialReg && <span style={{ opacity: 0.85 }}>السجل التجاري: <b dir="ltr">{office.commercialReg}</b></span>}
+            </div>
+          </section>
+        )}
+
         {/* Listings */}
         <div className="lx-listhead">
           <div className="lx-label"><span className="lx-label-line" /> المعروضات</div>
