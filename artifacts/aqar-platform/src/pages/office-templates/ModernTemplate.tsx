@@ -49,14 +49,7 @@ export default function ModernTemplate(p: TemplateProps) {
       )}
 
       <main className="tm-main">
-        {/* Stats */}
-        <div className="tm-stats">
-          <div className="tm-stat"><div className="tm-stat-n">{office.activeListings}</div><div className="tm-stat-l">عقار متاح</div></div>
-          <div className="tm-stat"><div className="tm-stat-n">{office.totalListings}</div><div className="tm-stat-l">إجمالي العقارات</div></div>
-          {office.governorateName && <div className="tm-stat"><div className="tm-stat-n" style={{ fontSize: 20 }}>{office.governorateName}</div><div className="tm-stat-l">الموقع</div></div>}
-        </div>
-
-        {/* About + legal identifiers */}
+        {/* About + legal identifiers — kept at the top (client preference) */}
         {(office.descriptionAr || office.licenseNumber || office.commercialReg) && (
           <section className="tm-card tm-about">
             {office.descriptionAr && (
@@ -73,6 +66,13 @@ export default function ModernTemplate(p: TemplateProps) {
             )}
           </section>
         )}
+
+        {/* Stats */}
+        <div className="tm-stats">
+          <div className="tm-stat"><div className="tm-stat-n">{office.activeListings}</div><div className="tm-stat-l">عقار متاح</div></div>
+          <div className="tm-stat"><div className="tm-stat-n">{office.totalListings}</div><div className="tm-stat-l">إجمالي العقارات</div></div>
+          {office.governorateName && <div className="tm-stat"><div className="tm-stat-n" style={{ fontSize: 20 }}>{office.governorateName}</div><div className="tm-stat-l">الموقع</div></div>}
+        </div>
 
         {/* Listings */}
         <div className="tm-listhead">
@@ -111,8 +111,7 @@ export default function ModernTemplate(p: TemplateProps) {
       </main>
 
       <footer className="tm-footer">
-        <HomeIcon size={14} style={{ verticalAlign: "middle", marginLeft: 4 }} />
-        مدعوم من <Link href="/">فايند</Link>
+        <Link href="/" className="tm-footer-badge">مدعوم من <b>فايند</b></Link>
       </footer>
 
       {/* Mobile sticky */}
@@ -182,8 +181,10 @@ const CSS = `
 .tm-pgbtn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 12px; border: 1px solid #E2E8F0; background: #fff; color: #111827; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Cairo', sans-serif; }
 .tm-pgbtn:disabled { opacity: .45; cursor: not-allowed; }
 .tm-pginfo { font-size: 14px; color: #64748B; font-weight: 600; }
-.tm-footer { text-align: center; padding: 40px 20px 48px; color: #94a3b8; font-size: 14px; }
-.tm-footer a { color: #667EEA; font-weight: 800; text-decoration: none; }
+.tm-footer { text-align: center; padding: 40px 20px 48px; }
+.tm-footer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 999px; background: #EEF2FF; border: 1px solid #DBE4FF; color: #475569; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: background .18s; box-shadow: 0 2px 10px rgba(63,91,216,0.08); }
+.tm-footer-badge:hover { background: #E0E7FF; }
+.tm-footer-badge b { color: #667EEA; font-weight: 800; }
 .tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
 .tm-sticky-spacer { height: 80px; }
 @media (min-width: 1024px){ .tm-sticky, .tm-sticky-spacer { display: none; } }

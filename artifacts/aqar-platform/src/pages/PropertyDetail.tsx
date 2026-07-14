@@ -121,6 +121,9 @@ const styles = `
 .pd-mobilebar { display: none; }
 @media (max-width: 1023px) {
   .pd-mobilebar { display: flex; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: #fff; border-top: 1px solid #EEF1F5; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 20px rgba(15,23,42,0.08); }
+  /* On mobile the sticky bar is the single contact CTA — hide the sidebar's
+     call/whatsapp buttons so contact isn't shown twice (top + bottom). */
+  .pd-cta-stack .pd-cta { display: none; }
 }
 .pd-mobilebar .pd-cta { height: 48px; }
 `;
