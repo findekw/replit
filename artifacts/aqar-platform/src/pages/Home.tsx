@@ -107,7 +107,6 @@ export default function Home() {
     const order = ["للإيجار", "للبيع", "للبدل"];
     const t = setInterval(() => {
       setStatus((prev) => order[(order.indexOf(prev) + 1) % order.length]);
-      setTypes([]);
     }, 2000);
     return () => clearInterval(t);
   }, [userPickedStatus]);
@@ -134,6 +133,7 @@ export default function Home() {
     sheetOpen === "area" ? areas : [];
 
   function openSheet(which: "type" | "gov" | "area") {
+    setUserPickedStatus(true); // stop the status auto-carousel once the user starts choosing
     setSheetQuery(""); setSheetSearchVisible(false); setSheetOpen(which);
     const y = window.scrollY;
     document.body.dataset.sheetScrollY = String(y);
