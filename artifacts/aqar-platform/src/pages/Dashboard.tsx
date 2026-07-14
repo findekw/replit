@@ -716,7 +716,7 @@ export default function Dashboard() {
                             fontSize: 14, fontFamily: "monospace", fontWeight: 700,
                             color: NAVY, textDecoration: "none",
                             letterSpacing: "0.01em",
-                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-word",
                           }}
                         >
                           {BRAND_DOMAIN}/{snapshot.slug}
