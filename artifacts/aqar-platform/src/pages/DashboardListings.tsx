@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle } from "lucide-react";
+import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle, MessageCircle, Phone } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -122,7 +122,7 @@ export default function DashboardListings() {
                     <th className="text-right p-4" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>العقار</th>
                     <th className="text-right p-4 hidden md:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>الحالة</th>
                     <th className="text-right p-4 hidden md:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>السعر</th>
-                    <th className="text-right p-4 hidden lg:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>المشاهدات</th>
+                    <th className="text-right p-4 hidden lg:table-cell" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>التفاعل</th>
                     <th className="text-right p-4" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>إجراءات</th>
                   </tr>
                 </thead>
@@ -156,6 +156,12 @@ export default function DashboardListings() {
                                 <Badge className="text-xs bg-amber-50 text-amber-700">معلّق</Badge>
                               )}
                             </div>
+                            {/* Per-ad engagement — visible on small screens where the dedicated column is hidden */}
+                            <div className="flex items-center gap-3 mt-1 text-xs lg:hidden" style={{ color: "#94A3B8", fontWeight: 600 }}>
+                              <span className="flex items-center gap-0.5" title="مشاهدات"><Eye className="h-3 w-3" />{p.views}</span>
+                              <span className="flex items-center gap-0.5" title="واتساب"><MessageCircle className="h-3 w-3" />{(p as any).whatsappClicks ?? 0}</span>
+                              <span className="flex items-center gap-0.5" title="اتصال"><Phone className="h-3 w-3" />{(p as any).callClicks ?? 0}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -168,9 +174,10 @@ export default function DashboardListings() {
                         {p.price.toLocaleString("en-US")} KWD
                       </td>
                       <td className="p-4 hidden lg:table-cell">
-                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "#64748B", fontWeight: 600 }}>
-                          <Eye className="h-3.5 w-3.5" />
-                          {p.views}
+                        <div className="flex items-center gap-3 text-sm" style={{ color: "#64748B", fontWeight: 600 }}>
+                          <span className="flex items-center gap-1" title="مشاهدات"><Eye className="h-3.5 w-3.5" />{p.views}</span>
+                          <span className="flex items-center gap-1" title="نقرات واتساب" style={{ color: "#16a34a" }}><MessageCircle className="h-3.5 w-3.5" />{(p as any).whatsappClicks ?? 0}</span>
+                          <span className="flex items-center gap-1" title="نقرات اتصال" style={{ color: "#667EEA" }}><Phone className="h-3.5 w-3.5" />{(p as any).callClicks ?? 0}</span>
                         </div>
                       </td>
                       <td className="p-4">
