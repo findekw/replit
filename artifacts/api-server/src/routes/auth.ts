@@ -271,10 +271,14 @@ router.post("/auth/office/verify-email", async (req: Request, res: Response): Pr
       return;
     }
 
+    const now = new Date();
+    const trialEnds = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
     const [verified] = await db
       .update(officeUsersTable)
       .set({
-        emailVerifiedAt: new Date(),
+        emailVerifiedAt: now,
+        status: "active",
         emailOtpHash: null,
         emailOtpExpiresAt: null,
         emailOtpSentAt: null,
@@ -283,11 +287,25 @@ router.post("/auth/office/verify-email", async (req: Request, res: Response): Pr
       .where(eq(officeUsersTable.id, ou.id))
       .returning();
 
+    // Activate the office and start its 14-day free trial so its auto-approved
+    // listings go live immediately — no manual admin approval step (client decision).
+    if (ou.officeId) {
+      await db
+        .update(officesTable)
+        .set({
+          active: true,
+          subscriptionStatus: "trial",
+          trialStartedAt: now,
+          trialEndsAt: trialEnds,
+        })
+        .where(eq(officesTable.id, ou.officeId));
+    }
+
     setSession(res, "office", ou.id);
     res.json({
       officeUser: safe(verified ?? ou),
       officeId: (verified ?? ou).officeId,
-      message: "تم تفعيل البريد الإلكتروني بنجاح. حسابك الآن قيد مراجعة الإدارة.",
+      message: "تم تفعيل حسابك بنجاح! بدأت تجربتك المجانية — أضف إعلاناتك وستظهر مباشرة.",
     });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم، حاول مرة أخرى" });
