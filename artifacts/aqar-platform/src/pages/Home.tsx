@@ -1,7 +1,7 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star, Download, Smartphone, Share2 } from "lucide-react";
+import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getApiBase } from "@/lib/apiBase";
 import {
@@ -13,10 +13,6 @@ const HOME_BASE = getApiBase();
 const DEFAULT_HERO_IMG = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=70";
 
 interface HeroSlide { id: number; imageUrl: string; title: string | null; subtitle: string | null; ctaText: string | null; ctaUrl: string | null; }
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-};
 
 const TYPES_BY_STATUS: Record<string, string[]> = {
   "للإيجار": ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
@@ -72,9 +68,6 @@ export default function Home() {
   const { data: stats } = useGetPlatformStats();
 
   const latestList = (latest as any[]) ?? [];
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallHint, setShowInstallHint] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   // Store the visible listing IDs so the property page can offer السابق/التالي navigation.
   useEffect(() => {
@@ -82,31 +75,6 @@ export default function Home() {
       try { localStorage.setItem("aqar_search_ids", JSON.stringify(latestList.slice(0, 8).map((p: any) => p.id))); } catch {}
     }
   }, [latestList]);
-
-  useEffect(() => {
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    setIsStandalone(standalone);
-
-    const onBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-      setShowInstallHint(false);
-    };
-    const onAppInstalled = () => {
-      setIsStandalone(true);
-      setInstallPrompt(null);
-      setShowInstallHint(false);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    window.addEventListener("appinstalled", onAppInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", onAppInstalled);
-    };
-  }, []);
 
   // ── Admin-managed hero banners ──
   const [slides, setSlides] = useState<HeroSlide[]>([]);
@@ -216,24 +184,6 @@ export default function Home() {
     setLocation(`/properties?${params.toString()}`);
   };
 
-  const handleInstallApp = async () => {
-    if (isStandalone) return;
-    if (!installPrompt) {
-      setShowInstallHint((v) => !v);
-      return;
-    }
-
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === "accepted") {
-      setIsStandalone(true);
-      setShowInstallHint(false);
-    } else {
-      setShowInstallHint(true);
-    }
-    setInstallPrompt(null);
-  };
-
   return (
     <MainLayout>
       <style>{`
@@ -339,25 +289,6 @@ export default function Home() {
         .fh-stat-ic { width:38px; height:38px; border-radius:11px; background:#EEF2FF; color:#667EEA; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
         .fh-stat-num { font-size:25px; font-weight:800; color:#111827; line-height:1; letter-spacing:-0.5px; }
         .fh-stat-lbl { font-size:13px; color:#64748B; margin-top:4px; font-weight:600; }
-
-        /* PWA install CTA */
-        .fh-pwa { position:relative; z-index:2; max-width:780px; margin:22px auto 0; padding:0 16px; }
-        .fh-pwa-box { display:flex; align-items:center; justify-content:space-between; gap:16px; background:#fff; border:1px solid #E6EAF1; border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(15,23,42,0.07); }
-        .fh-pwa-copy { display:flex; align-items:center; gap:12px; min-width:0; text-align:right; }
-        .fh-pwa-ic { width:44px; height:44px; border-radius:13px; background:#F0FDF4; color:#16A34A; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .fh-pwa-title { font-size:15.5px; font-weight:800; color:#111827; margin:0 0 3px; line-height:1.35; }
-        .fh-pwa-text { font-size:12.5px; color:#64748B; margin:0; line-height:1.55; }
-        .fh-pwa-btn, .fh-pwa-ready { height:42px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:0 16px; font-size:13.5px; font-weight:800; white-space:nowrap; flex-shrink:0; }
-        .fh-pwa-btn { border:none; cursor:pointer; background:#111827; color:#fff; box-shadow:0 8px 18px rgba(17,24,39,0.18); }
-        .fh-pwa-ready { background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; }
-        .fh-pwa-hint { margin-top:10px; background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:11px 13px; color:#475569; font-size:12.5px; line-height:1.65; display:flex; align-items:flex-start; gap:8px; box-shadow:0 8px 22px rgba(15,23,42,0.05); }
-        .fh-pwa-hint svg { color:#667EEA; flex-shrink:0; margin-top:2px; }
-        @media (max-width:640px){
-          .fh-pwa { margin-top:18px; }
-          .fh-pwa-box { align-items:stretch; flex-direction:column; padding:14px; }
-          .fh-pwa-btn, .fh-pwa-ready { width:100%; height:46px; }
-          .fh-pwa-title { font-size:15px; }
-        }
 
         /* ===== SECTIONS ===== */
         .fh-section { max-width:1180px; margin:0 auto; padding:48px 16px 0; }
@@ -490,33 +421,6 @@ export default function Home() {
             <div className="fh-stat"><div className="fh-stat-ic"><MapPin size={19} /></div><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
           </div>
         </div>
-
-        {/* ===== PWA INSTALL CTA ===== */}
-        <section className="fh-pwa fh-reveal" aria-label="تحميل تطبيق فايند">
-          <div className="fh-pwa-box">
-            <div className="fh-pwa-copy">
-              <div className="fh-pwa-ic"><Smartphone size={21} /></div>
-              <div style={{ minWidth: 0 }}>
-                <h2 className="fh-pwa-title">فايند كتطبيق على موبايلك</h2>
-                <p className="fh-pwa-text">وصول أسرع للبحث ولوحة المكتب من الشاشة الرئيسية.</p>
-              </div>
-            </div>
-            {isStandalone ? (
-              <span className="fh-pwa-ready"><Check size={16} /> التطبيق مثبت</span>
-            ) : (
-              <button type="button" className="fh-pwa-btn" onClick={handleInstallApp} data-testid="button-install-pwa">
-                <Download size={16} />
-                {installPrompt ? "ثبّت التطبيق" : "أضف للشاشة الرئيسية"}
-              </button>
-            )}
-          </div>
-          {showInstallHint && !isStandalone && (
-            <div className="fh-pwa-hint">
-              <Share2 size={15} />
-              <span>على iPhone: افتح زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية". على Android: افتح قائمة المتصفح ثم اختر تثبيت التطبيق.</span>
-            </div>
-          )}
-        </section>
 
         {/* ===== LATEST PROPERTIES ===== */}
         {latestList.length > 0 && (
