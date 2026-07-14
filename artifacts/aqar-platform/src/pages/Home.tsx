@@ -57,8 +57,8 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [status, setStatus]     = useState("للإيجار");
   const [province, setProvince] = useState<string>("");
-  const [area, setArea]         = useState<string>("");
-  const [type, setType]         = useState<string>("");
+  const [areas, setAreas]       = useState<string[]>([]);
+  const [types, setTypes]       = useState<string[]>([]);
 
   const availableTypes  = TYPES_BY_STATUS[status] ?? TYPES_BY_STATUS["للإيجار"];
   const provinces       = Object.keys(AREAS);
@@ -107,12 +107,12 @@ export default function Home() {
     const order = ["للإيجار", "للبيع", "للبدل"];
     const t = setInterval(() => {
       setStatus((prev) => order[(order.indexOf(prev) + 1) % order.length]);
-      setType("");
+      setTypes([]);
     }, 2000);
     return () => clearInterval(t);
   }, [userPickedStatus]);
 
-  function handleStatusChange(s: string) { setUserPickedStatus(true); setStatus(s); setType(""); }
+  function handleStatusChange(s: string) { setUserPickedStatus(true); setStatus(s); setTypes([]); }
 
   const [sheetOpen, setSheetOpen]                   = useState<"type" | "gov" | "area" | null>(null);
   const [sheetQuery, setSheetQuery]                 = useState("");
@@ -128,10 +128,10 @@ export default function Home() {
     ? sheetItems.filter(i => i.label.includes(sheetQuery.trim()))
     : sheetItems;
 
-  const currentSheetValue =
-    sheetOpen === "type" ? type :
-    sheetOpen === "gov"  ? province :
-    sheetOpen === "area" ? area : "";
+  const sheetSelectedValues =
+    sheetOpen === "type" ? types :
+    sheetOpen === "gov"  ? (province ? [province] : []) :
+    sheetOpen === "area" ? areas : [];
 
   function openSheet(which: "type" | "gov" | "area") {
     setSheetQuery(""); setSheetSearchVisible(false); setSheetOpen(which);
@@ -160,15 +160,15 @@ export default function Home() {
 
   function handleSheetSelect(value: string) {
     if (sheetOpen === "type") {
-      const v = value === type ? "" : value;
-      setType(v); closeSheet();
-      if (v) setTimeout(() => openSheet("gov"), 220);
+      setTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+      // multi-select: keep the sheet open
     } else if (sheetOpen === "gov") {
       const v = value === province ? "" : value;
-      setProvince(v); setArea(""); closeSheet();
+      setProvince(v); setAreas([]); closeSheet();
       if (v) setTimeout(() => openSheet("area"), 220);
     } else if (sheetOpen === "area") {
-      setArea(value === area ? "" : value); closeSheet();
+      setAreas((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+      // multi-select: keep the sheet open
     }
   }
 
@@ -176,11 +176,13 @@ export default function Home() {
     const params = new URLSearchParams();
     if (status) params.append("status", status);
     if (province) params.append("governorateId", String(GOV_ID[province] ?? ""));
-    if (area && province) {
-      const e = _AREA_ID.find(a => a.name === area && a.govId === GOV_ID[province]);
-      if (e) params.append("areaId", String(e.id));
+    if (areas.length && province) {
+      const ids = areas
+        .map((name) => _AREA_ID.find((a) => a.name === name && a.govId === GOV_ID[province])?.id)
+        .filter(Boolean);
+      if (ids.length) params.append("areaId", ids.join(","));
     }
-    if (type) params.append("type", type);
+    if (types.length) params.append("type", types.join(","));
     setLocation(`/properties?${params.toString()}`);
   };
 
@@ -388,17 +390,17 @@ export default function Home() {
                 ))}
               </div>
               <div className="fh-fields">
-                <button className={`fh-field${type ? " filled" : ""}`} onClick={() => openSheet("type")}>
-                  <span className={type ? "" : "ph"}>{type || "نوع العقار"}</span>
-                  <ChevronDown size={17} color={type ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${types.length ? " filled" : ""}`} onClick={() => openSheet("type")}>
+                  <span className={types.length ? "" : "ph"}>{types.length === 0 ? "نوع العقار" : types.length === 1 ? types[0] : `${types.length} أنواع`}</span>
+                  <ChevronDown size={17} color={types.length ? "#667EEA" : "#94A3B8"} />
                 </button>
                 <button className={`fh-field${province ? " filled" : ""}`} onClick={() => openSheet("gov")}>
                   <span className={province ? "" : "ph"}>{province || "المحافظة"}</span>
                   <ChevronDown size={17} color={province ? "#667EEA" : "#94A3B8"} />
                 </button>
-                <button className={`fh-field${area ? " filled" : ""}`} onClick={() => { if (province) openSheet("area"); }} disabled={!province}>
-                  <span className={area ? "" : "ph"}>{area || (province ? "المنطقة" : "اختر المحافظة")}</span>
-                  <ChevronDown size={17} color={area ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${areas.length ? " filled" : ""}`} onClick={() => { if (province) openSheet("area"); }} disabled={!province}>
+                  <span className={areas.length ? "" : "ph"}>{areas.length === 0 ? (province ? "المنطقة" : "اختر المحافظة") : areas.length === 1 ? areas[0] : `${areas.length} مناطق`}</span>
+                  <ChevronDown size={17} color={areas.length ? "#667EEA" : "#94A3B8"} />
                 </button>
               </div>
               <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
@@ -507,14 +509,24 @@ export default function Home() {
               </div>
             )}
             <div style={{ overflowY: "auto", flex: 1 }}>
-              {filteredSheetItems.map(item => (
-                <button key={item.value} className={`fh-sheet-item${item.value === currentSheetValue ? " sel" : ""}`} onClick={() => handleSheetSelect(item.value)}>
-                  <span>{item.label}</span>
-                  {item.value === currentSheetValue && <Check size={16} color="#667EEA" />}
-                </button>
-              ))}
+              {filteredSheetItems.map(item => {
+                const isSel = sheetSelectedValues.includes(item.value);
+                return (
+                  <button key={item.value} className={`fh-sheet-item${isSel ? " sel" : ""}`} onClick={() => handleSheetSelect(item.value)}>
+                    <span>{item.label}</span>
+                    {isSel && <Check size={16} color="#667EEA" />}
+                  </button>
+                );
+              })}
               {filteredSheetItems.length === 0 && <p style={{ textAlign: "center", color: "#94A3B8", padding: "32px 20px", fontFamily: "'Cairo', sans-serif", fontSize: 14 }}>لا توجد نتائج</p>}
             </div>
+            {(sheetOpen === "type" || sheetOpen === "area") && (
+              <div style={{ padding: "12px 16px", borderTop: "1px solid #F1F5F9", flexShrink: 0 }}>
+                <button onClick={closeSheet} style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "#667EEA", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", outline: "none", fontFamily: "'Cairo', sans-serif" }}>
+                  تم
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
