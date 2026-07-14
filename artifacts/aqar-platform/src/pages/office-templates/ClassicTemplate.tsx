@@ -81,7 +81,7 @@ export default function ClassicTemplate(p: TemplateProps) {
             )}
 
             {(hasPhone || hasWA) && (
-              <>
+              <div className="cl-sidebar-contact">
                 <div className="cl-divider" />
                 <h3 className="cl-sub">بيانات التواصل</h3>
                 <ul className="cl-contact-list">
@@ -94,7 +94,7 @@ export default function ClassicTemplate(p: TemplateProps) {
                       <button className="cl-contact-row" onClick={onWhatsApp}>{office.whatsapp || "واتساب"}</button></li>
                   )}
                 </ul>
-              </>
+              </div>
             )}
 
           </div>
@@ -242,4 +242,7 @@ const CSS = `
 .cl-sticky-spacer { height: 80px; }
 @media (min-width: 980px) { .cl-sticky, .cl-sticky-spacer { display: none; } }
 @media (max-width: 979px) { .cl-topbar-actions { display: none; } }
+/* On mobile the sticky bottom bar is the single contact CTA — hide the
+   sidebar's contact list so it isn't shown twice (top + bottom). */
+@media (max-width: 979px) { .cl-sidebar-contact { display: none; } }
 `;
