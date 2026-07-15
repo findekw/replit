@@ -255,25 +255,23 @@ h1, h2, h3 {
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.13);
   border-color: #D8DFEC;
 }
+/* Offices upload poster-style ads with the details written into the image, so
+   the card shows the whole thing letterboxed — same as the listing page — and
+   the old hover zoom is gone because it cropped the very poster it reveals.
+   The card still lifts on hover. */
 .property-media {
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #EEF1F6;
+  background: #111827;
 }
 .property-img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%; height: 100%; object-fit: contain;
 }
-.property-card:hover .property-img { transform: scale(1.07); }
 .property-img-fallback {
   width: 100%; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   background: linear-gradient(135deg, #111827 0%, #667EEA 100%);
-}
-.property-media::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to top, rgba(15,23,42,0.34) 0%, rgba(15,23,42,0) 42%);
 }
 .property-badges {
   position: absolute; top: 12px; inset-inline-start: 12px;
