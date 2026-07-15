@@ -10,6 +10,15 @@
 (site) {
 	encode gzip
 
+	# API + uploaded files (Express serves /api/uploads/* statically).
+	# MUST come before the crawler rules below: a crawler fetching the og:image
+	# from /api/uploads/*.png is still a crawler, and the crawler block's
+	# fallthrough would answer it with index.html — the preview then arrives
+	# with no image, which is exactly what happened.
+	handle /api/* {
+		reverse_proxy app:3000
+	}
+
 	# Link previews: social crawlers don't run JS, so the SPA's static og: tags
 	# made every shared link preview as the generic site card. Send only the
 	# crawlers to the API, which renders per-listing / per-office tags. Humans
@@ -37,11 +46,6 @@
 			try_files {path} /index.html
 			file_server
 		}
-	}
-
-	# API + uploaded files (Express serves /api/uploads/* statically)
-	handle /api/* {
-		reverse_proxy app:3000
 	}
 
 	# SPA: serve static build, fall back to index.html for client-side routing
