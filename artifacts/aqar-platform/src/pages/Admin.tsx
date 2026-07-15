@@ -21,7 +21,7 @@ import {
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus, CreditCard,
-  Image as ImageIcon, Plus, Upload, Loader2, Flag,
+  Image as ImageIcon, Plus, Upload, Loader2, Flag, Edit2,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -176,7 +176,17 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "tools">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "locations" | "tools">("offices");
+
+  type AdminArea = { id: number; nameAr: string; governorateId: number; active: boolean; listings: number };
+  type AdminGov = { id: number; nameAr: string; active: boolean; areas: AdminArea[] };
+  const [govs, setGovs] = useState<AdminGov[]>([]);
+  const [locBusy, setLocBusy] = useState(false);
+  const [newAreaFor, setNewAreaFor] = useState<number | null>(null);
+  const [newAreaName, setNewAreaName] = useState("");
+  const [newGovName, setNewGovName] = useState("");
+  const [editing, setEditing] = useState<{ kind: "gov" | "area"; id: number } | null>(null);
+  const [editName, setEditName] = useState("");
   const [confirm, setConfirm]             = useState<ConfirmState | null>(null);
 
   /* ── Reports tab state ── */
@@ -229,6 +239,47 @@ export default function Admin() {
       setLoadingListings(false);
     }
   }, [toast]);
+
+  const loadLocations = useCallback(async () => {
+    setLocBusy(true);
+    try {
+      const data = await adminFetch<{ governorates: AdminGov[] }>("/api/admin/locations");
+      setGovs(data.governorates);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل المناطق", variant: "destructive" });
+    } finally {
+      setLocBusy(false);
+    }
+  }, [toast]);
+
+  /** Every mutation re-reads the list, so the UI can never drift from the DB. */
+  const locMutate = useCallback(
+    async (path: string, method: "POST" | "PUT" | "DELETE", body?: unknown, okMsg?: string) => {
+      setLocBusy(true);
+      try {
+        const res = await fetch(`${BASE}${path}`, {
+          method,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          toast({ title: "لم يتم التنفيذ", description: data?.error ?? "حدث خطأ", variant: "destructive" });
+          return false;
+        }
+        if (okMsg) toast({ title: okMsg });
+        await loadLocations();
+        return true;
+      } catch {
+        toast({ title: "خطأ", description: "تعذّر الاتصال بالخادم", variant: "destructive" });
+        return false;
+      } finally {
+        setLocBusy(false);
+      }
+    },
+    [toast, loadLocations],
+  );
 
   const loadReports = useCallback(async () => {
     setLoadingReports(true);
@@ -320,7 +371,8 @@ export default function Admin() {
       loadAllOffices();
       loadHeroSlides();
     }
-  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides]);
+    if (activeTab === "locations" && user) loadLocations();
+  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides, loadLocations]);
 
   // Load subscriptions when that tab is opened
   useEffect(() => {
@@ -730,6 +782,7 @@ export default function Admin() {
             { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
             { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
             { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
+            { key: "locations"     as const, icon: MapPin,     label: "المناطق",             count: undefined },
             { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
           ]).map(({ key, icon: Icon, label, count }) => {
             const active = activeTab === key;
@@ -1270,6 +1323,180 @@ export default function Admin() {
             )}
           </div>
           </>
+        )}
+
+        {/* ═══════════════ LOCATIONS TAB ═══════════════ */}
+        {activeTab === "locations" && (
+          <div className="adm-card p-5">
+            <div className="flex items-start justify-between gap-3 flex-wrap mb-5">
+              <div>
+                <h3 className="font-bold text-base" style={{ color: NAVY }}>المحافظات والمناطق</h3>
+                <p className="text-sm mt-1" style={{ color: BODY }}>
+                  المناطق التي تظهر في البحث وفي نموذج إضافة الإعلان. التعطيل يخفي المنطقة من البحث دون المساس بالإعلانات المنشورة فيها.
+                </p>
+              </div>
+              {locBusy && <Loader2 className="h-4 w-4 animate-spin" style={{ color: BLUE }} />}
+            </div>
+
+            {/* Add governorate */}
+            <div className="flex gap-2 mb-5 flex-wrap">
+              <input
+                className="adm-input"
+                style={{ maxWidth: 260 }}
+                placeholder="اسم محافظة جديدة"
+                value={newGovName}
+                onChange={(e) => setNewGovName(e.target.value)}
+              />
+              <button
+                className="adm-btn adm-btn--blue"
+                disabled={locBusy || !newGovName.trim()}
+                onClick={async () => {
+                  if (await locMutate("/api/admin/governorates", "POST", { nameAr: newGovName.trim() }, "تمت إضافة المحافظة")) {
+                    setNewGovName("");
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                إضافة محافظة
+              </button>
+            </div>
+
+            {govs.length === 0 && !locBusy ? (
+              <p className="text-sm text-center py-10" style={{ color: BODY }}>لا توجد محافظات بعد.</p>
+            ) : (
+              <div className="grid gap-4">
+                {govs.map((g) => (
+                  <div key={g.id} className="rounded-xl border p-4" style={{ borderColor: BORDER, background: g.active ? "#fff" : "#FAFAFA" }}>
+                    {/* Governorate header */}
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
+                      {editing?.kind === "gov" && editing.id === g.id ? (
+                        <>
+                          <input className="adm-input" style={{ maxWidth: 200 }} value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
+                          <button
+                            className="adm-btn adm-btn--approve"
+                            disabled={!editName.trim()}
+                            onClick={async () => {
+                              if (await locMutate(`/api/admin/governorates/${g.id}`, "PUT", { nameAr: editName.trim() }, "تم التعديل")) setEditing(null);
+                            }}
+                          >حفظ</button>
+                          <button className="adm-btn" onClick={() => setEditing(null)}>إلغاء</button>
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="h-4 w-4" style={{ color: BLUE }} />
+                          <span className="font-bold text-sm" style={{ color: NAVY }}>{g.nameAr}</span>
+                          <span className="adm-chip" style={{ background: "#F1F5F9", color: BODY }}>{g.areas.length} منطقة</span>
+                          {!g.active && <span className="adm-chip" style={{ background: "#FEECEC", color: RED }}>معطّلة</span>}
+                          <div className="flex gap-1.5 mr-auto flex-wrap">
+                            <button className="adm-btn" onClick={() => { setEditing({ kind: "gov", id: g.id }); setEditName(g.nameAr); }}>
+                              <Edit2 className="h-3.5 w-3.5" />
+                              تعديل
+                            </button>
+                            <button
+                              className="adm-btn"
+                              disabled={locBusy}
+                              onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "PUT", { active: !g.active }, g.active ? "تم تعطيل المحافظة" : "تم تفعيل المحافظة")}
+                            >
+                              {g.active ? "تعطيل" : "تفعيل"}
+                            </button>
+                            <button
+                              className="adm-btn adm-btn--reject"
+                              disabled={locBusy}
+                              onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "DELETE", undefined, "تم حذف المحافظة")}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              حذف
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Areas */}
+                    <div className="flex flex-wrap gap-2">
+                      {g.areas.map((a) =>
+                        editing?.kind === "area" && editing.id === a.id ? (
+                          <div key={a.id} className="flex gap-1.5 items-center">
+                            <input className="adm-input" style={{ maxWidth: 160 }} value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
+                            <button
+                              className="adm-btn adm-btn--approve"
+                              disabled={!editName.trim()}
+                              onClick={async () => {
+                                if (await locMutate(`/api/admin/areas/${a.id}`, "PUT", { nameAr: editName.trim() }, "تم التعديل")) setEditing(null);
+                              }}
+                            >حفظ</button>
+                            <button className="adm-btn" onClick={() => setEditing(null)}>إلغاء</button>
+                          </div>
+                        ) : (
+                          <span
+                            key={a.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs"
+                            style={{ borderColor: BORDER, background: a.active ? "#fff" : "#F8FAFC", color: a.active ? NAVY : BODY }}
+                          >
+                            <span style={{ fontWeight: 700, textDecoration: a.active ? "none" : "line-through" }}>{a.nameAr}</span>
+                            {a.listings > 0 && <span style={{ color: BODY }}>({a.listings})</span>}
+                            <button title="تعديل" onClick={() => { setEditing({ kind: "area", id: a.id }); setEditName(a.nameAr); }} style={{ color: BODY }}>
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                            <button
+                              title={a.active ? "تعطيل" : "تفعيل"}
+                              disabled={locBusy}
+                              onClick={() => locMutate(`/api/admin/areas/${a.id}`, "PUT", { active: !a.active }, a.active ? "تم تعطيل المنطقة" : "تم تفعيل المنطقة")}
+                              style={{ color: a.active ? AMBER : GREEN }}
+                            >
+                              {a.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                            </button>
+                            <button
+                              title={a.listings > 0 ? "بها إعلانات — عطّلها بدل الحذف" : "حذف"}
+                              disabled={locBusy}
+                              onClick={() => locMutate(`/api/admin/areas/${a.id}`, "DELETE", undefined, "تم حذف المنطقة")}
+                              style={{ color: RED, opacity: a.listings > 0 ? 0.35 : 1 }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ),
+                      )}
+
+                      {/* Add area */}
+                      {newAreaFor === g.id ? (
+                        <div className="flex gap-1.5 items-center">
+                          <input
+                            className="adm-input"
+                            style={{ maxWidth: 160 }}
+                            placeholder="اسم المنطقة"
+                            value={newAreaName}
+                            onChange={(e) => setNewAreaName(e.target.value)}
+                            autoFocus
+                          />
+                          <button
+                            className="adm-btn adm-btn--approve"
+                            disabled={!newAreaName.trim() || locBusy}
+                            onClick={async () => {
+                              if (await locMutate("/api/admin/areas", "POST", { nameAr: newAreaName.trim(), governorateId: g.id }, "تمت إضافة المنطقة")) {
+                                setNewAreaName("");
+                                setNewAreaFor(null);
+                              }
+                            }}
+                          >إضافة</button>
+                          <button className="adm-btn" onClick={() => { setNewAreaFor(null); setNewAreaName(""); }}>إلغاء</button>
+                        </div>
+                      ) : (
+                        <button
+                          className="adm-btn"
+                          style={{ borderStyle: "dashed" }}
+                          onClick={() => { setNewAreaFor(g.id); setNewAreaName(""); }}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          منطقة
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* ═══════════════ TOOLS TAB ═══════════════ */}

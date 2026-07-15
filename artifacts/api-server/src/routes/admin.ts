@@ -552,4 +552,138 @@ router.delete("/admin/plans/:id", requireAdmin, async (req: Request, res: Respon
   }
 });
 
+// ── Locations: governorates + areas ─────────────────────────────────────────
+// Kuwait's areas do change (new blocks open, names get corrected), and until
+// now editing one meant a code deploy. Deletes are refused while anything still
+// points at the row — deactivate instead, which hides it from search without
+// orphaning existing listings.
+
+router.get("/admin/locations", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const govs = await db.select().from(governoratesTable).orderBy(governoratesTable.id);
+    const areas = await db.select().from(areasTable).orderBy(areasTable.nameAr);
+    const counts = await db
+      .select({ areaId: propertiesTable.areaId, n: sql<number>`count(*)::int` })
+      .from(propertiesTable)
+      .groupBy(propertiesTable.areaId);
+    const byArea = new Map(counts.map((c: { areaId: number | null; n: number }) => [c.areaId, c.n]));
+
+    res.json({
+      governorates: govs.map((g: typeof governoratesTable.$inferSelect) => ({
+        ...g,
+        areas: areas
+          .filter((a: typeof areasTable.$inferSelect) => a.governorateId === g.id)
+          .map((a: typeof areasTable.$inferSelect) => ({ ...a, listings: byArea.get(a.id) ?? 0 })),
+      })),
+    });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/admin/governorates", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const nameAr = String(req.body?.nameAr ?? "").trim();
+  const name = String(req.body?.name ?? "").trim() || nameAr;
+  if (!nameAr) { res.status(400).json({ error: "اسم المحافظة مطلوب" }); return; }
+  try {
+    const [row] = await db.insert(governoratesTable).values({ name, nameAr }).returning();
+    res.status(201).json({ governorate: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.put("/admin/governorates/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const patch: Record<string, unknown> = {};
+  if (req.body?.nameAr !== undefined) {
+    const v = String(req.body.nameAr).trim();
+    if (!v) { res.status(400).json({ error: "اسم المحافظة مطلوب" }); return; }
+    patch["nameAr"] = v;
+  }
+  if (req.body?.name !== undefined) patch["name"] = String(req.body.name).trim();
+  if (req.body?.active !== undefined) patch["active"] = Boolean(req.body.active);
+  if (!Object.keys(patch).length) { res.status(400).json({ error: "لا يوجد تغيير" }); return; }
+
+  try {
+    const [row] = await db.update(governoratesTable).set(patch).where(eq(governoratesTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "المحافظة غير موجودة" }); return; }
+    res.json({ governorate: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.delete("/admin/governorates/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  try {
+    const [area] = await db.select({ id: areasTable.id }).from(areasTable).where(eq(areasTable.governorateId, id)).limit(1);
+    if (area) { res.status(409).json({ error: "لا يمكن حذف محافظة بها مناطق. احذف مناطقها أولاً أو عطّلها." }); return; }
+    const [row] = await db.delete(governoratesTable).where(eq(governoratesTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "المحافظة غير موجودة" }); return; }
+    res.json({ message: "تم حذف المحافظة" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/admin/areas", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const nameAr = String(req.body?.nameAr ?? "").trim();
+  const name = String(req.body?.name ?? "").trim() || nameAr;
+  const governorateId = Number(req.body?.governorateId);
+  if (!nameAr) { res.status(400).json({ error: "اسم المنطقة مطلوب" }); return; }
+  if (!Number.isFinite(governorateId)) { res.status(400).json({ error: "المحافظة مطلوبة" }); return; }
+  try {
+    const [gov] = await db.select({ id: governoratesTable.id }).from(governoratesTable).where(eq(governoratesTable.id, governorateId)).limit(1);
+    if (!gov) { res.status(400).json({ error: "المحافظة غير موجودة" }); return; }
+    const [row] = await db.insert(areasTable).values({ name, nameAr, governorateId }).returning();
+    res.status(201).json({ area: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.put("/admin/areas/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const patch: Record<string, unknown> = {};
+  if (req.body?.nameAr !== undefined) {
+    const v = String(req.body.nameAr).trim();
+    if (!v) { res.status(400).json({ error: "اسم المنطقة مطلوب" }); return; }
+    patch["nameAr"] = v;
+  }
+  if (req.body?.name !== undefined) patch["name"] = String(req.body.name).trim();
+  if (req.body?.active !== undefined) patch["active"] = Boolean(req.body.active);
+  if (req.body?.governorateId !== undefined) {
+    const g = Number(req.body.governorateId);
+    if (!Number.isFinite(g)) { res.status(400).json({ error: "المحافظة غير صالحة" }); return; }
+    patch["governorateId"] = g;
+  }
+  if (!Object.keys(patch).length) { res.status(400).json({ error: "لا يوجد تغيير" }); return; }
+
+  try {
+    const [row] = await db.update(areasTable).set(patch).where(eq(areasTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "المنطقة غير موجودة" }); return; }
+    res.json({ area: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.delete("/admin/areas/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  try {
+    const [used] = await db.select({ id: propertiesTable.id }).from(propertiesTable).where(eq(propertiesTable.areaId, id)).limit(1);
+    if (used) { res.status(409).json({ error: "لا يمكن حذف منطقة بها إعلانات. عطّلها بدلاً من ذلك لإخفائها من البحث." }); return; }
+    const [row] = await db.delete(areasTable).where(eq(areasTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "المنطقة غير موجودة" }); return; }
+    res.json({ message: "تم حذف المنطقة" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
 export default router;
