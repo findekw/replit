@@ -61,7 +61,10 @@ const uploadImage = multer({
 const MAX_IMAGE_EDGE = 1600;
 const WEBP_QUALITY = 82;
 
-const MAX_VIDEO_WIDTH = 1280;
+/** Longest edge, not width: phone videos are portrait, and capping only the
+ *  width left a 1080x1920 clip untouched — twice the pixels and twice the
+ *  encode time of the 720x1280 it should be. */
+const MAX_VIDEO_EDGE = 1280;
 
 /**
  * Transcode to a format every phone can actually play.
@@ -79,8 +82,11 @@ function transcodeVideo(input: string, output: string): Promise<void> {
       "-c:v", "libx264",
       "-preset", "veryfast",
       "-crf", "28",
-      // Cap width, keep aspect; -2 keeps height even (H.264 requires it).
-      "-vf", `scale='min(${MAX_VIDEO_WIDTH},iw)':-2`,
+      // Fit inside a square box so portrait and landscape are both capped;
+      // force_divisible_by keeps both sides even, which H.264 requires.
+      "-vf",
+      `scale=w=min(${MAX_VIDEO_EDGE}\\,iw):h=min(${MAX_VIDEO_EDGE}\\,ih)` +
+        `:force_original_aspect_ratio=decrease:force_divisible_by=2`,
       "-c:a", "aac",
       "-b:a", "128k",
       "-movflags", "+faststart",

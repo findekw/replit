@@ -534,7 +534,14 @@ export default function DashboardAddListing() {
                 </div>
                 <div className="flex items-center justify-between gap-3 p-3">
                   <p className="text-sm" style={{ color: uploadedVideo.error ? "#dc2626" : "#0f172a" }}>
-                    {uploadedVideo.error ?? (uploadedVideo.saved ? "تم حفظ الفيديو" : "جاهز للحفظ")}
+                    {/* The server re-encodes the clip so it plays on Android; that
+                        takes ~15-30s, so say so rather than spin silently. */}
+                    {uploadedVideo.error ??
+                      (uploadedVideo.saving
+                        ? "جارٍ معالجة الفيديو... قد يستغرق حتى دقيقة، لا تغلق الصفحة"
+                        : uploadedVideo.saved
+                          ? "تم حفظ الفيديو"
+                          : "جاهز للحفظ")}
                   </p>
                   <Button type="button" variant="ghost" className="gap-2" onClick={removeVideo} disabled={uploadedVideo.saving}>
                     <Trash2 className="h-4 w-4" />
