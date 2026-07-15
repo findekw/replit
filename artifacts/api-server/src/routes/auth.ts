@@ -2,12 +2,12 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, adminsTable, officeUsersTable, officesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { randomInt } from "node:crypto";
+import { randomInt, randomBytes } from "node:crypto";
 import type { Request, Response } from "express";
 import { logger } from "../lib/logger";
 import { setSession, clearSession, getSessionId } from "../lib/session";
 import { safe } from "../lib/authHelpers";
-import { sendOfficeVerificationOtp } from "../lib/email";
+import { sendOfficeVerificationOtp, sendOfficePasswordReset } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -49,6 +49,9 @@ const RESERVED_SLUGS = ["properties", "offices", "admin", "login", "register", "
 const OFFICE_OTP_TTL_MS = Number(process.env.EMAIL_OTP_TTL_MINUTES || 10) * 60 * 1000;
 const OFFICE_OTP_RESEND_MS = 60 * 1000;
 const OFFICE_OTP_MAX_ATTEMPTS = 5;
+const OFFICE_RESET_TTL_MS = 60 * 60 * 1000;
+const OFFICE_RESET_RESEND_MS = 60 * 1000;
+const APP_URL = (process.env["APP_URL"] || "https://www.finde.co").replace(/\/+$/, "");
 
 function isValidSlug(slug: string): boolean {
   return /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug);
@@ -385,6 +388,109 @@ router.get("/auth/office/me", async (req: Request, res: Response): Promise<void>
     const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.id, id)).limit(1);
     if (!ou) { clearSession(res, "office"); res.status(401).json({ error: "الجلسة غير صالحة" }); return; }
     res.json({ officeUser: safe(ou), officeId: ou.officeId });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── Password: change (signed in) / forgot + reset (by email link) ───────────
+
+router.post("/auth/office/change-password", async (req: Request, res: Response): Promise<void> => {
+  const id = getSessionId(req, "office");
+  if (!id) { res.status(401).json({ error: "غير مسجّل الدخول" }); return; }
+
+  const currentPassword = String(req.body?.currentPassword ?? "");
+  const newPassword = String(req.body?.newPassword ?? "");
+
+  if (newPassword.length < 8) { res.status(400).json({ error: "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل" }); return; }
+  if (currentPassword === newPassword) { res.status(400).json({ error: "كلمة المرور الجديدة مطابقة للحالية" }); return; }
+
+  try {
+    const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.id, id)).limit(1);
+    if (!ou) { clearSession(res, "office"); res.status(401).json({ error: "الجلسة غير صالحة" }); return; }
+
+    if (!(await bcrypt.compare(currentPassword, ou.passwordHash))) {
+      res.status(400).json({ error: "كلمة المرور الحالية غير صحيحة" });
+      return;
+    }
+
+    await db
+      .update(officeUsersTable)
+      .set({ passwordHash: await bcrypt.hash(newPassword, 12), resetTokenHash: null, resetTokenExpiresAt: null })
+      .where(eq(officeUsersTable.id, id));
+
+    res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/auth/office/forgot-password", loginLimiter, async (req: Request, res: Response): Promise<void> => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  // Always the same answer: whether an email is registered isn't public info.
+  const ok = { message: "إذا كان البريد مسجلاً لدينا فستصلك رسالة بها رابط إعادة التعيين خلال دقائق." };
+
+  if (!email) { res.status(400).json({ error: "البريد الإلكتروني مطلوب" }); return; }
+
+  try {
+    const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.email, email)).limit(1);
+    if (!ou || ou.status === "banned") { res.json(ok); return; }
+
+    // Don't let a repeated click spam the mailbox.
+    if (ou.resetTokenSentAt && Date.now() - new Date(ou.resetTokenSentAt).getTime() < OFFICE_RESET_RESEND_MS) {
+      res.json(ok);
+      return;
+    }
+
+    const token = randomBytes(32).toString("hex");
+    const now = new Date();
+    await db
+      .update(officeUsersTable)
+      .set({
+        resetTokenHash: await bcrypt.hash(token, 10),
+        resetTokenExpiresAt: new Date(now.getTime() + OFFICE_RESET_TTL_MS),
+        resetTokenSentAt: now,
+      })
+      .where(eq(officeUsersTable.id, ou.id));
+
+    await sendOfficePasswordReset({
+      to: ou.email,
+      name: ou.name,
+      resetUrl: `${APP_URL}/office/reset?token=${token}&id=${ou.id}`,
+    });
+
+    res.json(ok);
+  } catch {
+    res.json(ok);
+  }
+});
+
+router.post("/auth/office/reset-password", async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.body?.id);
+  const token = String(req.body?.token ?? "");
+  const newPassword = String(req.body?.newPassword ?? "");
+  const invalid = "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطاً جديداً.";
+
+  if (!Number.isFinite(id) || !token) { res.status(400).json({ error: invalid }); return; }
+  if (newPassword.length < 8) { res.status(400).json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }); return; }
+
+  try {
+    const [ou] = await db.select().from(officeUsersTable).where(eq(officeUsersTable.id, id)).limit(1);
+    if (!ou || !ou.resetTokenHash || !ou.resetTokenExpiresAt) { res.status(400).json({ error: invalid }); return; }
+    if (Date.now() > new Date(ou.resetTokenExpiresAt).getTime()) { res.status(400).json({ error: invalid }); return; }
+    if (!(await bcrypt.compare(token, ou.resetTokenHash))) { res.status(400).json({ error: invalid }); return; }
+
+    await db
+      .update(officeUsersTable)
+      .set({
+        passwordHash: await bcrypt.hash(newPassword, 12),
+        // Single use.
+        resetTokenHash: null,
+        resetTokenExpiresAt: null,
+      })
+      .where(eq(officeUsersTable.id, ou.id));
+
+    res.json({ message: "تم تعيين كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن." });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }

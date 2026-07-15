@@ -97,7 +97,7 @@ export default function OfficePage() {
           <Building2 className="h-16 w-16" style={{ color: "#cbd5e1", marginBottom: 16 }} />
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 8 }}>الصفحة غير موجودة</h1>
           <p style={{ color: "#64748B", marginBottom: 24 }}>لم يتم العثور على هذا المكتب على المنصة</p>
-          <Button onClick={() => navigate("/offices")}>تصفّح جميع المكاتب</Button>
+          <Button onClick={() => navigate("/properties")}>تصفّح العقارات</Button>
         </div>
       </MainLayout>
     );

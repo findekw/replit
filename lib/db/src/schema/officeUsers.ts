@@ -20,6 +20,11 @@ export const officeUsersTable = pgTable("office_users", {
   emailOtpExpiresAt: timestamp("email_otp_expires_at", { withTimezone: true }),
   emailOtpSentAt: timestamp("email_otp_sent_at", { withTimezone: true }),
   emailOtpAttempts: integer("email_otp_attempts").notNull().default(0),
+  // Single-use "forgot password" link: only the hash is stored, and it is
+  // cleared the moment the password is reset.
+  resetTokenHash: text("reset_token_hash"),
+  resetTokenExpiresAt: timestamp("reset_token_expires_at", { withTimezone: true }),
+  resetTokenSentAt: timestamp("reset_token_sent_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

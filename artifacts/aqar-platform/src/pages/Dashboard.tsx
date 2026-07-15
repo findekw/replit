@@ -150,6 +150,13 @@ export default function Dashboard() {
   /* snapshot for cancel */
   const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "" });
 
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -306,6 +313,36 @@ export default function Dashboard() {
     setDraftCommercialReg(snapshot.commercialReg);
     setErrors({});
     setEditMode(false);
+  }
+
+  function closePwForm() {
+    setPwOpen(false);
+    setPwCurrent(""); setPwNew(""); setPwConfirm(""); setPwError("");
+  }
+
+  async function changePassword() {
+    setPwError("");
+    if (!pwCurrent) { setPwError("اكتب كلمة المرور الحالية"); return; }
+    if (pwNew.length < 8) { setPwError("كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل"); return; }
+    if (pwNew !== pwConfirm) { setPwError("كلمتا المرور الجديدتان غير متطابقتين"); return; }
+
+    setSavingPw(true);
+    try {
+      const res = await fetch(`${BASE}/api/auth/office/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNew }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setPwError(data?.error ?? "تعذّر تغيير كلمة المرور"); return; }
+      closePwForm();
+      toast({ title: "تم تغيير كلمة المرور بنجاح" });
+    } catch {
+      setPwError("تعذّر الاتصال بالخادم، تأكد من اتصالك بالإنترنت");
+    } finally {
+      setSavingPw(false);
+    }
   }
 
   async function saveProfile() {
@@ -1020,6 +1057,109 @@ export default function Dashboard() {
             )}
 
           </div>
+        </div>
+
+        {/* ─── Password ─── */}
+        <div className="bg-card border rounded-2xl p-5 mb-6">
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-[#0B2545]" />
+              <h3 className="font-bold text-sm text-foreground">كلمة المرور</h3>
+            </div>
+            {!pwOpen && (
+              <button
+                onClick={() => { setPwOpen(true); setPwError(""); }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 16px", borderRadius: 9, border: "1.5px solid #d1d5db",
+                  background: "#fff", color: "#374151", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                <Edit2 style={{ width: 13, height: 13 }} />
+                تغيير
+              </button>
+            )}
+          </div>
+
+          {!pwOpen ? (
+            <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.9 }}>
+              لتغيير كلمة المرور اضغط «تغيير»، وستحتاج إلى إدخال كلمة المرور الحالية أولاً.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: 12, maxWidth: 420 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                  كلمة المرور الحالية
+                </label>
+                <input
+                  type="password"
+                  value={pwCurrent}
+                  onChange={(e) => { setPwCurrent(e.target.value); setPwError(""); }}
+                  autoComplete="current-password"
+                  style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid #d1d5db", padding: "0 12px", fontSize: 14, fontFamily: "'Cairo', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                  كلمة المرور الجديدة <span style={{ color: "#9ca3af", fontWeight: 400 }}>(8 أحرف على الأقل)</span>
+                </label>
+                <input
+                  type="password"
+                  value={pwNew}
+                  onChange={(e) => { setPwNew(e.target.value); setPwError(""); }}
+                  autoComplete="new-password"
+                  style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid #d1d5db", padding: "0 12px", fontSize: 14, fontFamily: "'Cairo', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                  تأكيد كلمة المرور الجديدة
+                </label>
+                <input
+                  type="password"
+                  value={pwConfirm}
+                  onChange={(e) => { setPwConfirm(e.target.value); setPwError(""); }}
+                  autoComplete="new-password"
+                  style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid #d1d5db", padding: "0 12px", fontSize: 14, fontFamily: "'Cairo', sans-serif" }}
+                />
+              </div>
+
+              {pwError && (
+                <p style={{ fontSize: 13, color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "9px 12px", margin: 0 }}>
+                  {pwError}
+                </p>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 2 }}>
+                <button
+                  onClick={changePassword}
+                  disabled={savingPw}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 7,
+                    padding: "9px 24px", borderRadius: 10, border: "none",
+                    background: NAVY, color: "#fff", fontSize: 14, fontWeight: 700,
+                    cursor: savingPw ? "not-allowed" : "pointer", opacity: savingPw ? 0.7 : 1,
+                    boxShadow: "0 2px 6px rgba(11,37,69,0.22)",
+                  }}
+                >
+                  {savingPw ? <Loader2 style={{ width: 15, height: 15 }} className="animate-spin" /> : <Save style={{ width: 15, height: 15 }} />}
+                  حفظ كلمة المرور
+                </button>
+                <button
+                  onClick={closePwForm}
+                  disabled={savingPw}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "9px 18px", borderRadius: 10, border: "1.5px solid #d1d5db",
+                    background: "#fff", color: "#6b7280", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  <X style={{ width: 14, height: 14 }} />
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ─── Subscription Status ─── */}
