@@ -360,9 +360,11 @@ body {
   color: var(--text-body);
   font-weight: 500;
 }
-p, .text, .card-description {
-  color: var(--text-body);
-  font-weight: 400;
+@layer base {
+  p, .text, .card-description {
+    color: var(--text-body);
+    font-weight: 400;
+  }
 }
 .small-text, .muted {
   color: var(--text-secondary);
