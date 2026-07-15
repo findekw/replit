@@ -191,7 +191,9 @@ const CSS = `
 .mn-listhead .mn-eyebrow { margin: 0; }
 .mn-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .mn-tab { padding: 7px 14px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; border: none; color: #94A3B8; transition: color .15s, background .15s; }
-.mn-tab:hover { color: #0F172A; }
+@media (hover: hover) {
+  .mn-tab:not(.mn-tab-on):hover { color: #0F172A; }
+}
 .mn-tab-on { color: #fff; background: #667EEA; }
 
 .mn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }

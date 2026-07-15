@@ -172,7 +172,12 @@ const CSS = `
 .tm-listhead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .tm-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .tm-tab { padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; background: #fff; color: #64748B; border: 1px solid #E2E8F0; }
-.tm-tab:hover { border-color: #667EEA; color: #667EEA; }
+/* Never restyle the selected tab on hover: ':hover' outranks '.tm-tab-on', and
+   touch devices keep :hover stuck on the last tap — which painted the active
+   tab's label #667EEA on its own #667EEA pill (invisible). */
+@media (hover: hover) {
+  .tm-tab:not(.tm-tab-on):hover { border-color: #667EEA; color: #667EEA; }
+}
 .tm-tab-on { background: #667EEA; color: #fff; border-color: #667EEA; }
 .tm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 @media (min-width:980px){ .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

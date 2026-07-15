@@ -200,7 +200,9 @@ const CSS = `
 .lx-listhead { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 34px; }
 .lx-tabs { display: flex; gap: 9px; flex-wrap: wrap; }
 .lx-tab { padding: 9px 22px; border-radius: 999px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all .15s; background: transparent; color: #A9AEBC; border: 1px solid rgba(255,255,255,0.14); }
-.lx-tab:hover { border-color: rgba(201,162,39,0.5); color: #E9D9A6; }
+@media (hover: hover) {
+  .lx-tab:not(.lx-tab-on):hover { border-color: rgba(201,162,39,0.5); color: #E9D9A6; }
+}
 .lx-tab-on { background: #C9A227; color: #0B0F1A; border-color: #C9A227; }
 
 /* Grid + card wrappers */
