@@ -131,16 +131,17 @@ export default function ModernTemplate(p: TemplateProps) {
 const CSS = `
 .tm-root { font-family: 'Cairo', sans-serif; background: #F6F8FC; min-height: 100vh; }
 .tm-root * { box-sizing: border-box; }
-.tm-hero { position: relative; min-height: 300px; overflow: hidden; background: linear-gradient(135deg,#16203a 0%,#243056 45%,#667EEA 120%); }
+.tm-hero { position: relative; overflow: hidden; background: linear-gradient(160deg,#1B2440 0%,#243056 55%,#3B4884 100%); }
 .tm-hero-bg { position: absolute; inset: 0; }
 .tm-hero-bg img { width: 100%; height: 100%; object-fit: cover; }
 .tm-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,22,40,0.55), rgba(16,22,40,0.82)); }
-.tm-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 70px 22px 56px; display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
-.tm-logo { width: 120px; height: 120px; border-radius: 26px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 5px solid #fff; box-shadow: 0 20px 45px rgba(0,0,0,0.3); }
-.tm-logo img { width: 100%; height: 100%; object-fit: cover; }
-.tm-hero-text { flex: 1; min-width: 220px; }
-.tm-name { font-size: clamp(28px,4.2vw,42px); font-weight: 800; color: #fff !important; margin: 0 0 14px; letter-spacing: -0.5px; text-shadow: 0 2px 16px rgba(0,0,0,0.4); line-height: 1.15; }
-.tm-badges { display: flex; flex-wrap: wrap; gap: 9px; }
+/* Logo centred above the name, tight spacing (client: "اللوقو بالوسط وتصغر المسافة"). */
+.tm-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 38px 22px 34px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.tm-logo { width: 104px; height: 104px; border-radius: 24px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 14px 34px rgba(0,0,0,0.28); }
+.tm-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.tm-hero-text { width: 100%; }
+.tm-name { font-size: clamp(24px,3.6vw,36px); font-weight: 800; color: #fff !important; margin: 0 0 10px; letter-spacing: -0.5px; text-shadow: 0 2px 16px rgba(0,0,0,0.4); line-height: 1.2; }
+.tm-badges { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; }
 .tm-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); backdrop-filter: blur(8px); }
 .tm-badge-ok { background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.5); }
 .tm-badge-feat { background: rgba(245,158,11,0.22); border-color: rgba(245,158,11,0.5); }
