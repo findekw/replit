@@ -81,7 +81,17 @@ if (!sessionSecret) {
 // lib/session.ts for the read/write/clear helpers.
 app.use(cookieParser(sessionSecret));
 
-app.use("/api/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+// Uploads get a unique timestamped filename and are never rewritten in place,
+// so they can be cached indefinitely. The default (max-age=0) forced a
+// revalidation round-trip per image — a dozen of them before a listing grid
+// could paint on mobile.
+app.use(
+  "/api/uploads",
+  express.static(path.resolve(process.cwd(), "uploads"), {
+    maxAge: "365d",
+    immutable: true,
+  }),
+);
 app.use("/api", router);
 
 export default app;

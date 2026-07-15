@@ -44,6 +44,15 @@ function absolute(url: unknown): string {
   return `${SITE}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
+/**
+ * No og:image:width/height here on purpose. They were hardcoded to 1200x630
+ * while the images they described are office logos (~430x427 square) and
+ * arbitrary listing photos — WhatsApp lays the card out from those hints and
+ * dropped the image when it didn't match, so the preview arrived text-only.
+ * Only declare dimensions if they're read from the real file; otherwise let the
+ * crawler measure. twitter:card is "summary" for the same reason: these are
+ * square logos, not wide banners.
+ */
 function renderOg(opts: { title: string; description: string; image: string; url: string }): string {
   const { title, description, image, url } = opts;
   return `<!doctype html>
@@ -59,9 +68,7 @@ function renderOg(opts: { title: string; description: string; image: string; url
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
 <meta property="og:image" content="${esc(image)}" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
 <meta name="twitter:image" content="${esc(image)}" />
