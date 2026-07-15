@@ -1,6 +1,13 @@
 # ── finde api-server (Express) ──────────────────────────────────────────────
 FROM node:20-bookworm-slim
 
+# ffmpeg: offices upload straight from an iPhone, which records .mov — a format
+# Android browsers generally refuse to play. Every upload is transcoded to
+# H.264/AAC MP4 so the video works for the buyer regardless of either phone.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 WORKDIR /app
 

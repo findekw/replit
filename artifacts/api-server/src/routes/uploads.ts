@@ -3,6 +3,7 @@ import multer, { type FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
 import sharp from "sharp";
+import { spawn } from "child_process";
 
 const router: IRouter = Router();
 
@@ -21,7 +22,10 @@ const ALLOWED_VIDEO_MIME = new Set(["video/mp4", "video/webm", "video/quicktime"
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
-/** Videos stream straight to disk; images go through sharp instead (below). */
+/**
+ * Videos stream to disk under a temp name, then get transcoded (below) — a
+ * 50MB upload shouldn't be buffered in memory the way images are.
+ */
 function makeVideoStorage() {
   return multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
@@ -30,7 +34,7 @@ function makeVideoStorage() {
         file.mimetype === "video/webm" ? ".webm" :
         file.mimetype === "video/quicktime" ? ".mov" :
         ".mp4";
-      cb(null, `video-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`);
+      cb(null, `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`);
     },
   });
 }
@@ -56,6 +60,42 @@ const uploadImage = multer({
 /** Longest edge kept. Bigger than any slot the UI renders, on any screen. */
 const MAX_IMAGE_EDGE = 1600;
 const WEBP_QUALITY = 82;
+
+const MAX_VIDEO_WIDTH = 1280;
+
+/**
+ * Transcode to a format every phone can actually play.
+ *
+ * iPhones record .mov/HEVC, which Android browsers generally refuse — so a
+ * video uploaded by one office was invisible to half its buyers. H.264/AAC in
+ * MP4 plays everywhere. -movflags +faststart moves the index to the front of
+ * the file so playback can start before the download finishes; without it a
+ * phone buffers the whole clip first.
+ */
+function transcodeVideo(input: string, output: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const ff = spawn("ffmpeg", [
+      "-i", input,
+      "-c:v", "libx264",
+      "-preset", "veryfast",
+      "-crf", "28",
+      // Cap width, keep aspect; -2 keeps height even (H.264 requires it).
+      "-vf", `scale='min(${MAX_VIDEO_WIDTH},iw)':-2`,
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-movflags", "+faststart",
+      "-y", output,
+    ]);
+
+    let stderr = "";
+    ff.stderr.on("data", (d) => { stderr += String(d); });
+    ff.on("error", reject);
+    ff.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-500)}`));
+    });
+  });
+}
 
 /**
  * Offices upload straight from the camera roll — 1-2MB posters and photos that
@@ -103,12 +143,8 @@ function handleUploadError(err: unknown, res: Response, kind: "image" | "video")
   return true;
 }
 
-function fileUrl(file: Express.Multer.File) {
-  return `/api/uploads/${file.filename}`;
-}
-
 router.post("/uploads/video", (req: Request, res: Response) => {
-  uploadVideo.single("video")(req, res, (err: unknown) => {
+  uploadVideo.single("video")(req, res, async (err: unknown) => {
     if (handleUploadError(err, res, "video")) return;
 
     if (!req.file) {
@@ -116,11 +152,30 @@ router.post("/uploads/video", (req: Request, res: Response) => {
       return;
     }
 
-    console.log(
-      `[Upload] Saved video: ${req.file.filename} | type: ${req.file.mimetype} | size: ${req.file.size} bytes`
-    );
+    const tmpPath = req.file.path;
+    const original = req.file.size;
+    const filename = `video-${Date.now()}-${Math.random().toString(36).slice(2, 9)}.mp4`;
+    const outPath = path.join(UPLOADS_DIR, filename);
+    const started = Date.now();
 
-    res.json({ url: fileUrl(req.file), filename: req.file.filename });
+    try {
+      await transcodeVideo(tmpPath, outPath);
+      const size = (await fs.promises.stat(outPath)).size;
+
+      console.log(
+        `[Upload] Saved video: ${filename} | ${req.file.mimetype} ${original}B -> mp4 ${size}B ` +
+          `(-${Math.round((1 - size / original) * 100)}%) in ${Date.now() - started}ms`,
+      );
+
+      res.json({ url: `/api/uploads/${filename}`, filename });
+    } catch (e) {
+      console.error("[Upload] video transcode failed:", e);
+      await fs.promises.rm(outPath, { force: true });
+      res.status(400).json({ error: "تعذّرت معالجة الفيديو، جرّب فيديو آخر", code: "PROCESSING_FAILED" });
+    } finally {
+      // The upload is only ever a staging copy — never leave it behind.
+      await fs.promises.rm(tmpPath, { force: true });
+    }
   });
 });
 
