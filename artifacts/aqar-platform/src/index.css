@@ -37,9 +37,15 @@ body::-webkit-scrollbar,
   --icon-color:         #111827;
 }
 
-/* ── Unified heading color ── */
-h1, h2, h3 {
-  color: var(--text-heading);
+/* ── Unified heading color ──
+   Must live in @layer base: unlayered rules outrank Tailwind's utilities, so
+   plain `h1 { color }` silently beat every `text-white` on a heading (dark
+   titles on dark heroes). As a base rule it stays the default and utilities
+   win, the way they're expected to. */
+@layer base {
+  h1, h2, h3 {
+    color: var(--text-heading);
+  }
 }
 
 @theme inline {
@@ -343,10 +349,12 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-h1, h2, h3, .main-title {
-  color: var(--text-heading);
-  font-weight: 800;
-  letter-spacing: -0.3px;
+@layer base {
+  h1, h2, h3, .main-title {
+    color: var(--text-heading);
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
 }
 .subtitle {
   color: var(--text-body);

@@ -50,7 +50,9 @@ export default function Privacy() {
               <Lock className="h-7 w-7 text-white" />
             </div>
             <h1 className="text-3xl font-black mb-2 text-white">سياسة الخصوصية</h1>
-            <p className="text-white/70 text-sm">آخر تحديث: يناير 2025</p>
+            <p className="inline-block rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs text-white/65">
+              آخر تحديث: 1 يناير 2026
+            </p>
           </div>
         </div>
 
