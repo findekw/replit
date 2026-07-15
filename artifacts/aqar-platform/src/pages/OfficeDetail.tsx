@@ -4,6 +4,7 @@ import { useGetOffice, useGetOfficeProperties, getGetOfficeQueryKey } from "@wor
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
+import { toIntlPhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Phone, MessageCircle, Globe, Instagram, Twitter, MapPin } from "lucide-react";
@@ -83,7 +84,7 @@ export default function OfficeDetail() {
               <Button
                 size="lg"
                 className="bg-green-500 hover:bg-green-600 text-white font-bold px-6"
-                onClick={() => window.open(`https://wa.me/${office.whatsapp}`, "_blank")}
+                onClick={() => window.open(`https://wa.me/${toIntlPhone(office.whatsapp)}`, "_blank")}
                 data-testid="button-office-whatsapp"
               >
                 <MessageCircle className="h-5 w-5 ml-2" />
@@ -94,7 +95,7 @@ export default function OfficeDetail() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => window.open(`tel:${office.phone}`, "_blank")}
+                onClick={() => window.open(`tel:+${toIntlPhone(office.phone)}`, "_blank")}
                 data-testid="button-office-call"
               >
                 <Phone className="h-4 w-4 ml-2" />

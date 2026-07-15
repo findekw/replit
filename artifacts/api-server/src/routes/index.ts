@@ -14,6 +14,7 @@ import uploadsRouter from "./uploads";
 import heroRouter from "./hero";
 import reportsRouter from "./reports";
 import paymentsRouter from "./payments";
+import ogRouter from "./og";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(uploadsRouter);
 router.use(heroRouter);
 router.use(reportsRouter);
 router.use(paymentsRouter);
+router.use(ogRouter);
 
 export default router;

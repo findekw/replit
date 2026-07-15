@@ -10,6 +10,35 @@
 (site) {
 	encode gzip
 
+	# Link previews: social crawlers don't run JS, so the SPA's static og: tags
+	# made every shared link preview as the generic site card. Send only the
+	# crawlers to the API, which renders per-listing / per-office tags. Humans
+	# fall through to the SPA below.
+	@crawler header_regexp User-Agent "(?i)(facebookexternalhit|WhatsApp|Twitterbot|Slackbot|TelegramBot|LinkedInBot|Discordbot|Googlebot|bingbot|redditbot|Pinterest|vkShare|SkypeUriPreview|Applebot|embedly|quora link preview|showyoubot|outbrain|W3C_Validator)"
+
+	handle @crawler {
+		# /properties/15 -> /api/og/properties/15
+		@property path_regexp prop ^/properties/([0-9]+)/?$
+		handle @property {
+			rewrite * /api/og/properties/{re.prop.1}
+			reverse_proxy app:3000
+		}
+
+		# /mhd -> /api/og/office/mhd (unknown slugs render the generic card)
+		@office path_regexp off ^/([A-Za-z0-9][A-Za-z0-9_-]*)/?$
+		handle @office {
+			rewrite * /api/og/office/{re.off.1}
+			reverse_proxy app:3000
+		}
+
+		# Everything else (/, deep paths) keeps the SPA's site-wide card.
+		handle {
+			root * /srv
+			try_files {path} /index.html
+			file_server
+		}
+	}
+
 	# API + uploaded files (Express serves /api/uploads/* statically)
 	handle /api/* {
 		reverse_proxy app:3000

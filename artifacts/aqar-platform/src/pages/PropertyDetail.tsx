@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
+import { toIntlPhone } from "@/lib/phone";
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
@@ -20,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 function buildWhatsAppUrl(whatsapp: string, title: string, propertyUrl: string) {
   const msg = `السلام عليكم، ممكن ترسل تفاصيل هذا الإعلان في فايند وشكراً\n${title}\n${propertyUrl}`;
-  return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
+  return `https://wa.me/${toIntlPhone(whatsapp)}?text=${encodeURIComponent(msg)}`;
 }
 
 const styles = `
@@ -258,7 +259,7 @@ export default function PropertyDetail() {
   };
   const handleCall = () => {
     trackInteraction(property.officeId!, property.id, "call", "property_page");
-    window.open(`tel:${property.office!.phone}`, "_blank");
+    window.open(`tel:+${toIntlPhone(property.office!.phone)}`, "_blank");
   };
 
   return (

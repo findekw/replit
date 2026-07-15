@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { trackInteraction } from "@/lib/trackInteraction";
+import { toIntlPhone } from "@/lib/phone";
 import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/layout/MainLayout";
@@ -82,12 +83,11 @@ export default function OfficePage() {
   }, [office]);
 
   function onWhatsApp() {
-    const number = office?.whatsapp ?? office?.phone ?? "";
-    const clean = number.replace(/\D/g, "");
+    const clean = toIntlPhone(office?.whatsapp ?? office?.phone);
     if (clean && office) { trackInteraction(office.id, null, "whatsapp", "office_page"); window.open(`https://wa.me/${clean}`, "_blank"); }
   }
   function onCall() {
-    if (office?.phone) { trackInteraction(office.id, null, "call", "office_page"); window.location.href = `tel:${office.phone}`; }
+    if (office?.phone) { trackInteraction(office.id, null, "call", "office_page"); window.location.href = `tel:+${toIntlPhone(office.phone)}`; }
   }
 
   if (notFound) {
