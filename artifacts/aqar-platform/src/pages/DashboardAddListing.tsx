@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -31,8 +31,10 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/we
 const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-const FURNISHED_OPTIONS = ["مفروش", "غير مفروش", "شبه مفروش"];
-const AMENITY_OPTIONS = [
+// Fallbacks only. The live lists come from /api/catalog (admin-editable); these
+// keep the form working if that request fails.
+const FURNISHED_FALLBACK = ["مفروش", "غير مفروش", "شبه مفروش"];
+const AMENITY_FALLBACK = [
   "مواقف سيارات",
   "مصعد",
   "بلكونة",
@@ -81,6 +83,22 @@ export default function DashboardAddListing() {
   const [bathrooms, setBathrooms] = useState("");
   const [furnished, setFurnished] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
+
+  // Admin-editable option lists; fall back to the built-in defaults on failure.
+  const [furnishedOptions, setFurnishedOptions] = useState<string[]>(FURNISHED_FALLBACK);
+  const [amenityOptions, setAmenityOptions] = useState<string[]>(AMENITY_FALLBACK);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${BASE}/api/catalog`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { furnished?: string[]; amenity?: string[] }) => {
+        if (!alive) return;
+        if (data.furnished?.length) setFurnishedOptions(data.furnished);
+        if (data.amenity?.length) setAmenityOptions(data.amenity);
+      })
+      .catch(() => {/* keep fallbacks */});
+    return () => { alive = false; };
+  }, []);
   const [showExtras, setShowExtras] = useState(false);
   const [governorateId, setGovernorateId] = useState("");
   const [areaId, setAreaId] = useState("");
@@ -748,7 +766,7 @@ export default function DashboardAddListing() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">غير محدد</SelectItem>
-                        {FURNISHED_OPTIONS.map((option) => (
+                        {furnishedOptions.map((option) => (
                           <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
                       </SelectContent>
@@ -757,7 +775,7 @@ export default function DashboardAddListing() {
                   <div>
                     <Label className="mb-2 block">مميزات العقار</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {AMENITY_OPTIONS.map((option) => {
+                      {amenityOptions.map((option) => {
                         const active = amenities.includes(option);
                         return (
                           <button

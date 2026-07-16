@@ -15,6 +15,7 @@ import heroRouter from "./hero";
 import reportsRouter from "./reports";
 import paymentsRouter from "./payments";
 import ogRouter from "./og";
+import catalogRouter from "./catalog";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(heroRouter);
 router.use(reportsRouter);
 router.use(paymentsRouter);
 router.use(ogRouter);
+router.use(catalogRouter);
 
 export default router;

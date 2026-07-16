@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, subscriptionPlansTable } from "@workspace/db";
-import { eq, and, desc, sql, like, inArray } from "drizzle-orm";
+import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, subscriptionPlansTable, catalogOptionsTable } from "@workspace/db";
+import { eq, and, desc, asc, sql, like, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import { requireAdmin } from "../lib/authHelpers";
@@ -681,6 +681,119 @@ router.delete("/admin/areas/:id", requireAdmin, async (req: Request, res: Respon
     const [row] = await db.delete(areasTable).where(eq(areasTable.id, id)).returning();
     if (!row) { res.status(404).json({ error: "المنطقة غير موجودة" }); return; }
     res.json({ message: "تم حذف المنطقة" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── Catalog: furnishing states + amenities ──────────────────────────────────
+// Admin-editable versions of lists the add-listing form used to hardcode. Like
+// areas, values are stored on listings as their Arabic label, so renaming here
+// doesn't rewrite existing listings — deactivate to hide from the picker.
+
+const CATALOG_KINDS = new Set(["furnished", "amenity"]);
+
+router.get("/admin/catalog", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const rows = await db
+      .select()
+      .from(catalogOptionsTable)
+      .orderBy(asc(catalogOptionsTable.kind), asc(catalogOptionsTable.sortOrder), asc(catalogOptionsTable.id));
+
+    // How many listings reference each label, per kind, so the UI can warn
+    // before a delete. amenities is a text[]; furnished is a single text.
+    const props = await db
+      .select({ furnished: propertiesTable.furnished, amenities: propertiesTable.amenities })
+      .from(propertiesTable);
+
+    const furnishedUse = new Map<string, number>();
+    const amenityUse = new Map<string, number>();
+    for (const p of props as { furnished: string | null; amenities: string[] | null }[]) {
+      if (p.furnished) furnishedUse.set(p.furnished, (furnishedUse.get(p.furnished) ?? 0) + 1);
+      for (const a of p.amenities ?? []) amenityUse.set(a, (amenityUse.get(a) ?? 0) + 1);
+    }
+
+    res.json({
+      options: rows.map((r: typeof catalogOptionsTable.$inferSelect) => ({
+        ...r,
+        listings: (r.kind === "furnished" ? furnishedUse : amenityUse).get(r.nameAr) ?? 0,
+      })),
+    });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/admin/catalog", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const kind = String(req.body?.kind ?? "");
+  const nameAr = String(req.body?.nameAr ?? "").trim();
+  if (!CATALOG_KINDS.has(kind)) { res.status(400).json({ error: "نوع القائمة غير صالح" }); return; }
+  if (!nameAr) { res.status(400).json({ error: "الاسم مطلوب" }); return; }
+  try {
+    // No duplicate labels within a kind.
+    const [dupe] = await db
+      .select({ id: catalogOptionsTable.id })
+      .from(catalogOptionsTable)
+      .where(and(eq(catalogOptionsTable.kind, kind), eq(catalogOptionsTable.nameAr, nameAr)))
+      .limit(1);
+    if (dupe) { res.status(409).json({ error: "هذا الخيار موجود بالفعل" }); return; }
+
+    const [{ max } = { max: 0 }] = await db
+      .select({ max: sql<number>`coalesce(max(${catalogOptionsTable.sortOrder}), 0)::int` })
+      .from(catalogOptionsTable)
+      .where(eq(catalogOptionsTable.kind, kind));
+
+    const [row] = await db
+      .insert(catalogOptionsTable)
+      .values({ kind, nameAr, sortOrder: (max ?? 0) + 1 })
+      .returning();
+    res.status(201).json({ option: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.put("/admin/catalog/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const patch: Record<string, unknown> = {};
+  if (req.body?.nameAr !== undefined) {
+    const v = String(req.body.nameAr).trim();
+    if (!v) { res.status(400).json({ error: "الاسم مطلوب" }); return; }
+    patch["nameAr"] = v;
+  }
+  if (req.body?.active !== undefined) patch["active"] = Boolean(req.body.active);
+  if (req.body?.sortOrder !== undefined) patch["sortOrder"] = Number(req.body.sortOrder);
+  if (!Object.keys(patch).length) { res.status(400).json({ error: "لا يوجد تغيير" }); return; }
+
+  try {
+    const [row] = await db.update(catalogOptionsTable).set(patch).where(eq(catalogOptionsTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "الخيار غير موجود" }); return; }
+    res.json({ option: row });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.delete("/admin/catalog/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  try {
+    const [row] = await db.select().from(catalogOptionsTable).where(eq(catalogOptionsTable.id, id)).limit(1);
+    if (!row) { res.status(404).json({ error: "الخيار غير موجود" }); return; }
+
+    // Refuse if listings still reference this label — deactivate instead.
+    const opt = row as typeof catalogOptionsTable.$inferSelect;
+    const props = await db
+      .select({ furnished: propertiesTable.furnished, amenities: propertiesTable.amenities })
+      .from(propertiesTable);
+    const used = (props as { furnished: string | null; amenities: string[] | null }[]).some((p) =>
+      opt.kind === "furnished" ? p.furnished === opt.nameAr : (p.amenities ?? []).includes(opt.nameAr),
+    );
+    if (used) { res.status(409).json({ error: "هذا الخيار مستخدم في إعلانات. عطّله بدلاً من حذفه." }); return; }
+
+    await db.delete(catalogOptionsTable).where(eq(catalogOptionsTable.id, id));
+    res.json({ message: "تم حذف الخيار" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }

@@ -176,7 +176,14 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "locations" | "tools">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "locations" | "catalog" | "tools">("offices");
+
+  type CatalogOption = { id: number; kind: "furnished" | "amenity"; nameAr: string; active: boolean; sortOrder: number; listings: number };
+  const [catalog, setCatalog] = useState<CatalogOption[]>([]);
+  const [catBusy, setCatBusy] = useState(false);
+  const [newCatName, setNewCatName] = useState<{ furnished: string; amenity: string }>({ furnished: "", amenity: "" });
+  const [editingCat, setEditingCat] = useState<number | null>(null);
+  const [editCatName, setEditCatName] = useState("");
 
   type AdminArea = { id: number; nameAr: string; governorateId: number; active: boolean; listings: number };
   type AdminGov = { id: number; nameAr: string; active: boolean; areas: AdminArea[] };
@@ -281,6 +288,46 @@ export default function Admin() {
     [toast, loadLocations],
   );
 
+  const loadCatalog = useCallback(async () => {
+    setCatBusy(true);
+    try {
+      const data = await adminFetch<{ options: CatalogOption[] }>("/api/admin/catalog");
+      setCatalog(data.options);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل الخيارات", variant: "destructive" });
+    } finally {
+      setCatBusy(false);
+    }
+  }, [toast]);
+
+  const catMutate = useCallback(
+    async (path: string, method: "POST" | "PUT" | "DELETE", body?: unknown, okMsg?: string) => {
+      setCatBusy(true);
+      try {
+        const res = await fetch(`${BASE}${path}`, {
+          method,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          toast({ title: "لم يتم التنفيذ", description: data?.error ?? "حدث خطأ", variant: "destructive" });
+          return false;
+        }
+        if (okMsg) toast({ title: okMsg });
+        await loadCatalog();
+        return true;
+      } catch {
+        toast({ title: "خطأ", description: "تعذّر الاتصال بالخادم", variant: "destructive" });
+        return false;
+      } finally {
+        setCatBusy(false);
+      }
+    },
+    [toast, loadCatalog],
+  );
+
   const loadReports = useCallback(async () => {
     setLoadingReports(true);
     try {
@@ -372,7 +419,8 @@ export default function Admin() {
       loadHeroSlides();
     }
     if (activeTab === "locations" && user) loadLocations();
-  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides, loadLocations]);
+    if (activeTab === "catalog" && user) loadCatalog();
+  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides, loadLocations, loadCatalog]);
 
   // Load subscriptions when that tab is opened
   useEffect(() => {
@@ -783,6 +831,7 @@ export default function Admin() {
             { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
             { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
             { key: "locations"     as const, icon: MapPin,     label: "المناطق",             count: undefined },
+            { key: "catalog"       as const, icon: ClipboardList, label: "خيارات الإعلان",   count: undefined },
             { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
           ]).map(({ key, icon: Icon, label, count }) => {
             const active = activeTab === key;
@@ -1496,6 +1545,102 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ═══════════════ CATALOG TAB ═══════════════ */}
+        {activeTab === "catalog" && (
+          <div className="grid gap-5">
+            {([
+              { kind: "furnished" as const, title: "حالة التأثيث", hint: "الخيارات المتاحة في «حالة التأثيث» عند إضافة إعلان." },
+              { kind: "amenity" as const, title: "مميزات العقار", hint: "المميزات التي يختار منها المكتب عند إضافة إعلان (مصعد، مسبح، ...)." },
+            ]).map(({ kind, title, hint }) => {
+              const items = catalog.filter((o) => o.kind === kind);
+              return (
+                <div key={kind} className="adm-card p-5">
+                  <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+                    <div>
+                      <h3 className="font-bold text-base" style={{ color: NAVY }}>{title}</h3>
+                      <p className="text-sm mt-1" style={{ color: BODY }}>{hint} التعطيل يُخفي الخيار من النموذج دون المساس بالإعلانات الحالية.</p>
+                    </div>
+                    {catBusy && <Loader2 className="h-4 w-4 animate-spin" style={{ color: BLUE }} />}
+                  </div>
+
+                  {/* Add */}
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    <input
+                      className="adm-input"
+                      style={{ maxWidth: 260 }}
+                      placeholder={kind === "furnished" ? "حالة جديدة" : "ميزة جديدة"}
+                      value={newCatName[kind]}
+                      onChange={(e) => setNewCatName((p) => ({ ...p, [kind]: e.target.value }))}
+                    />
+                    <button
+                      className="adm-btn adm-btn--blue"
+                      disabled={catBusy || !newCatName[kind].trim()}
+                      onClick={async () => {
+                        if (await catMutate("/api/admin/catalog", "POST", { kind, nameAr: newCatName[kind].trim() }, "تمت الإضافة")) {
+                          setNewCatName((p) => ({ ...p, [kind]: "" }));
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      إضافة
+                    </button>
+                  </div>
+
+                  {items.length === 0 && !catBusy ? (
+                    <p className="text-sm py-6 text-center" style={{ color: BODY }}>لا توجد خيارات بعد.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {items.map((o) =>
+                        editingCat === o.id ? (
+                          <div key={o.id} className="flex gap-1.5 items-center">
+                            <input className="adm-input" style={{ maxWidth: 180 }} value={editCatName} onChange={(e) => setEditCatName(e.target.value)} autoFocus />
+                            <button
+                              className="adm-btn adm-btn--approve"
+                              disabled={!editCatName.trim()}
+                              onClick={async () => {
+                                if (await catMutate(`/api/admin/catalog/${o.id}`, "PUT", { nameAr: editCatName.trim() }, "تم التعديل")) setEditingCat(null);
+                              }}
+                            >حفظ</button>
+                            <button className="adm-btn" onClick={() => setEditingCat(null)}>إلغاء</button>
+                          </div>
+                        ) : (
+                          <span
+                            key={o.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs"
+                            style={{ borderColor: BORDER, background: o.active ? "#fff" : "#F8FAFC", color: o.active ? NAVY : BODY }}
+                          >
+                            <span style={{ fontWeight: 700, textDecoration: o.active ? "none" : "line-through" }}>{o.nameAr}</span>
+                            {o.listings > 0 && <span style={{ color: BODY }}>({o.listings})</span>}
+                            <button title="تعديل" onClick={() => { setEditingCat(o.id); setEditCatName(o.nameAr); }} style={{ color: BODY }}>
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                            <button
+                              title={o.active ? "تعطيل" : "تفعيل"}
+                              disabled={catBusy}
+                              onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "PUT", { active: !o.active }, o.active ? "تم التعطيل" : "تم التفعيل")}
+                              style={{ color: o.active ? AMBER : GREEN }}
+                            >
+                              {o.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                            </button>
+                            <button
+                              title={o.listings > 0 ? "مستخدم في إعلانات — عطّله بدل الحذف" : "حذف"}
+                              disabled={catBusy}
+                              onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "DELETE", undefined, "تم الحذف")}
+                              style={{ color: RED, opacity: o.listings > 0 ? 0.35 : 1 }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
