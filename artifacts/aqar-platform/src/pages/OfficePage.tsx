@@ -17,6 +17,12 @@ const STATUS_TABS = ["الكل", "للبيع", "للإيجار", "للبدل"] a
 // Common property types offered as a quick filter on the office page.
 const PROPERTY_TYPES = ["شقة", "بيت", "دور", "ارض", "عمارة", "محل", "مكتب", "مخزن", "شاليه", "مزرعة", "قسيمة"] as const;
 
+// "للبدل" (swap) only makes sense for a handful of types, so its filter shows
+// just those — sale/rent still show every type. (Client: البدل يجي أربع أنواع.)
+const TYPES_BY_STATUS: Record<string, readonly string[]> = {
+  "للبدل": ["بيت", "شقة", "ارض", "قسيمة"],
+};
+
 const TEMPLATES = {
   modern: ModernTemplate,
   luxury: LuxuryTemplate,
@@ -66,6 +72,14 @@ export default function OfficePage() {
   }, [office, activeTab, activeType, page]);
 
   useEffect(() => { setPage(1); }, [activeTab, activeType]);
+
+  // Types available under the current status tab.
+  const availableTypes = TYPES_BY_STATUS[activeTab] ?? PROPERTY_TYPES;
+  // If the selected type isn't valid for the new status (e.g. عمارة then للبدل),
+  // clear it so the list isn't filtered to nothing.
+  useEffect(() => {
+    if (activeType && !availableTypes.includes(activeType)) setActiveType("");
+  }, [activeTab, activeType, availableTypes]);
 
   // Store the visible listing IDs so the property page can offer السابق/التالي navigation.
   useEffect(() => {
@@ -124,7 +138,7 @@ export default function OfficePage() {
 
   const props: TemplateProps = {
     office, properties, loadingProps, activeTab, setActiveTab,
-    activeType, setActiveType, propertyTypes: PROPERTY_TYPES,
+    activeType, setActiveType, propertyTypes: availableTypes,
     page, totalPages, setPage,
     onWhatsApp, onCall, statusTabs: STATUS_TABS, hasWA, hasPhone,
   };

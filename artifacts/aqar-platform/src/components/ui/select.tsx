@@ -118,7 +118,10 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      // Highlighted item: light indigo fill + dark indigo text. The old
+      // focus:bg-accent (solid #667EEA) risked a dark label on a dark fill —
+      // the "أزرق ومش باين الاسم" the client hit; a light fill can't.
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-[#EEF2FF] focus:text-[#1D4ED8] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}
