@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useListGovernorates } from "@workspace/api-client-react";
-import { getAreasByGovId } from "@/lib/kuwait-areas";
+import { useListGovernorates, useListAreas } from "@workspace/api-client-react";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -115,7 +114,10 @@ export default function DashboardAddListing() {
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: govs } = useListGovernorates();
-  const areas = governorateId ? getAreasByGovId(Number(governorateId)) : [];
+  const { data: areas } = useListAreas(
+    { governorateId: governorateId ? Number(governorateId) : undefined } as any,
+    { query: { enabled: !!governorateId } }
+  );
 
   const isUploading = uploadedImages.some((img) => img.saving) || uploadedVideo?.saving === true;
 

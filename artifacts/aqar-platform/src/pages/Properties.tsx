@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useListProperties, useListGovernorates } from "@workspace/api-client-react";
-import { getAreasByGovId } from "@/lib/kuwait-areas";
+import { useListProperties, useListGovernorates, useListAreas } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
@@ -216,8 +215,14 @@ export default function Properties() {
 
   const { data, isLoading, isFetching } = useListProperties(params as Record<string, string>);
   const { data: governorates } = useListGovernorates();
-  const areas = govId ? getAreasByGovId(parseInt(govId)) : [];
-  const mobileAreas = tempGovId ? getAreasByGovId(parseInt(tempGovId)) : [];
+  const { data: areas } = useListAreas(
+    { governorateId: govId ? Number(govId) : undefined } as any,
+    { query: { enabled: !!govId } }
+  );
+  const { data: mobileAreas } = useListAreas(
+    { governorateId: tempGovId ? Number(tempGovId) : undefined } as any,
+    { query: { enabled: !!tempGovId } }
+  );
 
   /* ─── Sheet computed values ─── */
   const sheetTypeItems = [

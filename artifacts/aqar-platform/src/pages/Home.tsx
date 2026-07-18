@@ -7,6 +7,8 @@ import { getApiBase } from "@/lib/apiBase";
 import {
   useGetLatestProperties,
   useGetPlatformStats,
+  useListGovernorates,
+  useListAreas,
 } from "@workspace/api-client-react";
 
 const HOME_BASE = getApiBase();
@@ -19,29 +21,6 @@ const TYPES_BY_STATUS: Record<string, string[]> = {
   "للبيع":   ["بيت", "قسيمة", "ارض", "دور", "شقة", "محل", "مكتب", "مخزن", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية"],
   "للبدل":   ["بيت", "قسيمة", "ارض", "شقة", "طلب"],
 };
-
-const AREAS: Record<string, string[]> = {
-  "العاصمة":      ["الخالدية","الدسمة","الدعية","الدوحة","الروضة","السرة","الشامية","الشرق","الشويخ السكنية","الشويخ الصناعية","الصليبيخات","العديلية","الفيحاء","القادسية","القبلة","القيروان","المباركية","المرقاب","المنصورية","النزهة","اليرموك","بنيد القار","جابر الأحمد","حصة المبارك","دسمان","شمال غرب الصليبيخات","عبدالله السالم","غرناطة","قرطبة","كيفان"],
-  "حولي":         ["البدع","الجابرية","الرميثية","الزهراء","السالمية","السلام","الشعب البحري","الشعب السكني","الشهداء","الصديق","بيان","حطين","حولي","سلوى","مبارك العبدالله","مشرف","ميدان حولي"],
-  "الفروانية":    ["اسطبلات الفروانية","اشبيلية","الاندلس","الرابية","الرحاب","الرقعي","الري","الضجيج","العارضية","العارضية الحرفية","العمرية","الفردوس","الفروانية","جليب الشيوخ","جنوب عبدالله المبارك","خيطان","خيطان الجنوبي الجديدة","صباح الناصر","عبدالله المبارك","غرب عبدالله المبارك"],
-  "مبارك الكبير": ["ابو الحصانية","ابو فطيرة","العدان","الفنيطيس","القرين","القصور","المسائل","المسيلة","صباح السالم","صبحان","غرب ابو فطيرة الحرفية","مبارك الكبير"],
-  "الأحمدي":      ["ابو حليفة","اسطبلات الاحمدي","الاحمدي","الجليعة","الخيران السكنية","الرقة","الزور","الشعيبة الصناعية","الصباحية","الضباعية","الظهر","العقيلة","الفحيحيل","الفنطاس","المنقف","المهبولة","النويصيب","الوفرة","الوفرة السكنية","بنيدر","جابر العلي","جنوب صباح الاحمد","صباح الاحمد البحرية","صباح الاحمد السكنية","علي صباح السالم","فهد الاحمد","ميناء عبدالله","هدية"],
-  "الجهراء":      ["اسطبلات الجهراء","الجهراء الصناعية","الجهراء القديمة","الخويسات","الصبية","الصليبية","الصليبيخات","العبدلي","العيون","القصر","المطلاع","النسيم","النعايم","النعيم","النهضة","الهجن","الواحة","امغرة الصناعية","تيماء","جنوب سعد العبدالله","سعد العبدالله","كبد"],
-};
-
-const GOV_ID: Record<string, number> = {
-  "العاصمة": 1, "حولي": 2, "الفروانية": 3,
-  "مبارك الكبير": 4, "الأحمدي": 5, "الجهراء": 6,
-};
-
-const _AREA_ID: { name: string; id: number; govId: number }[] = [
-  {name:"الخالدية",id:57,govId:1},{name:"الدسمة",id:62,govId:1},{name:"الدعية",id:63,govId:1},{name:"الدوحة",id:64,govId:1},{name:"الروضة",id:10,govId:1},{name:"السرة",id:47,govId:1},{name:"الشامية",id:8,govId:1},{name:"الشرق",id:48,govId:1},{name:"الشويخ السكنية",id:45,govId:1},{name:"الشويخ الصناعية",id:49,govId:1},{name:"الصليبيخات",id:60,govId:1},{name:"العديلية",id:55,govId:1},{name:"الفيحاء",id:51,govId:1},{name:"القادسية",id:53,govId:1},{name:"القبلة",id:5,govId:1},{name:"القيروان",id:61,govId:1},{name:"المباركية",id:66,govId:1},{name:"المرقاب",id:2,govId:1},{name:"المنصورية",id:7,govId:1},{name:"النزهة",id:58,govId:1},{name:"اليرموك",id:65,govId:1},{name:"بنيد القار",id:4,govId:1},{name:"جابر الأحمد",id:46,govId:1},{name:"حصة المبارك",id:59,govId:1},{name:"دسمان",id:3,govId:1},{name:"شمال غرب الصليبيخات",id:50,govId:1},{name:"عبدالله السالم",id:56,govId:1},{name:"غرناطة",id:52,govId:1},{name:"قرطبة",id:54,govId:1},{name:"كيفان",id:9,govId:1},
-  {name:"البدع",id:75,govId:2},{name:"الجابرية",id:17,govId:2},{name:"الرميثية",id:12,govId:2},{name:"الزهراء",id:68,govId:2},{name:"السالمية",id:16,govId:2},{name:"السلام",id:67,govId:2},{name:"الشعب البحري",id:74,govId:2},{name:"الشعب السكني",id:71,govId:2},{name:"الشهداء",id:70,govId:2},{name:"الصديق",id:69,govId:2},{name:"بيان",id:14,govId:2},{name:"حطين",id:20,govId:2},{name:"حولي",id:11,govId:2},{name:"سلوى",id:13,govId:2},{name:"مبارك العبدالله",id:72,govId:2},{name:"مشرف",id:15,govId:2},{name:"ميدان حولي",id:73,govId:2},
-  {name:"اسطبلات الفروانية",id:90,govId:3},{name:"اشبيلية",id:83,govId:3},{name:"الاندلس",id:79,govId:3},{name:"الرابية",id:87,govId:3},{name:"الرحاب",id:23,govId:3},{name:"الرقعي",id:24,govId:3},{name:"الري",id:81,govId:3},{name:"الضجيج",id:88,govId:3},{name:"العارضية",id:80,govId:3},{name:"العارضية الحرفية",id:84,govId:3},{name:"العمرية",id:26,govId:3},{name:"الفردوس",id:89,govId:3},{name:"الفروانية",id:21,govId:3},{name:"جليب الشيوخ",id:85,govId:3},{name:"جنوب عبدالله المبارك",id:77,govId:3},{name:"خيطان",id:22,govId:3},{name:"خيطان الجنوبي الجديدة",id:78,govId:3},{name:"صباح الناصر",id:86,govId:3},{name:"عبدالله المبارك",id:82,govId:3},{name:"غرب عبدالله المبارك",id:76,govId:3},
-  {name:"ابو الحصانية",id:95,govId:4},{name:"ابو فطيرة",id:91,govId:4},{name:"العدان",id:93,govId:4},{name:"الفنيطيس",id:29,govId:4},{name:"القرين",id:96,govId:4},{name:"القصور",id:94,govId:4},{name:"المسائل",id:92,govId:4},{name:"المسيلة",id:32,govId:4},{name:"صباح السالم",id:30,govId:4},{name:"صبحان",id:98,govId:4},{name:"غرب ابو فطيرة الحرفية",id:97,govId:4},{name:"مبارك الكبير",id:28,govId:4},
-  {name:"ابو حليفة",id:118,govId:5},{name:"اسطبلات الاحمدي",id:110,govId:5},{name:"الاحمدي",id:117,govId:5},{name:"الجليعة",id:102,govId:5},{name:"الخيران السكنية",id:100,govId:5},{name:"الرقة",id:39,govId:5},{name:"الزور",id:103,govId:5},{name:"الشعيبة الصناعية",id:106,govId:5},{name:"الصباحية",id:113,govId:5},{name:"الضباعية",id:108,govId:5},{name:"الظهر",id:101,govId:5},{name:"العقيلة",id:112,govId:5},{name:"الفحيحيل",id:34,govId:5},{name:"الفنطاس",id:38,govId:5},{name:"المنقف",id:35,govId:5},{name:"المهبولة",id:36,govId:5},{name:"النويصيب",id:104,govId:5},{name:"الوفرة",id:121,govId:5},{name:"الوفرة السكنية",id:115,govId:5},{name:"بنيدر",id:105,govId:5},{name:"جابر العلي",id:99,govId:5},{name:"جنوب صباح الاحمد",id:109,govId:5},{name:"صباح الاحمد البحرية",id:114,govId:5},{name:"صباح الاحمد السكنية",id:111,govId:5},{name:"علي صباح السالم",id:119,govId:5},{name:"فهد الاحمد",id:116,govId:5},{name:"ميناء عبدالله",id:107,govId:5},{name:"هدية",id:120,govId:5},
-  {name:"اسطبلات الجهراء",id:133,govId:6},{name:"الجهراء الصناعية",id:134,govId:6},{name:"الجهراء القديمة",id:124,govId:6},{name:"الخويسات",id:137,govId:6},{name:"الصبية",id:132,govId:6},{name:"الصليبية",id:129,govId:6},{name:"الصليبيخات",id:41,govId:6},{name:"العبدلي",id:130,govId:6},{name:"العيون",id:127,govId:6},{name:"القصر",id:43,govId:6},{name:"المطلاع",id:122,govId:6},{name:"النسيم",id:123,govId:6},{name:"النعايم",id:138,govId:6},{name:"النعيم",id:42,govId:6},{name:"النهضة",id:139,govId:6},{name:"الهجن",id:128,govId:6},{name:"الواحة",id:125,govId:6},{name:"امغرة الصناعية",id:126,govId:6},{name:"تيماء",id:136,govId:6},{name:"جنوب سعد العبدالله",id:135,govId:6},{name:"سعد العبدالله",id:44,govId:6},{name:"كبد",id:131,govId:6},
-];
 
 // One restrained accent across all feature cards (el-captin-style: few colors).
 const FEAT_COLOR = "#667EEA";
@@ -56,13 +35,22 @@ const FEATURES = [
 export default function Home() {
   const [, setLocation] = useLocation();
   const [status, setStatus]     = useState("للإيجار");
-  const [province, setProvince] = useState<string>("");
-  const [areas, setAreas]       = useState<string[]>([]);
+  const [govId, setGovId]       = useState<string>("");
+  const [areaIds, setAreaIds]   = useState<string[]>([]);
   const [types, setTypes]       = useState<string[]>([]);
 
   const availableTypes  = TYPES_BY_STATUS[status] ?? TYPES_BY_STATUS["للإيجار"];
-  const provinces       = Object.keys(AREAS);
-  const areasByProvince = province ? AREAS[province] ?? [] : [];
+
+  // Governorates + areas come from the DB so admin edits show up in search immediately.
+  const { data: govList } = useListGovernorates();
+  const { data: areaList } = useListAreas(
+    { governorateId: govId ? Number(govId) : undefined } as any,
+    { query: { enabled: !!govId } }
+  );
+  const govName = (id: string) =>
+    (govList ?? []).find((g) => String(g.id) === id)?.nameAr.replace("محافظة ", "") ?? "";
+  const areaName = (id: string) =>
+    (areaList ?? []).find((a) => String(a.id) === id)?.nameAr ?? "";
 
   const { data: latest } = useGetLatestProperties({ limit: 8 } as any);
   const { data: stats } = useGetPlatformStats();
@@ -120,8 +108,8 @@ export default function Home() {
 
   const sheetItems =
     sheetOpen === "type" ? availableTypes.map(t => ({ value: t, label: t })) :
-    sheetOpen === "gov"  ? provinces.map(p => ({ value: p, label: p })) :
-    sheetOpen === "area" ? areasByProvince.map(a => ({ value: a, label: a })) : [];
+    sheetOpen === "gov"  ? (govList ?? []).map(g => ({ value: String(g.id), label: g.nameAr.replace("محافظة ", "") })) :
+    sheetOpen === "area" ? (areaList ?? []).map(a => ({ value: String(a.id), label: a.nameAr })) : [];
 
   const filteredSheetItems = sheetQuery.trim()
     ? sheetItems.filter(i => i.label.includes(sheetQuery.trim()))
@@ -129,8 +117,8 @@ export default function Home() {
 
   const sheetSelectedValues =
     sheetOpen === "type" ? types :
-    sheetOpen === "gov"  ? (province ? [province] : []) :
-    sheetOpen === "area" ? areas : [];
+    sheetOpen === "gov"  ? (govId ? [govId] : []) :
+    sheetOpen === "area" ? areaIds : [];
 
   function openSheet(which: "type" | "gov" | "area") {
     setUserPickedStatus(true); // stop the status auto-carousel once the user starts choosing
@@ -163,11 +151,11 @@ export default function Home() {
       setTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
       // multi-select: keep the sheet open
     } else if (sheetOpen === "gov") {
-      const v = value === province ? "" : value;
-      setProvince(v); setAreas([]); closeSheet();
+      const v = value === govId ? "" : value;
+      setGovId(v); setAreaIds([]); closeSheet();
       if (v) setTimeout(() => openSheet("area"), 220);
     } else if (sheetOpen === "area") {
-      setAreas((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+      setAreaIds((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
       // multi-select: keep the sheet open
     }
   }
@@ -175,13 +163,8 @@ export default function Home() {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (status) params.append("status", status);
-    if (province) params.append("governorateId", String(GOV_ID[province] ?? ""));
-    if (areas.length && province) {
-      const ids = areas
-        .map((name) => _AREA_ID.find((a) => a.name === name && a.govId === GOV_ID[province])?.id)
-        .filter(Boolean);
-      if (ids.length) params.append("areaId", ids.join(","));
-    }
+    if (govId) params.append("governorateId", govId);
+    if (areaIds.length && govId) params.append("areaId", areaIds.join(","));
     if (types.length) params.append("type", types.join(","));
     setLocation(`/properties?${params.toString()}`);
   };
@@ -394,13 +377,13 @@ export default function Home() {
                   <span className={types.length ? "" : "ph"}>{types.length === 0 ? "نوع العقار" : types.length === 1 ? types[0] : `${types.length} أنواع`}</span>
                   <ChevronDown size={17} color={types.length ? "#667EEA" : "#94A3B8"} />
                 </button>
-                <button className={`fh-field${province ? " filled" : ""}`} onClick={() => openSheet("gov")}>
-                  <span className={province ? "" : "ph"}>{province || "المحافظة"}</span>
-                  <ChevronDown size={17} color={province ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${govId ? " filled" : ""}`} onClick={() => openSheet("gov")}>
+                  <span className={govId ? "" : "ph"}>{govId ? govName(govId) : "المحافظة"}</span>
+                  <ChevronDown size={17} color={govId ? "#667EEA" : "#94A3B8"} />
                 </button>
-                <button className={`fh-field${areas.length ? " filled" : ""}`} onClick={() => { if (province) openSheet("area"); }} disabled={!province}>
-                  <span className={areas.length ? "" : "ph"}>{areas.length === 0 ? (province ? "المنطقة" : "اختر المحافظة") : areas.length === 1 ? areas[0] : `${areas.length} مناطق`}</span>
-                  <ChevronDown size={17} color={areas.length ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${areaIds.length ? " filled" : ""}`} onClick={() => { if (govId) openSheet("area"); }} disabled={!govId}>
+                  <span className={areaIds.length ? "" : "ph"}>{areaIds.length === 0 ? (govId ? "المنطقة" : "اختر المحافظة") : areaIds.length === 1 ? areaName(areaIds[0]) : `${areaIds.length} مناطق`}</span>
+                  <ChevronDown size={17} color={areaIds.length ? "#667EEA" : "#94A3B8"} />
                 </button>
               </div>
               <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
@@ -443,10 +426,10 @@ export default function Home() {
         <section className="fh-section fh-reveal">
           <div className="fh-sec-head"><div className="fh-sec-titlewrap"><span className="fh-sec-accent" /><h2 className="fh-sec-title">تصفّح حسب المحافظة</h2></div></div>
           <div className="fh-gov-grid">
-            {Object.entries(GOV_ID).map(([name, id]) => (
-              <Link key={id} href={`/properties?governorateId=${id}`} className="fh-gov">
+            {(govList ?? []).map((g) => (
+              <Link key={g.id} href={`/properties?governorateId=${g.id}`} className="fh-gov">
                 <div className="fh-gov-ic"><MapPin size={22} /></div>
-                <div className="fh-gov-name">{name}</div>
+                <div className="fh-gov-name">{g.nameAr.replace("محافظة ", "")}</div>
               </Link>
             ))}
           </div>
