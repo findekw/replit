@@ -144,11 +144,12 @@ export default function Dashboard() {
   const [draftDescription, setDraftDescription] = useState("");
   const [draftLicense, setDraftLicense] = useState("");
   const [draftCommercialReg, setDraftCommercialReg] = useState("");
+  const [draftAddress, setDraftAddress] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingProfile, setSavingProfile] = useState(false);
 
   /* snapshot for cancel */
-  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "" });
+  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "", address: "" });
 
   const [pwOpen, setPwOpen] = useState(false);
   const [pwCurrent, setPwCurrent] = useState("");
@@ -184,7 +185,7 @@ export default function Dashboard() {
     if (!officeId) return;
     fetch(`${BASE}/api/offices/${officeId}`, { credentials: "include" })
       .then(r => r.json())
-      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null; licenseNumber?: string | null; commercialReg?: string | null }) => {
+      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null; licenseNumber?: string | null; commercialReg?: string | null; addressAr?: string | null }) => {
         const name = data.nameAr ?? "";
         const slug = data.slug ?? "";
         const rawPhone = data.phone ?? "";
@@ -194,6 +195,7 @@ export default function Dashboard() {
         const desc = data.descriptionAr ?? "";
         const lic = data.licenseNumber ?? "";
         const creg = data.commercialReg ?? "";
+        const addr = data.addressAr ?? "";
         const edits = data.slugEdits ?? 0;
         setOfficeNameAr(name);
         setOfficeSlug(slug || null);
@@ -207,7 +209,8 @@ export default function Dashboard() {
         setDraftDescription(desc);
         setDraftLicense(lic);
         setDraftCommercialReg(creg);
-        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg });
+        setDraftAddress(addr);
+        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg, address: addr });
       })
       .catch(() => {});
   }, [officeId]);
@@ -299,6 +302,7 @@ export default function Dashboard() {
     setDraftDescription(snapshot.description);
     setDraftLicense(snapshot.licenseNumber);
     setDraftCommercialReg(snapshot.commercialReg);
+    setDraftAddress(snapshot.address);
     setErrors({});
     setEditMode(true);
   }
@@ -311,6 +315,7 @@ export default function Dashboard() {
     setDraftDescription(snapshot.description);
     setDraftLicense(snapshot.licenseNumber);
     setDraftCommercialReg(snapshot.commercialReg);
+    setDraftAddress(snapshot.address);
     setErrors({});
     setEditMode(false);
   }
@@ -360,6 +365,7 @@ export default function Dashboard() {
         officeDescription: draftDescription.trim(),
         licenseNumber: draftLicense.trim(),
         commercialReg: draftCommercialReg.trim(),
+        addressAr: draftAddress.trim(),
       };
       if (draftSlug !== snapshot.slug) payload.slug = draftSlug;
 
@@ -378,7 +384,7 @@ export default function Dashboard() {
         return;
       }
       /* update local state */
-      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim(), licenseNumber: draftLicense.trim(), commercialReg: draftCommercialReg.trim() };
+      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim(), licenseNumber: draftLicense.trim(), commercialReg: draftCommercialReg.trim(), address: draftAddress.trim() };
       setSnapshot(newSnap);
       setOfficeNameAr(draftNameAr.trim());
       setOfficeSlug(draftSlug || null);
@@ -731,6 +737,31 @@ export default function Dashboard() {
               )
             )}
 
+            {/* ── Office address (optional) ── */}
+            {editMode ? (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 7 }}>
+                  عنوان المكتب <span style={{ color: "#9ca3af", fontWeight: 400 }}>(اختياري)</span>
+                </div>
+                <input
+                  value={draftAddress}
+                  onChange={e => setDraftAddress(e.target.value.slice(0, 200))}
+                  placeholder="مثال: القبلة - شارع علي السالم - خلف سوق المناخ - مكتب رقم 68"
+                  dir="rtl"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, background: "#fff", color: "#111827", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                  onFocus={e => (e.currentTarget.style.borderColor = "#3b82f6")}
+                  onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+                <p style={{ fontSize: 11, color: "#9ca3af", margin: "6px 0 0" }}>يظهر في صفحتك العامة تحت نبذة المكتب.</p>
+              </div>
+            ) : (
+              snapshot.address && (
+                <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
+                  العنوان: <span style={{ color: "#111827" }}>{snapshot.address}</span>
+                </div>
+              )
+            )}
+
             {/* ── Legal identifiers (optional) ── */}
             {editMode ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -784,40 +815,44 @@ export default function Dashboard() {
                   </div>
                   {snapshot.slug ? (
                     <div style={{
-                      display: "flex", alignItems: "center", gap: 12,
+                      display: "flex", flexDirection: "column", gap: 12,
                       background: "linear-gradient(120deg,#F4F7FF,#EEF2FE)",
                       border: "1px solid #DBE4FF",
-                      borderRadius: 14, padding: "14px 16px", flexWrap: "wrap",
+                      borderRadius: 14, padding: "14px 16px",
                       boxShadow: "0 4px 14px rgba(63,91,216,0.08)",
                     }}>
-                      <span style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #DBE4FF", boxShadow: "0 2px 6px rgba(63,91,216,0.12)" }}>
-                        <ExternalLink style={{ width: 18, height: 18, color: "#667EEA" }} />
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", marginBottom: 2 }}>الرابط المباشر</div>
-                        <a
-                          href={`${BASE}/${snapshot.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={`${BRAND_DOMAIN}/${snapshot.slug}`}
-                          style={{
-                            minWidth: 0, maxWidth: "100%",
-                            direction: "ltr", display: "block",
-                            fontSize: 14, fontFamily: "monospace", fontWeight: 700,
-                            color: NAVY, textDecoration: "none",
-                            letterSpacing: "0.01em",
-                            whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-word",
-                          }}
-                        >
-                          {BRAND_DOMAIN}/{snapshot.slug}
-                        </a>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #DBE4FF", boxShadow: "0 2px 6px rgba(63,91,216,0.12)" }}>
+                          <ExternalLink style={{ width: 16, height: 16, color: "#667EEA" }} />
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>الرابط المباشر</span>
                       </div>
-                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      {/* Full link on its own full-width line — never stacked char-by-char */}
+                      <a
+                        href={`${BASE}/${snapshot.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`${BRAND_DOMAIN}/${snapshot.slug}`}
+                        style={{
+                          display: "block", width: "100%",
+                          direction: "ltr", textAlign: "left",
+                          background: "#fff", border: "1px solid #DBE4FF", borderRadius: 10,
+                          padding: "11px 13px",
+                          fontSize: 14.5, fontFamily: "monospace", fontWeight: 700,
+                          color: NAVY, textDecoration: "none",
+                          letterSpacing: "0.01em",
+                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        {BRAND_DOMAIN}/{snapshot.slug}
+                      </a>
+                      <div style={{ display: "flex", gap: 8 }}>
                         <button
                           onClick={copyPageLink}
                           style={{
-                            display: "inline-flex", alignItems: "center", gap: 6,
-                            padding: "9px 16px", borderRadius: 10,
+                            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                            padding: "10px 16px", borderRadius: 10,
                             border: "none", background: copied ? "#059669" : "#667EEA",
                             color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
                             boxShadow: "0 6px 16px rgba(63,91,216,0.28)", transition: "background .18s",
@@ -831,8 +866,8 @@ export default function Dashboard() {
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            display: "inline-flex", alignItems: "center", gap: 6,
-                            padding: "9px 16px", borderRadius: 10,
+                            flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                            padding: "10px 16px", borderRadius: 10,
                             border: "1.5px solid #C7D2FE", background: "#fff",
                             color: "#667EEA", fontSize: 13, fontWeight: 700, textDecoration: "none",
                           }}

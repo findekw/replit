@@ -69,6 +69,14 @@ export default function ClassicTemplate(p: TemplateProps) {
               </>
             )}
 
+            {office.addressAr && (
+              <>
+                <div className="cl-divider" />
+                <h3 className="cl-sub">العنوان</h3>
+                <p className="cl-desc">{office.addressAr}</p>
+              </>
+            )}
+
             {(office.licenseNumber || office.commercialReg) && (
               <>
                 <div className="cl-divider" />

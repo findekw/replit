@@ -13,6 +13,7 @@ export interface OfficeData {
   email: string | null;
   licenseNumber: string | null;
   commercialReg: string | null;
+  addressAr: string | null;
   governorateName: string | null;
   verified: boolean;
   featured: boolean;

@@ -49,14 +49,18 @@ export default function ModernTemplate(p: TemplateProps) {
       )}
 
       <main className="tm-main">
-        {/* About + legal identifiers — kept at the top (client preference) */}
-        {(office.descriptionAr || office.licenseNumber || office.commercialReg) && (
+        {/* About + address + legal identifiers — kept at the top (client preference).
+            Order per client: نبذة → عنوان → الترخيص/السجل. */}
+        {(office.descriptionAr || office.addressAr || office.licenseNumber || office.commercialReg) && (
           <section className="tm-card tm-about">
             {office.descriptionAr && (
               <>
                 <h2 className="tm-h2">نبذة عن المكتب</h2>
                 <p>{office.descriptionAr}</p>
               </>
+            )}
+            {office.addressAr && (
+              <div className="tm-addr"><MapPin size={17} style={{ flexShrink: 0, marginTop: 3, color: "#667EEA" }} /> {office.addressAr}</div>
             )}
             {(office.licenseNumber || office.commercialReg) && (
               <div className="tm-legal">
@@ -164,6 +168,8 @@ const CSS = `
 .tm-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 20px; box-shadow: 0 6px 22px rgba(15,23,42,0.05); }
 .tm-about { padding: 26px 28px; margin-bottom: 28px; }
 .tm-about p { color: #475569; line-height: 2; font-size: 15.5px; margin: 14px 0 0; }
+.tm-addr { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; color: #475569; font-size: 14.5px; font-weight: 600; line-height: 1.8; }
+.tm-addr:first-child { margin-top: 0; }
 .tm-legal { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #EEF1F5; }
 .tm-legal:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .tm-legal-item { font-size: 13.5px; color: #64748B; font-weight: 600; }
@@ -194,5 +200,7 @@ const CSS = `
 .tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
 .tm-sticky-spacer { height: 80px; }
 @media (min-width: 1024px){ .tm-sticky, .tm-sticky-spacer { display: none; } }
-@media (max-width: 1023px){ .tm-contact-wrap { display: none; } }
+/* Mobile: the floating contact bar is hidden (sticky bottom bar covers it), so
+   also collapse the gap it left between the hero and the first card. */
+@media (max-width: 1023px){ .tm-contact-wrap { display: none; } .tm-main { padding-top: 14px; } .tm-hero-inner { padding-bottom: 24px; } }
 `;

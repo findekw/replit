@@ -46,6 +46,7 @@ function buildOfficeObject(o: typeof officesTable.$inferSelect, extras: {
     twitter: o.twitter ?? null,
     licenseNumber: (o as { licenseNumber?: string | null }).licenseNumber ?? null,
     commercialReg: (o as { commercialReg?: string | null }).commercialReg ?? null,
+    addressAr: (o as { addressAr?: string | null }).addressAr ?? null,
     governorateId: o.governorateId ?? null,
     governorateName: extras.governorateName ?? null,
     verified: o.verified,
@@ -300,6 +301,7 @@ router.get("/offices/:id", async (req, res): Promise<void> => {
     landingTemplate: officeBase.landingTemplate,
     licenseNumber: officeBase.licenseNumber,
     commercialReg: officeBase.commercialReg,
+    addressAr: officeBase.addressAr,
   });
 });
 
@@ -526,8 +528,8 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
   if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
-  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate, licenseNumber, commercialReg } = req.body as {
-    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string; licenseNumber?: string; commercialReg?: string;
+  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate, licenseNumber, commercialReg, addressAr } = req.body as {
+    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string; licenseNumber?: string; commercialReg?: string; addressAr?: string;
   };
 
   // Fetch current office to check slugEdits
@@ -566,6 +568,7 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   }
   if (licenseNumber !== undefined) updates.licenseNumber = licenseNumber.trim().slice(0, 60) || null;
   if (commercialReg !== undefined) updates.commercialReg = commercialReg.trim().slice(0, 60) || null;
+  if (addressAr !== undefined) updates.addressAr = addressAr.trim().slice(0, 200) || null;
 
   // Slug (username) is chosen once — at registration or the first time it's set —
   // then it is fixed and can no longer be changed by the office.

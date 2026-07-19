@@ -56,6 +56,14 @@ export default function MinimalTemplate(p: TemplateProps) {
           </section>
         )}
 
+        {/* Address */}
+        {office.addressAr && (
+          <section className="mn-section">
+            <div className="mn-eyebrow">العنوان</div>
+            <p className="mn-about">{office.addressAr}</p>
+          </section>
+        )}
+
         {/* Legal identifiers */}
         {(office.licenseNumber || office.commercialReg) && (
           <section className="mn-section">

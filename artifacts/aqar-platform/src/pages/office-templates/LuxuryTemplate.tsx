@@ -71,6 +71,14 @@ export default function LuxuryTemplate(p: TemplateProps) {
           </section>
         )}
 
+        {/* Address */}
+        {office.addressAr && (
+          <section className="lx-about">
+            <div className="lx-label"><span className="lx-label-line" /> العنوان</div>
+            <p>{office.addressAr}</p>
+          </section>
+        )}
+
         {/* Legal identifiers */}
         {(office.licenseNumber || office.commercialReg) && (
           <section className="lx-about">

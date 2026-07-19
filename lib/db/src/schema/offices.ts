@@ -41,6 +41,7 @@ export const officesTable = pgTable("offices", {
   // later; displayed on the office page for trust/compliance.
   licenseNumber: text("license_number"),
   commercialReg: text("commercial_reg"),
+  addressAr: text("address_ar"),
   governorateId: integer("governorate_id").references(() => governoratesTable.id),
   planId: integer("plan_id").references(() => subscriptionPlansTable.id),
   verified: boolean("verified").notNull().default(false),
