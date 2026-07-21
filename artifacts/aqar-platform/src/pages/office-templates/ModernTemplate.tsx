@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Phone, MessageCircle, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
+  ShieldCheck, BadgeCheck,
 } from "lucide-react";
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
@@ -62,10 +63,29 @@ export default function ModernTemplate(p: TemplateProps) {
             {office.addressAr && (
               <div className="tm-addr"><MapPin size={17} style={{ flexShrink: 0, marginTop: 3, color: "#667EEA" }} /> {office.addressAr}</div>
             )}
+            {/* Credentials read as verification badges rather than a line of
+                text — they exist to signal the office is licensed, so they
+                should look official. Each appears only if filled in. */}
             {(office.licenseNumber || office.commercialReg) && (
               <div className="tm-legal">
-                {office.licenseNumber && <span className="tm-legal-item">رقم الترخيص: <b dir="ltr">{office.licenseNumber}</b></span>}
-                {office.commercialReg && <span className="tm-legal-item">السجل التجاري: <b dir="ltr">{office.commercialReg}</b></span>}
+                {office.licenseNumber && (
+                  <div className="tm-cred">
+                    <span className="tm-cred-ic"><ShieldCheck size={18} /></span>
+                    <span className="tm-cred-body">
+                      <span className="tm-cred-label">رقم الترخيص</span>
+                      <span className="tm-cred-val" dir="ltr">{office.licenseNumber}</span>
+                    </span>
+                  </div>
+                )}
+                {office.commercialReg && (
+                  <div className="tm-cred">
+                    <span className="tm-cred-ic"><BadgeCheck size={18} /></span>
+                    <span className="tm-cred-body">
+                      <span className="tm-cred-label">السجل التجاري</span>
+                      <span className="tm-cred-val" dir="ltr">{office.commercialReg}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </section>
@@ -170,10 +190,15 @@ const CSS = `
 .tm-about p { color: #475569; line-height: 2; font-size: 15.5px; margin: 14px 0 0; }
 .tm-addr { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; color: #475569; font-size: 14.5px; font-weight: 600; line-height: 1.8; }
 .tm-addr:first-child { margin-top: 0; }
-.tm-legal { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #EEF1F5; }
+.tm-legal { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #EEF1F5; }
+@media (min-width:560px){ .tm-legal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tm-legal:first-child { margin-top: 0; padding-top: 0; border-top: none; }
-.tm-legal-item { font-size: 13.5px; color: #64748B; font-weight: 600; }
-.tm-legal-item b { color: #111827; font-weight: 800; }
+/* Credential badge */
+.tm-cred { display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-radius: 13px; background: #F7F9FE; border: 1px solid #E6ECFB; }
+.tm-cred-ic { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: #667EEA; border: 1px solid #E0E8FA; box-shadow: 0 2px 6px rgba(63,91,216,0.10); }
+.tm-cred-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tm-cred-label { font-size: 12px; font-weight: 700; color: #64748B; letter-spacing: 0.01em; }
+.tm-cred-val { font-size: 15px; font-weight: 800; color: #111827; letter-spacing: 0.02em; overflow-wrap: anywhere; }
 .tm-h2 { font-size: 22px; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.3px; }
 .tm-listhead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .tm-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
