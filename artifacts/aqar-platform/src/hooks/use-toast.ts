@@ -6,7 +6,11 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// How long a dismissed toast lingers for its exit animation before unmounting.
+const TOAST_REMOVE_DELAY = 1000
+// Toasts auto-dismiss: they used to sit until manually closed — and the close
+// button only appears on hover, so on mobile "مش راضية تختفي".
+const TOAST_AUTO_DISMISS_MS = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -160,6 +164,8 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  setTimeout(dismiss, TOAST_AUTO_DISMISS_MS)
 
   return {
     id: id,

@@ -353,7 +353,9 @@ router.get("/offices/:id/properties", async (req, res): Promise<void> => {
       .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
       .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
       .where(whereClause)
-      .orderBy(desc(propertiesTable.featured), desc(propertiesTable.createdAt))
+      // Newest first, same as public search — the featured boost buried fresh
+      // listings mid-list on the office's own page too.
+      .orderBy(desc(propertiesTable.createdAt), desc(propertiesTable.id))
       .limit(limit)
       .offset(offset),
     db.select({ count: count() }).from(propertiesTable).where(whereClause),

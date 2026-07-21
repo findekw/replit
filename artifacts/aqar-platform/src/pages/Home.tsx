@@ -34,10 +34,14 @@ const FEATURES = [
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  // Home search is deliberately single-select: pick a type and the governorate
+  // sheet opens itself, pick a governorate and the areas open, pick an area and
+  // you're done — the client's signature fast flow ("ما في أي موقع يعمل كده").
+  // Multi-select lives on the /properties page (areas only), not here.
   const [status, setStatus]     = useState("للإيجار");
   const [govId, setGovId]       = useState<string>("");
-  const [areaIds, setAreaIds]   = useState<string[]>([]);
-  const [types, setTypes]       = useState<string[]>([]);
+  const [areaId, setAreaId]     = useState<string>("");
+  const [type, setType]         = useState<string>("");
 
   const availableTypes  = TYPES_BY_STATUS[status] ?? TYPES_BY_STATUS["للإيجار"];
 
@@ -99,7 +103,7 @@ export default function Home() {
     return () => clearInterval(t);
   }, [userPickedStatus]);
 
-  function handleStatusChange(s: string) { setUserPickedStatus(true); setStatus(s); setTypes([]); }
+  function handleStatusChange(s: string) { setUserPickedStatus(true); setStatus(s); setType(""); }
 
   const [sheetOpen, setSheetOpen]                   = useState<"type" | "gov" | "area" | null>(null);
   const [sheetQuery, setSheetQuery]                 = useState("");
@@ -116,9 +120,9 @@ export default function Home() {
     : sheetItems;
 
   const sheetSelectedValues =
-    sheetOpen === "type" ? types :
+    sheetOpen === "type" ? (type ? [type] : []) :
     sheetOpen === "gov"  ? (govId ? [govId] : []) :
-    sheetOpen === "area" ? areaIds : [];
+    sheetOpen === "area" ? (areaId ? [areaId] : []) : [];
 
   function openSheet(which: "type" | "gov" | "area") {
     setUserPickedStatus(true); // stop the status auto-carousel once the user starts choosing
@@ -146,17 +150,19 @@ export default function Home() {
     setTimeout(() => sheetInputRef.current?.focus(), 60);
   }
 
+  // The cascade: each pick closes its sheet and opens the next step, so the
+  // whole search is type → governorate → area → ابحث in four taps.
   function handleSheetSelect(value: string) {
     if (sheetOpen === "type") {
-      setTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
-      // multi-select: keep the sheet open
+      const v = value === type ? "" : value;
+      setType(v); closeSheet();
+      if (v && !govId) setTimeout(() => openSheet("gov"), 220);
     } else if (sheetOpen === "gov") {
       const v = value === govId ? "" : value;
-      setGovId(v); setAreaIds([]); closeSheet();
+      setGovId(v); setAreaId(""); closeSheet();
       if (v) setTimeout(() => openSheet("area"), 220);
     } else if (sheetOpen === "area") {
-      setAreaIds((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
-      // multi-select: keep the sheet open
+      setAreaId(value === areaId ? "" : value); closeSheet();
     }
   }
 
@@ -164,8 +170,8 @@ export default function Home() {
     const params = new URLSearchParams();
     if (status) params.append("status", status);
     if (govId) params.append("governorateId", govId);
-    if (areaIds.length && govId) params.append("areaId", areaIds.join(","));
-    if (types.length) params.append("type", types.join(","));
+    if (areaId && govId) params.append("areaId", areaId);
+    if (type) params.append("type", type);
     setLocation(`/properties?${params.toString()}`);
   };
 
@@ -373,17 +379,17 @@ export default function Home() {
                 ))}
               </div>
               <div className="fh-fields">
-                <button className={`fh-field${types.length ? " filled" : ""}`} onClick={() => openSheet("type")}>
-                  <span className={types.length ? "" : "ph"}>{types.length === 0 ? "نوع العقار" : types.length === 1 ? types[0] : `${types.length} أنواع`}</span>
-                  <ChevronDown size={17} color={types.length ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${type ? " filled" : ""}`} onClick={() => openSheet("type")}>
+                  <span className={type ? "" : "ph"}>{type || "نوع العقار"}</span>
+                  <ChevronDown size={17} color={type ? "#667EEA" : "#94A3B8"} />
                 </button>
                 <button className={`fh-field${govId ? " filled" : ""}`} onClick={() => openSheet("gov")}>
                   <span className={govId ? "" : "ph"}>{govId ? govName(govId) : "المحافظة"}</span>
                   <ChevronDown size={17} color={govId ? "#667EEA" : "#94A3B8"} />
                 </button>
-                <button className={`fh-field${areaIds.length ? " filled" : ""}`} onClick={() => { if (govId) openSheet("area"); }} disabled={!govId}>
-                  <span className={areaIds.length ? "" : "ph"}>{areaIds.length === 0 ? (govId ? "المنطقة" : "اختر المحافظة") : areaIds.length === 1 ? areaName(areaIds[0]) : `${areaIds.length} مناطق`}</span>
-                  <ChevronDown size={17} color={areaIds.length ? "#667EEA" : "#94A3B8"} />
+                <button className={`fh-field${areaId ? " filled" : ""}`} onClick={() => { if (govId) openSheet("area"); }} disabled={!govId}>
+                  <span className={areaId ? "" : "ph"}>{areaId ? areaName(areaId) : (govId ? "المنطقة" : "اختر المحافظة")}</span>
+                  <ChevronDown size={17} color={areaId ? "#667EEA" : "#94A3B8"} />
                 </button>
               </div>
               <button className="fh-search-btn" onClick={handleSearch}><Search size={18} /> ابحث الآن</button>
@@ -503,13 +509,7 @@ export default function Home() {
               })}
               {filteredSheetItems.length === 0 && <p style={{ textAlign: "center", color: "#94A3B8", padding: "32px 20px", fontFamily: "'Cairo', sans-serif", fontSize: 14 }}>لا توجد نتائج</p>}
             </div>
-            {(sheetOpen === "type" || sheetOpen === "area") && (
-              <div style={{ padding: "12px 16px", borderTop: "1px solid #F1F5F9", flexShrink: 0 }}>
-                <button onClick={closeSheet} style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "#667EEA", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", outline: "none", fontFamily: "'Cairo', sans-serif" }}>
-                  تم
-                </button>
-              </div>
-            )}
+            {/* Single-select cascade: a tap selects and advances, no "تم" needed. */}
           </div>
         </div>
       )}

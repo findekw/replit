@@ -1350,7 +1350,8 @@ export default function Admin() {
                                 style={{ height: 34, padding: "0 12px", background: "#fff", color: BLUE, border: `1px solid ${BLUE}`, opacity: busy ? 0.5 : 1 }}
                                 data-testid={`sub-trial-${s.officeId}`}
                               >
-                                تجربة ٧ أيام
+                                {/* The backend grants 14 days — the label said ٧ and confused the client. */}
+                                تجربة ١٤ يومًا
                               </button>
                               <button
                                 disabled={busy || s.subscriptionStatus === "expired"}

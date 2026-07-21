@@ -282,10 +282,12 @@ export default function Properties() {
 
   function handleSheetSelect(value: string) {
     if (sheetOpen === "type") {
-      if (!value) { setTypes([]); setPage(1); return; }
-      setTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+      // Type is single-select (client: a searcher wants ONE kind of property;
+      // multi is for areas only). State stays an array for the shared csv URL
+      // param, it just never holds more than one.
+      setTypes(value && !types.includes(value) ? [value] : []);
       setPage(1);
-      // multi-select: keep the sheet open so the user can pick several
+      closeSheet();
     } else if (sheetOpen === "gov") {
       setGovId(value);
       setAreaIds([]);
@@ -434,7 +436,7 @@ export default function Properties() {
         <span style={LABEL_STYLE}>نوع العقار</span>
         {isMobile
           ? <LocationCombobox items={tempTypeItems} value={tempType} onChange={setTempType} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
-          : <LocationCombobox items={typeItems} value={types} onChange={(v) => { setTypes(v); applyFilters(); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="400px" emptyText="لا يوجد نوع" multiple />}
+          : <LocationCombobox items={typeItems} value={types[0] ?? ""} onChange={(v: string) => { setTypes(v ? [v] : []); applyFilters(); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="400px" emptyText="لا يوجد نوع" />}
       </div>
 
       {/* المحافظة */}
@@ -445,9 +447,14 @@ export default function Properties() {
           : <LocationCombobox items={govItems} value={govId} onChange={(v) => { setGovId(v); setAreaIds([]); applyFilters(); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />}
       </div>
 
-      {/* المنطقة */}
+      {/* المنطقة — the one multi-select filter (client decision) */}
       <div>
-        <span style={LABEL_STYLE}>المنطقة</span>
+        <span style={LABEL_STYLE}>
+          المنطقة
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#667EEA", background: "#EEF2FF", border: "1px solid #DBE4FF", borderRadius: 999, padding: "2px 8px", marginRight: 6 }}>
+            يمكنك اختيار أكثر من منطقة
+          </span>
+        </span>
         {isMobile
           ? <LocationCombobox items={(mobileAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaId} onChange={setTempAreaId} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" />
           : <LocationCombobox items={(areas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={areaIds} onChange={(v) => { setAreaIds(v); applyFilters(); }} placeholder={govId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!govId} showSearch listMaxHeight="280px" multiple />}
@@ -1026,9 +1033,13 @@ export default function Properties() {
               )}
             </div>
 
-            {/* Multi-select sheets (type / area) get a done button since they don't auto-close */}
-            {(sheetOpen === "type" || sheetOpen === "area") && (
+            {/* Areas are the one multi-select filter, so only that sheet stays
+                open and needs a done button; type/gov auto-close on pick. */}
+            {sheetOpen === "area" && (
               <div style={{ padding: "12px 16px", borderTop: "1px solid #f1f5f9", flexShrink: 0 }}>
+                <p style={{ margin: "0 0 8px", textAlign: "center", fontSize: 12.5, fontWeight: 600, color: "#667EEA" }}>
+                  يمكنك اختيار أكثر من منطقة
+                </p>
                 <button
                   onClick={closeSheet}
                   style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "#667EEA", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", outline: "none" }}

@@ -228,7 +228,12 @@ body::-webkit-scrollbar,
     margin: 0;
     padding: 0;
     background: var(--background-main);
+    /* clip, not hidden: on iOS Safari `overflow-x: hidden` still lets the
+       whole page pan sideways when any child overflows (the box becomes a
+       scroll container) — the "صفحات مش كاملة عالموبايل" the client filmed.
+       clip forbids the scroll entirely; hidden stays as the fallback. */
     overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
   }
   body {
@@ -236,6 +241,7 @@ body::-webkit-scrollbar,
     color: var(--text-body);
     direction: rtl;
     overflow-x: hidden;
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }

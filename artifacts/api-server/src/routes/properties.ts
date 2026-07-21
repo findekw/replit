@@ -189,7 +189,10 @@ router.get("/properties", async (req, res): Promise<void> => {
       .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
       .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
       .where(whereClause)
-      .orderBy(desc(propertiesTable.featured), orderBy)
+      // No featured-first boost: the client expects a fresh listing at the very
+      // top, and the featured flag (demo data) was silently outranking it —
+      // "أنا أعمل إعلان جديد ما يروح فوق، ينزل تحت".
+      .orderBy(orderBy, desc(propertiesTable.id))
       .limit(limit)
       .offset(offset),
     db.select({ count: count() }).from(propertiesTable).leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id)).where(whereClause),
