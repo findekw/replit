@@ -21,6 +21,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function DashboardListings() {
   const [page, setPage] = useState(1);
+  // Server-side sort (client ask: "مين الأكثر مشاهدة؟ مين الأكثر تواصل؟") —
+  // must be server-side because the list is paginated.
+  const [sort, setSort] = useState("newest");
   const { officeId: oid, isLoading: authLoading } = useOfficeAuth();
   const officeId = oid ?? 0;
   const [, navigate] = useLocation();
@@ -29,7 +32,7 @@ export default function DashboardListings() {
 
   const { data, isLoading: propsLoading, refetch } = useGetOfficeProperties(
     officeId,
-    { page, limit: 10 } as any,
+    { page, limit: 10, ...(sort !== "newest" ? { sort } : {}) } as any,
     { query: { enabled: officeId > 0 } }
   );
 
@@ -87,12 +90,32 @@ export default function DashboardListings() {
             <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>إعلاناتي</h1>
             <p style={{ fontSize: 14, color: "#64748B", margin: "4px 0 0" }}>إدارة كل عقاراتك المعروضة على المنصة</p>
           </div>
-          <Link href="/dashboard/listings/new">
-            <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#667EEA" }} data-testid="button-add-listing">
-              <Plus className="h-4 w-4" />
-              إضافة إعلان
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* The corner sort the client asked for: who gets the most views /
+                WhatsApp taps / calls — sorted on the server across all pages. */}
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+              aria-label="ترتيب الإعلانات"
+              style={{
+                height: 44, borderRadius: 12, border: "1.5px solid #E2E8F0", background: "#fff",
+                padding: "0 12px", fontSize: 13.5, fontWeight: 700, color: "#334155",
+                fontFamily: "'Cairo', sans-serif", cursor: "pointer", outline: "none",
+              }}
+            >
+              <option value="newest">الأحدث أولاً</option>
+              <option value="oldest">الأقدم أولاً</option>
+              <option value="views">الأكثر مشاهدة</option>
+              <option value="whatsapp">الأكثر تواصلاً واتساب</option>
+              <option value="calls">الأكثر اتصالاً</option>
+            </select>
+            <Link href="/dashboard/listings/new">
+              <Button className="gap-2 h-11 px-6 rounded-xl font-bold" style={{ background: "#667EEA" }} data-testid="button-add-listing">
+                <Plus className="h-4 w-4" />
+                إضافة إعلان
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>

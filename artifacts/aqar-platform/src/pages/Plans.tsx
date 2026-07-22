@@ -1,7 +1,27 @@
 import { useLocation } from "wouter";
+import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { MessageCircle, Shield } from "lucide-react";
+import { getApiBase } from "@/lib/apiBase";
+
+const PLANS_BASE = getApiBase();
+
+type PublicPlan = {
+  id: number;
+  nameAr: string;
+  price: number;
+  currency: string;
+  maxListings: number;
+  durationDays?: number;
+  features?: string[];
+};
+
+/** "30 يوم" reads as monthly; anything else states its real length. */
+function durationLabel(days?: number) {
+  if (!days || days === 30) return "شهرياً";
+  return `لكل ${days} يوم`;
+}
 
 const BLUE     = "#111827";
 const ACCENT   = "#667EEA";
@@ -21,6 +41,16 @@ const FEATURE_CARDS = [
 export default function Plans() {
   const { officeId } = useOfficeAuth();
   const [, navigate] = useLocation();
+
+  // Live plans from the admin panel — this page was fully hardcoded, so a plan
+  // the admin added ("الباقة الماسية") never appeared anywhere on the site.
+  const [plans, setPlans] = useState<PublicPlan[]>([]);
+  useEffect(() => {
+    fetch(`${PLANS_BASE}/api/plans`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setPlans(Array.isArray(d) ? d : (d?.plans ?? [])))
+      .catch(() => setPlans([]));
+  }, []);
 
   function handleCTA() {
     if (officeId) {
@@ -205,8 +235,25 @@ export default function Plans() {
 
             <div className="pricing-card" style={{ paddingTop: 36 }}>
               <h2>باقة المكاتب العقارية</h2>
-              <div className="price-old">29 د.ك / شهرياً</div>
-              <div className="price-new">14.5 <span>د.ك / شهرياً</span></div>
+              {plans.length === 0 ? (
+                <>
+                  <div className="price-new">14.5 <span>د.ك / شهرياً</span></div>
+                </>
+              ) : (
+                <div style={{ display: "grid", gap: 14, margin: "6px 0 4px" }}>
+                  {plans.map((p) => (
+                    <div key={p.id} style={{ border: "1px solid #E5E9F2", borderRadius: 14, padding: "14px 16px", background: "#FBFCFF" }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>{p.nameAr}</div>
+                      <div className="price-new" style={{ margin: "4px 0" }}>
+                        {p.price} <span>د.ك / {durationLabel(p.durationDays)}</span>
+                      </div>
+                      {p.maxListings > 0 && (
+                        <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>حتى {p.maxListings} إعلان</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="pricing-desc">كل ما تحتاجه لإدارة وعرض عقاراتك في مكان واحد</div>
               <div className="trial-line">👇 جرب المنصة مجانًا لمدة 14 يومًا بدون دفع</div>
               <button

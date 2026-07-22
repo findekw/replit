@@ -99,15 +99,19 @@ export default function DashboardAnalytics() {
                   <p style={{ fontSize: 14, color: "#64748B" }}>لا توجد مشاهدات أو تفاعل بعد. أضف إعلانات لتبدأ في جمع الأرقام.</p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={engagementData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F5" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip {...CHART_TOOLTIP} cursor={{ fill: "rgba(63,91,216,0.06)" }} />
-                    <Bar dataKey="value" fill="#667EEA" radius={[6, 6, 0, 0]} maxBarSize={64} />
-                  </BarChart>
-                </ResponsiveContainer>
+                /* dir=ltr: recharts computes its layout left-to-right; inside
+                   the RTL page the bars were drawn over the Y-axis numbers. */
+                <div dir="ltr">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={engagementData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F5" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748B" }} axisLine={{ stroke: "#E2E8F0" }} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} allowDecimals={false} width={44} />
+                      <Tooltip {...CHART_TOOLTIP} cursor={{ fill: "rgba(63,91,216,0.06)" }} />
+                      <Bar dataKey="value" fill="#667EEA" radius={[6, 6, 0, 0]} maxBarSize={64} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               )}
             </div>
           </>

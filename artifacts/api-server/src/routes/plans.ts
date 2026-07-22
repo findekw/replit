@@ -12,7 +12,7 @@ router.get("/plans", async (_req, res): Promise<void> => {
     .where(eq(subscriptionPlansTable.active, true))
     .orderBy(subscriptionPlansTable.price);
 
-  res.json(ListPlansResponse.parse(
+  const parsed = ListPlansResponse.parse(
     plans.map((p) => ({
       id: p.id,
       name: p.name,
@@ -28,7 +28,11 @@ router.get("/plans", async (_req, res): Promise<void> => {
       hasCustomProfile: p.hasCustomProfile,
       features: p.features,
     }))
-  ));
+  );
+  // durationDays isn't in the generated schema (which strips unknown keys), and
+  // plans are no longer all monthly — the client added a 45-day one. Re-attach
+  // after parse, same pattern as offices.ts.
+  res.json(parsed.map((p: { id: number }, i: number) => ({ ...p, durationDays: plans[i].durationDays })));
 });
 
 export default router;

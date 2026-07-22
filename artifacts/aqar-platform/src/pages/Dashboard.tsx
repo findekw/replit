@@ -1207,8 +1207,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <p className="mb-1" style={{ fontSize: 13, color: "#0f172a" }}>نوع الباقة</p>
-                <p className="font-semibold" style={{ fontSize: 15, color: "#0f172a" }}>الباقة الأساسية</p>
-                <p style={{ fontSize: 13, color: "#0f172a" }}>10 د.ك / شهرياً</p>
+                {/* No invented plan/price — the old hardcoded "الباقة الأساسية
+                    10 د.ك" never matched the real admin-managed plans. */}
+                <p className="font-semibold" style={{ fontSize: 15, color: "#0f172a" }}>
+                  {subStatus === "trial" ? "تجربة مجانية" : subStatus === "active" ? "اشتراك مدفوع" : "لا يوجد اشتراك"}
+                </p>
               </div>
               <div>
                 <p className="mb-1" style={{ fontSize: 13, color: "#0f172a" }}>حالة الاشتراك</p>

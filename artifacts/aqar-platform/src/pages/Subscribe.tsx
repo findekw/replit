@@ -132,7 +132,13 @@ export default function Subscribe() {
                 <h3 style={{ fontSize: 18, fontWeight: 800, color: "#111827", margin: 0 }}>{p.nameAr}</h3>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "12px 0 4px" }}>
                   <span style={{ fontSize: 34, fontWeight: 900, color: "#667EEA", lineHeight: 1 }}>{p.price}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#64748B" }}>{p.currency === "KWD" ? "د.ك" : p.currency}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#64748B" }}>
+                    {p.currency === "KWD" ? "د.ك" : p.currency}
+                    {" / "}
+                    {(p as { durationDays?: number }).durationDays && (p as { durationDays?: number }).durationDays !== 30
+                      ? `${(p as { durationDays?: number }).durationDays} يوم`
+                      : "شهرياً"}
+                  </span>
                 </div>
                 <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 20px", display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
                   {p.maxListings > 0 && <Feature text={`حتى ${p.maxListings} إعلان`} />}

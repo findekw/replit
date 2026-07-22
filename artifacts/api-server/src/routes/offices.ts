@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, officesTable, propertiesTable, propertyImagesTable, governoratesTable, areasTable, subscriptionPlansTable, leadsTable } from "@workspace/db";
-import { eq, and, desc, sql, count, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count, inArray } from "drizzle-orm";
 import { getOfficeId } from "../lib/authHelpers";
 import {
   ListOfficesQueryParams,
@@ -353,9 +353,17 @@ router.get("/offices/:id/properties", async (req, res): Promise<void> => {
       .leftJoin(areasTable, eq(propertiesTable.areaId, areasTable.id))
       .leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id))
       .where(whereClause)
-      // Newest first, same as public search — the featured boost buried fresh
-      // listings mid-list on the office's own page too.
-      .orderBy(desc(propertiesTable.createdAt), desc(propertiesTable.id))
+      // Newest first by default (the featured boost used to bury fresh
+      // listings). The office dashboard can re-sort by engagement — the
+      // client's ask: "مين الأكثر مشاهدة؟ مين الأكثر تواصل؟".
+      .orderBy(...(
+        {
+          views: [desc(propertiesTable.views), desc(propertiesTable.id)],
+          whatsapp: [desc(propertiesTable.whatsappClicks), desc(propertiesTable.id)],
+          calls: [desc(propertiesTable.callClicks), desc(propertiesTable.id)],
+          oldest: [asc(propertiesTable.createdAt), asc(propertiesTable.id)],
+        } as Record<string, [ReturnType<typeof desc>, ReturnType<typeof desc>]>
+      )[String((req.query as Record<string, unknown>).sort ?? "")] ?? [desc(propertiesTable.createdAt), desc(propertiesTable.id)])
       .limit(limit)
       .offset(offset),
     db.select({ count: count() }).from(propertiesTable).where(whereClause),

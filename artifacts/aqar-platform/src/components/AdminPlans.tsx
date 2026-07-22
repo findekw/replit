@@ -35,6 +35,9 @@ export default function AdminPlans() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Two-tap delete: window.confirm is silently swallowed by mobile in-app
+  // browsers (the client tapped 🗑 on iPhone and nothing happened at all).
+  const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -88,11 +91,18 @@ export default function AdminPlans() {
   }
 
   async function remove(p: Plan) {
-    if (!window.confirm(`حذف باقة "${p.nameAr}"؟`)) return;
+    if (confirmingId !== p.id) {
+      setConfirmingId(p.id);
+      setTimeout(() => setConfirmingId((c) => (c === p.id ? null : c)), 4000);
+      return;
+    }
+    setConfirmingId(null);
     try {
-      await fetch(`${BASE}/api/admin/plans/${p.id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`${BASE}/api/admin/plans/${p.id}`, { method: "DELETE", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data?.error ?? "تعذّر حذف الباقة"); return; }
       await load();
-    } catch { /* ignore */ }
+    } catch { setError("تعذّر الاتصال بالخادم"); }
   }
 
   const inputStyle: CSSProperties = { width: "100%", height: 42, borderRadius: 10, border: "1.5px solid #E2E8F0", padding: "0 12px", fontSize: 14, fontFamily: "'Cairo',sans-serif", background: "#F8FAFC", outline: "none" };
@@ -133,8 +143,18 @@ export default function AdminPlans() {
                 <button onClick={() => openEdit(p)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, border: "1px solid #E2E8F0", background: "#fff", borderRadius: 9, padding: "7px 0", fontSize: 12.5, fontWeight: 700, color: "#334155", cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
                   <Pencil className="h-3.5 w-3.5" /> تعديل
                 </button>
-                <button onClick={() => remove(p)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #FECACA", background: "#FEF2F2", borderRadius: 9, padding: "7px 11px", color: "#DC2626", cursor: "pointer" }}>
+                <button
+                  onClick={() => remove(p)}
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    border: "1px solid #FECACA", borderRadius: 9, padding: "7px 11px", cursor: "pointer",
+                    fontFamily: "'Cairo',sans-serif", fontSize: 12.5, fontWeight: 700,
+                    background: confirmingId === p.id ? "#DC2626" : "#FEF2F2",
+                    color: confirmingId === p.id ? "#fff" : "#DC2626",
+                  }}
+                >
                   <Trash2 className="h-3.5 w-3.5" />
+                  {confirmingId === p.id && "تأكيد الحذف؟"}
                 </button>
               </div>
             </div>
