@@ -270,10 +270,13 @@ body::-webkit-scrollbar,
 /* Offices upload poster-style ads with the details written into the image, so
    the card shows the whole thing letterboxed — same as the listing page — and
    the old hover zoom is gone because it cropped the very poster it reveals.
-   The card still lifts on hover. */
+   The card still lifts on hover.
+   4/5 portrait frame: the real inventory is phone photos (3:4) and poster ads
+   (~4:5), which filled barely half of the old 4:3 landscape frame — portrait
+   media now spans nearly the full card width; landscape still shows whole. */
 .property-media {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   background: #111827;
 }

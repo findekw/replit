@@ -45,13 +45,15 @@ const styles = `
 .pd-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
 
 /* Gallery */
-/* Offices upload poster-style ads (portrait, text baked in), so the image must
-   fit whole — 'cover' cropped the details off. Letterbox onto the dark frame
-   and let the box scale with the page; taller ratio on phones. */
-.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16/10; }
-@media (max-width: 640px) { .pd-gallery { aspect-ratio: 4/3; } }
-.pd-gallery-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.pd-gallery-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
+/* Adaptive gallery: the box takes the shape of the image itself (capped at
+   72vh) instead of forcing a fixed landscape ratio. Nearly all real uploads
+   are portrait phone photos / poster ads — inside the old 4:3 box they
+   rendered at ~56% of the width with big dark bars ("مش ظاهر كامل"). Now a
+   portrait photo fills the phone's full width, a landscape one still does,
+   and nothing is ever cropped. */
+.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+.pd-gallery-img { display: block; max-width: 100%; max-height: 72vh; width: auto; height: auto; }
+.pd-gallery-ph { width: 100%; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
 .pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .pd-gnav:hover { background: rgba(15,23,42,0.8); }
 .pd-gnav-prev { right: 14px; }
