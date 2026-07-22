@@ -39,8 +39,15 @@ const styles = `
 .pd-navbtn:disabled { opacity: .4; cursor: not-allowed; }
 .pd-navcount { font-size: 13px; color: #64748B; font-weight: 600; }
 
-.pd-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-@media (min-width: 1024px) { .pd-grid { grid-template-columns: 1fr 360px; align-items: start; } }
+/* minmax(0,1fr), never bare 1fr: a grid item's implicit min-width is its
+   content, so the intrinsic width of a large photo blew the column out to
+   ~471px on a 375px phone — the whole page (image included) ran past the
+   screen edge. That was the client's "أروح يمين" pan and, after overflow-x
+   became clip, his cut-off "مش ظاهر كامل" photo. min-width:0 on the items
+   guards the same blowout from any future child (tables, long words, videos). */
+.pd-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.pd-grid > * { min-width: 0; }
+@media (min-width: 1024px) { .pd-grid { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } }
 
 .pd-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
 
@@ -89,8 +96,8 @@ const styles = `
 .pd-sec-title { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 14px; }
 .pd-desc { color: #475569; line-height: 2; font-size: 15px; white-space: pre-line; }
 
-.pd-amen { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (min-width: 640px) { .pd-amen { grid-template-columns: 1fr 1fr 1fr; } }
+.pd-amen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 640px) { .pd-amen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .pd-amen-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #111827; font-weight: 500; }
 .pd-amen-check { width: 22px; height: 22px; border-radius: 7px; background: rgba(5,150,105,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .pd-amen-check svg { color: #059669; }
@@ -121,8 +128,8 @@ const styles = `
 
 /* Similar */
 .pd-similar { margin-top: 8px; }
-.pd-similar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (min-width: 768px) { .pd-similar-grid { grid-template-columns: 1fr 1fr 1fr; } }
+.pd-similar-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 768px) { .pd-similar-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* Mobile sticky contact bar */
 .pd-mobilebar { display: none; }
