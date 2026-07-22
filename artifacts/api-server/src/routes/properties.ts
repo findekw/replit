@@ -523,9 +523,12 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
         governorateId,
         areaId,
         officeId,
-        // Auto-approve: new listings go live immediately (client decision — an
-        // AI moderation agent will handle review later). Admin can still hide.
-        active: true,
+        // Auto-approved (client decision — an AI moderation agent will handle
+        // review later), but NOT yet public: the wizard creates the listing
+        // before its photos upload, and publishing here meant the client hit
+        // "view" and saw his ad image-less ("في البداية... بعدين تعدل").
+        // It goes live via /properties/:id/publish when the wizard finishes.
+        active: false,
         approvalStatus: "approved",
         featured: false,
       })
@@ -537,6 +540,33 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
     req.log.error({ err }, "Failed to create property");
     console.error("Property insert error:", err);
     res.status(500).json({ error: "فشل إنشاء الإعلان، حاول مرة أخرى" });
+  }
+});
+
+// POST /api/properties/:id/publish — make a wizard-draft listing public.
+// Idempotent. Refuses admin-rejected listings so an office can't republish a
+// banned ad by finishing (or re-running) the wizard.
+router.post("/properties/:id/publish", async (req: Request, res: Response): Promise<void> => {
+  const officeId = await requireOfficeId(req, res);
+  if (officeId === null) return;
+
+  const propId = parseInt(String(req.params.id), 10);
+  if (!propId) { res.status(400).json({ error: "معرّف الإعلان غير صالح" }); return; }
+
+  try {
+    const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, propId)).limit(1);
+    if (!prop) { res.status(404).json({ error: "الإعلان غير موجود" }); return; }
+    if (prop.officeId !== officeId) { res.status(403).json({ error: "غير مصرح بنشر هذا الإعلان" }); return; }
+    if (prop.approvalStatus === "rejected") {
+      res.status(409).json({ error: "هذا الإعلان محظور من الإدارة ولا يمكن نشره" });
+      return;
+    }
+
+    await db.update(propertiesTable).set({ active: true }).where(eq(propertiesTable.id, propId));
+    res.json({ message: "تم نشر الإعلان" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to publish property");
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });
 

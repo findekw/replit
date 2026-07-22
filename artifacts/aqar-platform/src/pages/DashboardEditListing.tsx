@@ -126,6 +126,12 @@ export default function DashboardEditListing() {
         setErrors(errs);
         return;
       }
+      // Saving also publishes a wizard draft ("غير منشور") — the rescue path
+      // when the add-wizard was abandoned mid-way. The endpoint is idempotent
+      // and refuses admin-rejected listings, so this can't lift a ban.
+      try {
+        await fetch(`${BASE}/api/properties/${propId}/publish`, { method: "POST", credentials: "include" });
+      } catch { /* stays a draft; visible as غير منشور */ }
       toast({ title: "تم تحديث الإعلان بنجاح" });
       navigate("/dashboard/listings");
     } catch {

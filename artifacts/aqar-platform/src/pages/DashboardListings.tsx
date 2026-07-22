@@ -153,7 +153,9 @@ export default function DashboardListings() {
                               {(p as any).approvalStatus === "rejected" ? (
                                 <Badge className="text-xs bg-red-100 text-red-700">محظور</Badge>
                               ) : !p.active && (
-                                <Badge className="text-xs bg-amber-50 text-amber-700">معلّق</Badge>
+                                // A wizard draft (created, wizard not finished).
+                                // Editing + saving the listing publishes it.
+                                <Badge className="text-xs bg-amber-50 text-amber-700">غير منشور</Badge>
                               )}
                             </div>
                             {/* Per-ad engagement — visible on small screens where the dedicated column is hidden */}

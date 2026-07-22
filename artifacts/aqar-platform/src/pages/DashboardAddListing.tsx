@@ -378,11 +378,24 @@ export default function DashboardAddListing() {
     handleFiles(e.dataTransfer.files);
   }
 
-  function finishAndGoToListings() {
+  // The listing is created as a hidden draft in step 1; it only goes public
+  // here, once the wizard is done — otherwise "view" right after creating
+  // showed the ad image-less while uploads were still running.
+  async function finishAndGoToListings() {
+    if (propertyId) {
+      try {
+        await fetch(`${BASE}/api/properties/${propertyId}/publish`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch {
+        // Leaving it a draft is recoverable from إعلاناتي; don't block the exit.
+      }
+    }
     if (uploadedImages.filter((img) => img.saved).length === 0) {
-      toast({ title: "تنبيه", description: "لم تُضف أي صورة للإعلان. يمكنك إضافتها لاحقاً.", variant: "default" });
+      toast({ title: "تم نشر الإعلان بدون صور", description: "يمكنك إضافة الصور لاحقاً من تعديل الإعلان." });
     } else {
-      toast({ title: "تم بنجاح!", description: "تم إضافة إعلانك وسيُنشر بعد المراجعة." });
+      toast({ title: "تم بنجاح!", description: "تم نشر إعلانك على المنصة." });
     }
     navigate("/dashboard/listings");
   }
