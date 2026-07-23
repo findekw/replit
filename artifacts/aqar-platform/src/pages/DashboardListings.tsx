@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle, MessageCircle, Phone } from "lucide-react";
+import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle, MessageCircle, Phone, UserPlus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -207,6 +207,13 @@ export default function DashboardListings() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-1">
+                          {/* Per-listing CRM entry: opens عملائي with the add form
+                              pre-targeted at this listing (client's ask). */}
+                          <Button variant="ghost" size="icon" asChild title="إضافة عميل لهذا الإعلان" data-testid={`button-lead-${p.id}`}>
+                            <Link href={`/dashboard/leads?add=1&propertyId=${p.id}`}>
+                              <UserPlus className="h-4 w-4" style={{ color: "#059669" }} />
+                            </Link>
+                          </Button>
                           <Button variant="ghost" size="icon" asChild data-testid={`button-view-${p.id}`} title="عرض الإعلان">
                             <Link href={`/properties/${p.id}`}>
                               <Eye className="h-4 w-4" />

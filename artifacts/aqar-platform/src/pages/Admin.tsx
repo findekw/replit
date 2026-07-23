@@ -178,10 +178,10 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "locations" | "catalog" | "tools">("offices");
 
-  type CatalogOption = { id: number; kind: "furnished" | "amenity"; nameAr: string; active: boolean; sortOrder: number; listings: number };
+  type CatalogOption = { id: number; kind: "furnished" | "amenity" | "lead_status"; nameAr: string; active: boolean; sortOrder: number; listings: number };
   const [catalog, setCatalog] = useState<CatalogOption[]>([]);
   const [catBusy, setCatBusy] = useState(false);
-  const [newCatName, setNewCatName] = useState<{ furnished: string; amenity: string }>({ furnished: "", amenity: "" });
+  const [newCatName, setNewCatName] = useState<{ furnished: string; amenity: string; lead_status: string }>({ furnished: "", amenity: "", lead_status: "" });
   const [editingCat, setEditingCat] = useState<number | null>(null);
   const [editCatName, setEditCatName] = useState("");
 
@@ -1555,6 +1555,7 @@ export default function Admin() {
             {([
               { kind: "furnished" as const, title: "حالة التأثيث", hint: "الخيارات المتاحة في «حالة التأثيث» عند إضافة إعلان." },
               { kind: "amenity" as const, title: "مميزات العقار", hint: "المميزات التي يختار منها المكتب عند إضافة إعلان (مصعد، مسبح، ...)." },
+              { kind: "lead_status" as const, title: "حالات العملاء (CRM)", hint: "الحالات التي يصنّف بها المكتب عملاءه (مهتم، جاد، متردد، ...)." },
             ]).map(({ kind, title, hint }) => {
               const items = catalog.filter((o) => o.kind === kind);
               return (
@@ -1572,7 +1573,7 @@ export default function Admin() {
                     <input
                       className="adm-input"
                       style={{ maxWidth: 260 }}
-                      placeholder={kind === "furnished" ? "حالة جديدة" : "ميزة جديدة"}
+                      placeholder={kind === "furnished" ? "حالة جديدة" : kind === "lead_status" ? "حالة عميل جديدة" : "ميزة جديدة"}
                       value={newCatName[kind]}
                       onChange={(e) => setNewCatName((p) => ({ ...p, [kind]: e.target.value }))}
                     />

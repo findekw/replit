@@ -8,7 +8,7 @@ import { and, eq, asc } from "drizzle-orm";
  */
 const router: IRouter = Router();
 
-const KINDS = new Set(["furnished", "amenity"]);
+const KINDS = new Set(["furnished", "amenity", "lead_status"]);
 
 router.get("/catalog", async (req, res): Promise<void> => {
   try {
@@ -24,8 +24,8 @@ router.get("/catalog", async (req, res): Promise<void> => {
       return;
     }
 
-    // Grouped by kind for the add-listing form (one request, both lists).
-    const grouped: Record<string, string[]> = { furnished: [], amenity: [] };
+    // Grouped by kind (one request, all lists).
+    const grouped: Record<string, string[]> = { furnished: [], amenity: [], lead_status: [] };
     for (const r of rows as { kind: string; nameAr: string }[]) {
       (grouped[r.kind] ??= []).push(r.nameAr);
     }

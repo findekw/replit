@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home } from "lucide-react";
+import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
@@ -7,12 +7,14 @@ import { useOfficeAuth } from "@/lib/AuthContext";
 const NAV_ITEMS = [
   { label: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard },
   { label: "إعلاناتي", href: "/dashboard/listings", icon: Building },
+  { label: "عملائي", href: "/dashboard/leads", icon: Users },
   { label: "الإحصائيات", href: "/dashboard/analytics", icon: BarChart2 },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "لوحة التحكم",
   "/dashboard/listings": "إعلاناتي",
+  "/dashboard/leads": "عملائي",
   "/dashboard/analytics": "الإحصائيات",
 };
 

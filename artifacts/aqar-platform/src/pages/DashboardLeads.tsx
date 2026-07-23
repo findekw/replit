@@ -1,321 +1,428 @@
-import { useState } from "react";
-import { useListLeads, useUpdateLead, getListLeadsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, MessageCircle, Phone, FileText } from "lucide-react";
+import {
+  Users, Phone, MessageCircle, Plus, X, Loader2, Trash2,
+  Pencil, Save, Building, Globe, Hand,
+} from "lucide-react";
 import { useOfficeAuth } from "@/lib/AuthContext";
+import { useGetOfficeProperties } from "@workspace/api-client-react";
+import { toIntlPhone } from "@/lib/phone";
 
-const LEAD_STATUSES = ["جديد", "مهتم", "تم التواصل", "غير جاد", "مغلق"];
+import { getApiBase } from "@/lib/apiBase";
+const BASE = getApiBase();
 
-const STATUS_COLORS: Record<string, string> = {
-  "جديد": "bg-indigo-100 text-indigo-800 border-indigo-200",
-  "مهتم": "bg-indigo-50 text-indigo-700 border-indigo-200",
-  "تم التواصل": "bg-indigo-100 text-indigo-800 border-indigo-200",
-  "غير جاد": "bg-gray-100 text-gray-600 border-gray-200",
-  "مغلق": "bg-red-100 text-red-800 border-red-200",
+/**
+ * The office CRM: every customer in one place — added by hand from a listing
+ * or captured automatically from the "أنا مهتم" form on the property page.
+ * Statuses come from the admin-editable catalog (kind: lead_status).
+ */
+
+const FALLBACK_STATUSES = ["جديد", "مهتم", "جاد", "متردد", "تم التواصل", "مغلق"];
+
+const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
+  "جديد": { bg: "#EEF2FF", fg: "#4338CA" },
+  "مهتم": { bg: "#ECFDF5", fg: "#047857" },
+  "جاد": { bg: "#D1FAE5", fg: "#065F46" },
+  "متردد": { bg: "#FEF3C7", fg: "#92400E" },
+  "تم التواصل": { bg: "#E0F2FE", fg: "#0369A1" },
+  "مغلق": { bg: "#F1F5F9", fg: "#475569" },
+};
+const statusStyle = (s: string) => STATUS_STYLE[s] ?? { bg: "#F1F5F9", fg: "#334155" };
+
+const SOURCE_META: Record<string, { label: string; icon: typeof Hand }> = {
+  manual: { label: "يدوي", icon: Hand },
+  property_form: { label: "من صفحة الإعلان", icon: Globe },
 };
 
-const INTERACTION_COLORS: Record<string, string> = {
-  "واتساب": "bg-green-100 text-green-800 border-green-200",
-  "اتصال": "bg-indigo-100 text-indigo-800 border-indigo-200",
-  "استفسار": "bg-purple-100 text-purple-800 border-purple-200",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  "property_page": "صفحة العقار",
-  "office_page": "صفحة المكتب",
+type Lead = {
+  id: number;
+  customerName: string;
+  phone: string;
+  message: string | null;
+  inquiryType: string;
+  status: string;
+  notes: string | null;
+  propertyId: number | null;
+  propertyTitle: string | null;
+  sourcePage: string | null;
+  createdAt: string;
 };
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-KW", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return new Date(iso).toLocaleDateString("ar-KW", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function DashboardLeads() {
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { officeId: oid, isLoading: authLoading } = useOfficeAuth();
   const officeId = oid ?? 0;
 
-  const params: Record<string, string | number> = { officeId };
-  if (filterStatus) params.status = filterStatus;
+  const urlParams = new URLSearchParams(window.location.search);
 
-  const { data: leads, isLoading: leadsLoading } = useListLeads(params as Record<string, string>, {
-    query: { enabled: officeId > 0 },
-  });
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statuses, setStatuses] = useState<string[]>(FALLBACK_STATUSES);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterProperty, setFilterProperty] = useState(urlParams.get("propertyId") ?? "");
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [confirmDel, setConfirmDel] = useState<number | null>(null);
+  const [noteDraft, setNoteDraft] = useState<{ id: number; text: string } | null>(null);
 
-  const isLoading = authLoading || leadsLoading;
-  const updateLead = useUpdateLead();
+  // Add-client form (opens automatically from the listing row's "عميل+").
+  const [addOpen, setAddOpen] = useState(urlParams.get("add") === "1");
+  const [fName, setFName] = useState("");
+  const [fPhone, setFPhone] = useState("");
+  const [fStatus, setFStatus] = useState("جديد");
+  const [fNote, setFNote] = useState("");
+  const [fProperty, setFProperty] = useState(urlParams.get("propertyId") ?? "");
+  const [saving, setSaving] = useState(false);
 
-  const allLeads = leads ?? [];
-  const filtered = filterType
-    ? allLeads.filter((l) => l.inquiryType === filterType)
-    : allLeads;
+  // The office's listings, for the pickers.
+  const { data: propsData } = useGetOfficeProperties(
+    officeId, { limit: 100 } as any, { query: { enabled: officeId > 0 } },
+  );
+  const myListings = (propsData?.properties ?? []) as { id: number; titleAr: string }[];
 
-  const totalLeads = allLeads.length;
-  const waCount = allLeads.filter((l) => l.inquiryType === "واتساب").length;
-  const callCount = allLeads.filter((l) => l.inquiryType === "اتصال").length;
-  const formCount = allLeads.filter(
-    (l) => l.inquiryType !== "واتساب" && l.inquiryType !== "اتصال"
-  ).length;
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams();
+      if (filterStatus) qs.set("status", filterStatus);
+      if (filterProperty) qs.set("propertyId", filterProperty);
+      const res = await fetch(`${BASE}/api/leads?${qs}`, { credentials: "include" });
+      if (!res.ok) throw new Error();
+      setLeads(await res.json());
+    } catch {
+      toast({ title: "فشل تحميل العملاء", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [filterStatus, filterProperty, toast]);
 
-  const handleStatusChange = (leadId: number, newStatus: string) => {
-    updateLead.mutate(
-      { id: leadId, data: { status: newStatus } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListLeadsQueryKey() });
-          toast({ title: "تم تحديث الحالة" });
-        },
-      }
-    );
+  useEffect(() => { if (officeId > 0) load(); }, [officeId, load]);
+
+  // Admin-editable status list.
+  useEffect(() => {
+    fetch(`${BASE}/api/catalog?kind=lead_status`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { options?: string[] }) => { if (d.options?.length) setStatuses(d.options); })
+      .catch(() => { /* keep fallback */ });
+  }, []);
+
+  async function addLead() {
+    if (fName.trim().length < 2) { toast({ title: "اكتب اسم العميل", variant: "destructive" }); return; }
+    if (!/^[0-9+\s-]{6,20}$/.test(fPhone.trim())) { toast({ title: "رقم الهاتف غير صالح", variant: "destructive" }); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${BASE}/api/leads`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: fName.trim(),
+          phone: fPhone.trim(),
+          status: fStatus,
+          notes: fNote.trim() || undefined,
+          propertyId: fProperty ? Number(fProperty) : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { toast({ title: data?.error ?? "تعذّرت الإضافة", variant: "destructive" }); return; }
+      toast({ title: "تمت إضافة العميل" });
+      setFName(""); setFPhone(""); setFNote(""); setFStatus("جديد"); setAddOpen(false);
+      await load();
+    } catch {
+      toast({ title: "تعذّر الاتصال بالخادم", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function patchLead(id: number, patch: Record<string, unknown>, okMsg?: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch(`${BASE}/api/leads/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { toast({ title: data?.error ?? "تعذّر التحديث", variant: "destructive" }); return false; }
+      if (okMsg) toast({ title: okMsg });
+      await load();
+      return true;
+    } catch {
+      toast({ title: "تعذّر الاتصال بالخادم", variant: "destructive" });
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteLead(id: number) {
+    if (confirmDel !== id) {
+      setConfirmDel(id);
+      setTimeout(() => setConfirmDel((c) => (c === id ? null : c)), 4000);
+      return;
+    }
+    setConfirmDel(null);
+    setBusyId(id);
+    try {
+      const res = await fetch(`${BASE}/api/leads/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) { toast({ title: "تعذّر الحذف", variant: "destructive" }); return; }
+      toast({ title: "تم حذف العميل" });
+      await load();
+    } catch {
+      toast({ title: "تعذّر الاتصال بالخادم", variant: "destructive" });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const counts = statuses.map((s) => ({ s, n: leads.filter((l) => l.status === s).length }));
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", height: 42, borderRadius: 10, border: "1.5px solid #E2E8F0",
+    padding: "0 12px", fontSize: 14, fontFamily: "'Cairo',sans-serif", background: "#fff", outline: "none",
   };
+  const selStyle: React.CSSProperties = { ...inputStyle, cursor: "pointer", fontWeight: 700, color: "#334155" };
+
+  if (authLoading) {
+    return <DashboardLayout><div className="p-6 space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div></DashboardLayout>;
+  }
 
   return (
     <DashboardLayout>
       <div dir="rtl">
-        <div className="mb-6">
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>العملاء المحتملون</h1>
-          <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
-            كل تفاعل على عقاراتك أو صفحة مكتبك يُسجَّل هنا تلقائياً
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>عملائي</h1>
+            <p style={{ fontSize: 14, color: "#64748B", margin: "4px 0 0" }}>
+              كل عملائك في مكان واحد — أضفهم يدوياً أو استقبلهم تلقائياً من نموذج «أنا مهتم» في صفحات إعلاناتك
+            </p>
+          </div>
+          <button
+            onClick={() => setAddOpen((o) => !o)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7, height: 44, padding: "0 22px",
+              borderRadius: 12, border: "none", background: addOpen ? "#F1F5F9" : "#667EEA",
+              color: addOpen ? "#334155" : "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
+              fontFamily: "'Cairo',sans-serif",
+            }}
+          >
+            {addOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {addOpen ? "إغلاق" : "إضافة عميل"}
+          </button>
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "إجمالي العملاء", value: totalLeads, icon: Users, fg: "#667EEA", bg: "#EEF2FE" },
-            { label: "واتساب", value: waCount, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
-            { label: "اتصالات", value: callCount, icon: Phone, fg: "#667EEA", bg: "#EEF2FE" },
-            { label: "استفسارات", value: formCount, icon: FileText, fg: "#7C3AED", bg: "#F5F3FF" },
-          ].map(({ label, value, icon: Icon, fg, bg }) => (
-            <div
-              key={label}
-              style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: 18, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}
-            >
-              <div className="flex items-center gap-3 mb-2.5">
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon className="h-4 w-4" style={{ color: fg }} />
-                </div>
-                <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>{label}</span>
+        {/* Add form */}
+        {addOpen && (
+          <div style={{ background: "#fff", border: "1px solid #DBE4FF", borderRadius: 16, padding: 18, marginBottom: 20, boxShadow: "0 6px 20px rgba(63,91,216,0.08)" }}>
+            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>اسم العميل *</label>
+                <input style={inputStyle} value={fName} onChange={(e) => setFName(e.target.value)} placeholder="مثال: أبو محمد" />
               </div>
-              <p style={{ fontSize: 26, fontWeight: 800, color: "#111827" }}>
-                {isLoading ? "—" : value}
-              </p>
+              <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>رقم الهاتف *</label>
+                <input style={{ ...inputStyle, direction: "ltr", textAlign: "right" }} value={fPhone} onChange={(e) => setFPhone(e.target.value)} placeholder="9XXXXXXX" inputMode="tel" />
+              </div>
+              <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الحالة</label>
+                <select style={selStyle} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+                  {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الإعلان (اختياري)</label>
+                <select style={selStyle} value={fProperty} onChange={(e) => setFProperty(e.target.value)}>
+                  <option value="">بدون إعلان محدد</option>
+                  {myListings.map((p) => <option key={p.id} value={String(p.id)}>{p.titleAr}</option>)}
+                </select>
+              </div>
             </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>ملاحظة (اختياري)</label>
+              <input style={inputStyle} value={fNote} onChange={(e) => setFNote(e.target.value)} placeholder="مثال: يفضّل التواصل مساءً" />
+            </div>
+            <button
+              onClick={addLead}
+              disabled={saving}
+              style={{
+                marginTop: 14, display: "inline-flex", alignItems: "center", gap: 7, height: 44, padding: "0 26px",
+                borderRadius: 12, border: "none", background: "#667EEA", color: "#fff", fontWeight: 800, fontSize: 14.5,
+                cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'Cairo',sans-serif",
+              }}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              حفظ العميل
+            </button>
+          </div>
+        )}
+
+        {/* Status filter chips (counts included) */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          <button
+            onClick={() => setFilterStatus("")}
+            style={{
+              padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+              fontFamily: "'Cairo',sans-serif", border: "1px solid",
+              borderColor: !filterStatus ? "#667EEA" : "#E2E8F0",
+              background: !filterStatus ? "#667EEA" : "#fff",
+              color: !filterStatus ? "#fff" : "#64748B",
+            }}
+          >
+            الكل ({leads.length})
+          </button>
+          {counts.map(({ s, n }) => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(filterStatus === s ? "" : s)}
+              style={{
+                padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                fontFamily: "'Cairo',sans-serif", border: "1px solid",
+                borderColor: filterStatus === s ? "#667EEA" : "#E2E8F0",
+                background: filterStatus === s ? "#667EEA" : "#fff",
+                color: filterStatus === s ? "#fff" : "#64748B",
+              }}
+            >
+              {s}{n > 0 && ` (${n})`}
+            </button>
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-44" data-testid="filter-lead-status">
-              <SelectValue placeholder="كل الحالات" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل الحالات</SelectItem>
-              {LEAD_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterType || "all"} onValueChange={(v) => setFilterType(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-44" data-testid="filter-lead-type">
-              <SelectValue placeholder="كل الأنواع" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل الأنواع</SelectItem>
-              <SelectItem value="واتساب">واتساب</SelectItem>
-              <SelectItem value="اتصال">اتصال</SelectItem>
-              <SelectItem value="استفسار">استفسار</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Listing filter */}
+        <div style={{ marginBottom: 18, maxWidth: 360 }}>
+          <select style={selStyle} value={filterProperty} onChange={(e) => setFilterProperty(e.target.value)}>
+            <option value="">كل الإعلانات</option>
+            {myListings.map((p) => <option key={p.id} value={String(p.id)}>{p.titleAr}</option>)}
+          </select>
         </div>
 
-        {/* Table */}
-        <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 16px rgba(15,23,42,0.05)" }}>
-          {isLoading ? (
-            <div className="p-6 space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-14 rounded-lg" />
-              ))}
+        {/* Leads */}
+        {loading ? (
+          <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
+        ) : leads.length === 0 ? (
+          <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: "60px 20px", textAlign: "center" }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Users className="h-9 w-9" style={{ color: "#94A3B8" }} />
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-24">
-              <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                <Users className="h-9 w-9" style={{ color: "#94A3B8" }} />
-              </div>
-              <p style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>لا يوجد عملاء</p>
-              <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>
-                ستظهر هنا نقرات واتساب والاتصال على عقاراتك تلقائياً
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Table header */}
-              <div className="hidden lg:grid grid-cols-[2fr_1fr_1fr_1.5fr_1.5fr] gap-4 px-5 py-3.5 text-xs font-bold" style={{ background: "#F8FAFC", color: "#64748B", borderBottom: "1px solid #EEF1F5" }}>
-                <span>العقار</span>
-                <span>نوع التفاعل</span>
-                <span>المصدر</span>
-                <span>التاريخ</span>
-                <span>الحالة</span>
-              </div>
-              <div className="divide-y" style={{ borderColor: "#EEF1F5" }}>
-                {filtered.map((lead) => {
-                  const sourceLabel =
-                    SOURCE_LABELS[lead.sourcePage ?? ""] ?? (lead.sourcePage || "—");
-                  const isAnonymous =
-                    lead.customerName === "زائر" || lead.phone === "—";
-
-                  return (
-                    <div
-                      key={lead.id}
-                      className="px-5 py-4 hover:bg-secondary/20 transition-colors"
-                      data-testid={`lead-row-${lead.id}`}
-                    >
-                      {/* Mobile layout */}
-                      <div className="lg:hidden space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${INTERACTION_COLORS[lead.inquiryType] ?? "bg-gray-100 text-gray-600"}`}
-                            >
-                              {lead.inquiryType === "واتساب" && (
-                                <MessageCircle className="h-3 w-3 ml-1" />
-                              )}
-                              {lead.inquiryType === "اتصال" && (
-                                <Phone className="h-3 w-3 ml-1" />
-                              )}
-                              {lead.inquiryType}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-600"}`}
-                            >
-                              {lead.status}
-                            </Badge>
-                          </div>
-                          <Select
-                            value={lead.status}
-                            onValueChange={(v) => handleStatusChange(lead.id, v)}
-                          >
-                            <SelectTrigger className="w-32 h-7 text-xs" data-testid={`lead-status-select-${lead.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {LEAD_STATUSES.map((s) => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="text-sm">
-                          {lead.propertyTitle ? (
-                            <span className="font-medium text-primary">{lead.propertyTitle}</span>
-                          ) : (
-                            <span className="text-muted-foreground">صفحة المكتب</span>
-                          )}
-                        </div>
-                        {!isAnonymous && (
-                          <div className="text-sm text-muted-foreground">
-                            {lead.customerName} · {lead.phone}
-                          </div>
-                        )}
-                        {lead.message && (
-                          <p className="text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2">
-                            {lead.message}
-                          </p>
-                        )}
-                        <div className="text-xs text-muted-foreground">
-                          {sourceLabel} · {formatDate(lead.createdAt)}
-                        </div>
+            <p style={{ fontSize: 18, fontWeight: 800, color: "#111827", margin: 0 }}>لا يوجد عملاء بعد</p>
+            <p style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>
+              أضف عميلك الأول بزر «إضافة عميل»، أو انتظر تسجيلات «أنا مهتم» من صفحات إعلاناتك
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gap: 12 }}>
+            {leads.map((l) => {
+              const src = SOURCE_META[l.sourcePage ?? ""] ?? { label: l.inquiryType, icon: MessageCircle };
+              const SrcIcon = src.icon;
+              const st = statusStyle(l.status);
+              const intl = toIntlPhone(l.phone);
+              return (
+                <div key={l.id} style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: "16px 18px", boxShadow: "0 4px 14px rgba(15,23,42,0.04)" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    {/* Identity */}
+                    <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 15.5, fontWeight: 800, color: "#111827" }}>{l.customerName}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "#64748B", background: "#F8FAFC", border: "1px solid #EEF1F5", borderRadius: 999, padding: "3px 9px" }}>
+                          <SrcIcon style={{ width: 11, height: 11 }} /> {src.label}
+                        </span>
                       </div>
-
-                      {/* Desktop grid row */}
-                      <div className="hidden lg:grid grid-cols-[2fr_1fr_1fr_1.5fr_1.5fr] gap-4 items-center">
-                        {/* العقار */}
-                        <div className="min-w-0">
-                          {lead.propertyTitle ? (
-                            <div>
-                              <p className="font-medium text-sm text-foreground truncate">
-                                {lead.propertyTitle}
-                              </p>
-                              {lead.propertyRef && (
-                                <p className="text-xs text-muted-foreground">{lead.propertyRef}</p>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">صفحة المكتب</span>
-                          )}
-                          {!isAnonymous && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {lead.customerName} · {lead.phone}
-                            </p>
-                          )}
+                      <div dir="ltr" style={{ fontSize: 14, fontWeight: 700, color: "#334155", textAlign: "right", marginTop: 3 }}>{l.phone}</div>
+                      {l.propertyTitle && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "#667EEA", fontWeight: 600, marginTop: 4 }}>
+                          <Building style={{ width: 12, height: 12, flexShrink: 0 }} /> {l.propertyTitle}
                         </div>
+                      )}
+                      {l.message && <div style={{ fontSize: 13, color: "#64748B", marginTop: 6, lineHeight: 1.7 }}>"{l.message}"</div>}
+                      <div style={{ fontSize: 11.5, color: "#94A3B8", marginTop: 6 }}>{formatDate(l.createdAt)}</div>
+                    </div>
 
-                        {/* نوع التفاعل */}
-                        <div>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs gap-1 ${INTERACTION_COLORS[lead.inquiryType] ?? "bg-gray-100 text-gray-600"}`}
-                          >
-                            {lead.inquiryType === "واتساب" && (
-                              <MessageCircle className="h-3 w-3" />
-                            )}
-                            {lead.inquiryType === "اتصال" && (
-                              <Phone className="h-3 w-3" />
-                            )}
-                            {lead.inquiryType}
-                          </Badge>
-                        </div>
-
-                        {/* المصدر */}
-                        <div className="text-sm text-muted-foreground">
-                          {sourceLabel}
-                        </div>
-
-                        {/* التاريخ */}
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(lead.createdAt)}
-                        </div>
-
-                        {/* الحالة */}
-                        <div>
-                          <Select
-                            value={lead.status}
-                            onValueChange={(v) => handleStatusChange(lead.id, v)}
-                          >
-                            <SelectTrigger className="w-36 h-8 text-sm" data-testid={`lead-status-select-${lead.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {LEAD_STATUSES.map((s) => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                    {/* Actions */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+                      <select
+                        value={l.status}
+                        disabled={busyId === l.id}
+                        onChange={(e) => patchLead(l.id, { status: e.target.value }, "تم تحديث الحالة")}
+                        style={{
+                          height: 36, borderRadius: 999, border: "none", padding: "0 14px", fontSize: 13, fontWeight: 800,
+                          fontFamily: "'Cairo',sans-serif", cursor: "pointer", outline: "none",
+                          background: st.bg, color: st.fg,
+                        }}
+                      >
+                        {/* keep the stored value selectable even if the admin later removed it */}
+                        {!statuses.includes(l.status) && <option value={l.status}>{l.status}</option>}
+                        {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {intl && (
+                          <>
+                            <a href={`https://wa.me/${intl}`} target="_blank" rel="noopener noreferrer" title="واتساب"
+                              style={{ width: 34, height: 34, borderRadius: 9, background: "#ECFDF5", color: "#059669", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              <MessageCircle style={{ width: 15, height: 15 }} />
+                            </a>
+                            <a href={`tel:+${intl}`} title="اتصال"
+                              style={{ width: 34, height: 34, borderRadius: 9, background: "#EEF2FF", color: "#4338CA", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              <Phone style={{ width: 15, height: 15 }} />
+                            </a>
+                          </>
+                        )}
+                        <button
+                          title="ملاحظة"
+                          onClick={() => setNoteDraft(noteDraft?.id === l.id ? null : { id: l.id, text: l.notes ?? "" })}
+                          style={{ width: 34, height: 34, borderRadius: 9, background: "#F8FAFC", border: "1px solid #E2E8F0", color: "#64748B", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                          <Pencil style={{ width: 14, height: 14 }} />
+                        </button>
+                        <button
+                          title={confirmDel === l.id ? "اضغط مرة أخرى للتأكيد" : "حذف"}
+                          onClick={() => deleteLead(l.id)}
+                          disabled={busyId === l.id}
+                          style={{
+                            height: 34, minWidth: 34, padding: confirmDel === l.id ? "0 10px" : 0, borderRadius: 9,
+                            border: "1px solid #FECACA", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            gap: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "'Cairo',sans-serif",
+                            background: confirmDel === l.id ? "#DC2626" : "#FEF2F2",
+                            color: confirmDel === l.id ? "#fff" : "#DC2626",
+                          }}>
+                          <Trash2 style={{ width: 14, height: 14 }} />
+                          {confirmDel === l.id && "تأكيد؟"}
+                        </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+                  </div>
+
+                  {/* Existing note + editor */}
+                  {noteDraft?.id === l.id ? (
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <input
+                        style={{ ...inputStyle, flex: 1 }}
+                        value={noteDraft.text}
+                        autoFocus
+                        placeholder="اكتب ملاحظتك عن العميل..."
+                        onChange={(e) => setNoteDraft({ id: l.id, text: e.target.value })}
+                      />
+                      <button
+                        onClick={async () => { if (await patchLead(l.id, { notes: noteDraft.text }, "تم حفظ الملاحظة")) setNoteDraft(null); }}
+                        style={{ height: 42, padding: "0 18px", borderRadius: 10, border: "none", background: "#667EEA", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+                        حفظ
+                      </button>
+                    </div>
+                  ) : l.notes ? (
+                    <div style={{ marginTop: 10, fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px dashed #E2E8F0", borderRadius: 10, padding: "8px 12px" }}>
+                      📝 {l.notes}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

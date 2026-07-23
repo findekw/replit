@@ -691,7 +691,7 @@ router.delete("/admin/areas/:id", requireAdmin, async (req: Request, res: Respon
 // areas, values are stored on listings as their Arabic label, so renaming here
 // doesn't rewrite existing listings — deactivate to hide from the picker.
 
-const CATALOG_KINDS = new Set(["furnished", "amenity"]);
+const CATALOG_KINDS = new Set(["furnished", "amenity", "lead_status"]);
 
 router.get("/admin/catalog", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -700,8 +700,9 @@ router.get("/admin/catalog", requireAdmin, async (_req: Request, res: Response):
       .from(catalogOptionsTable)
       .orderBy(asc(catalogOptionsTable.kind), asc(catalogOptionsTable.sortOrder), asc(catalogOptionsTable.id));
 
-    // How many listings reference each label, per kind, so the UI can warn
-    // before a delete. amenities is a text[]; furnished is a single text.
+    // How many records reference each label, per kind, so the UI can warn
+    // before a delete. amenities is a text[]; furnished is a single text;
+    // lead_status counts CRM leads instead of listings.
     const props = await db
       .select({ furnished: propertiesTable.furnished, amenities: propertiesTable.amenities })
       .from(propertiesTable);
@@ -713,10 +714,19 @@ router.get("/admin/catalog", requireAdmin, async (_req: Request, res: Response):
       for (const a of p.amenities ?? []) amenityUse.set(a, (amenityUse.get(a) ?? 0) + 1);
     }
 
+    const leadStatusRows = await db
+      .select({ status: leadsTable.status, n: sql<number>`count(*)::int` })
+      .from(leadsTable)
+      .groupBy(leadsTable.status);
+    const leadStatusUse = new Map<string, number>(
+      (leadStatusRows as { status: string; n: number }[]).map((r) => [r.status, r.n]),
+    );
+
     res.json({
       options: rows.map((r: typeof catalogOptionsTable.$inferSelect) => ({
         ...r,
-        listings: (r.kind === "furnished" ? furnishedUse : amenityUse).get(r.nameAr) ?? 0,
+        listings:
+          (r.kind === "furnished" ? furnishedUse : r.kind === "lead_status" ? leadStatusUse : amenityUse).get(r.nameAr) ?? 0,
       })),
     });
   } catch {
@@ -782,15 +792,22 @@ router.delete("/admin/catalog/:id", requireAdmin, async (req: Request, res: Resp
     const [row] = await db.select().from(catalogOptionsTable).where(eq(catalogOptionsTable.id, id)).limit(1);
     if (!row) { res.status(404).json({ error: "الخيار غير موجود" }); return; }
 
-    // Refuse if listings still reference this label — deactivate instead.
+    // Refuse if records still reference this label — deactivate instead.
     const opt = row as typeof catalogOptionsTable.$inferSelect;
-    const props = await db
-      .select({ furnished: propertiesTable.furnished, amenities: propertiesTable.amenities })
-      .from(propertiesTable);
-    const used = (props as { furnished: string | null; amenities: string[] | null }[]).some((p) =>
-      opt.kind === "furnished" ? p.furnished === opt.nameAr : (p.amenities ?? []).includes(opt.nameAr),
-    );
-    if (used) { res.status(409).json({ error: "هذا الخيار مستخدم في إعلانات. عطّله بدلاً من حذفه." }); return; }
+    let used: boolean;
+    if (opt.kind === "lead_status") {
+      const [hit] = await db.select({ id: leadsTable.id }).from(leadsTable).where(eq(leadsTable.status, opt.nameAr)).limit(1);
+      used = !!hit;
+      if (used) { res.status(409).json({ error: "هذه الحالة مستخدمة لعملاء حاليين. عطّلها بدلاً من حذفها." }); return; }
+    } else {
+      const props = await db
+        .select({ furnished: propertiesTable.furnished, amenities: propertiesTable.amenities })
+        .from(propertiesTable);
+      used = (props as { furnished: string | null; amenities: string[] | null }[]).some((p) =>
+        opt.kind === "furnished" ? p.furnished === opt.nameAr : (p.amenities ?? []).includes(opt.nameAr),
+      );
+      if (used) { res.status(409).json({ error: "هذا الخيار مستخدم في إعلانات. عطّله بدلاً من حذفه." }); return; }
+    }
 
     await db.delete(catalogOptionsTable).where(eq(catalogOptionsTable.id, id));
     res.json({ message: "تم حذف الخيار" });

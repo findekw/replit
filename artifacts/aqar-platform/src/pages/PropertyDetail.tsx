@@ -469,6 +469,9 @@ export default function PropertyDetail() {
                 </div>
               )}
 
+              {/* Interested-visitor capture — feeds the office CRM directly */}
+              <InterestForm propertyId={property.id} />
+
               {/* Share */}
               <div className="pd-share">
                 <button className="pd-share-btn" data-testid="button-share"
@@ -576,5 +579,82 @@ export default function PropertyDetail() {
         </div>
       )}
     </MainLayout>
+  );
+}
+
+/**
+ * "أنا مهتم" — the visitor leaves name + phone and lands straight in the
+ * office's CRM (عملائي) as a lead with source "من صفحة الإعلان". No account
+ * needed: asking a buyer to register first is where interest goes to die.
+ */
+function InterestForm({ propertyId }: { propertyId: number }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (name.trim().length < 2) { setError("اكتب اسمك"); return; }
+    if (!/^[0-9+\s-]{6,20}$/.test(phone.trim())) { setError("اكتب رقم هاتف صحيح"); return; }
+    setSending(true);
+    try {
+      const res = await fetch(`${BASE}/api/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propertyId, customerName: name.trim(), phone: phone.trim(), message: note.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data?.error ?? "تعذّر الإرسال، حاول مرة أخرى"); return; }
+      setDone(true);
+    } catch {
+      setError("تعذّر الاتصال، تحقق من الإنترنت");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const input: React.CSSProperties = {
+    width: "100%", height: 42, borderRadius: 10, border: "1.5px solid #E2E8F0",
+    padding: "0 12px", fontSize: 14, fontFamily: "'Cairo',sans-serif", outline: "none", background: "#fff",
+  };
+
+  return (
+    <div className="pd-card" style={{ padding: 18, marginTop: 16 }}>
+      {done ? (
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: "#ECFDF5", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+            <Check size={24} color="#059669" />
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>تم إرسال طلبك</div>
+          <div style={{ fontSize: 13, color: "#64748B", marginTop: 4 }}>سيتواصل معك المكتب قريباً</div>
+        </div>
+      ) : (
+        <form onSubmit={submit} noValidate>
+          <div style={{ fontSize: 15.5, fontWeight: 800, color: "#111827", marginBottom: 4 }}>مهتم بهذا العقار؟</div>
+          <div style={{ fontSize: 12.5, color: "#64748B", marginBottom: 12 }}>اترك بياناتك وسيتواصل معك المكتب مباشرة</div>
+          <div style={{ display: "grid", gap: 9 }}>
+            <input style={input} placeholder="اسمك" value={name} onChange={(e) => { setName(e.target.value); setError(""); }} />
+            <input style={{ ...input, direction: "ltr", textAlign: "right" }} placeholder="رقم هاتفك" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setError(""); }} />
+            <input style={input} placeholder="ملاحظة (اختياري)" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          {error && <div style={{ fontSize: 12.5, color: "#b91c1c", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 9, padding: "7px 11px", marginTop: 9 }}>{error}</div>}
+          <button
+            type="submit"
+            disabled={sending}
+            style={{
+              width: "100%", height: 44, marginTop: 11, borderRadius: 11, border: "none",
+              background: "#667EEA", color: "#fff", fontWeight: 800, fontSize: 14.5,
+              cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, fontFamily: "'Cairo',sans-serif",
+            }}
+          >
+            {sending ? "جارٍ الإرسال..." : "أنا مهتم — تواصلوا معي"}
+          </button>
+        </form>
+      )}
+    </div>
   );
 }
