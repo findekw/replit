@@ -364,13 +364,9 @@ export default function Home() {
             </h1>
             <p className="fh-subtitle fh-anim-2">{heroSubtitle}</p>
 
-            {current?.ctaText && current?.ctaUrl && (
-              current.ctaUrl.startsWith("/") ? (
-                <Link href={current.ctaUrl} className="fh-hero-cta fh-anim-2">{current.ctaText} <ArrowLeft size={17} /></Link>
-              ) : (
-                <a href={current.ctaUrl} target="_blank" rel="noopener noreferrer" className="fh-hero-cta fh-anim-2">{current.ctaText} <ArrowLeft size={17} /></a>
-              )
-            )}
+            {/* Hero CTA removed (client: "الغيها ما لها داعي — أنا أبي الشخص يبحث").
+                The search card IS the hero action; a browse button above it just
+                stole taps from it. Slide images/titles still render. */}
 
             <div className="fh-card fh-anim-3">
               <div className="fh-tabs">

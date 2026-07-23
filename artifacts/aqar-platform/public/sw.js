@@ -1,6 +1,10 @@
-const CACHE_NAME = "finde-pwa-v1";
+// v2: purges every v1 cache on activation. v1 pre-cached "/" (the HTML) at
+// install time, so phones kept serving a frozen app shell — the client saw
+// days-old versions on mobile while desktop was current. The HTML is never
+// pre-cached any more; it's only stored as an offline fallback by the
+// network-first navigate handler below.
+const CACHE_NAME = "finde-pwa-v2";
 const APP_SHELL = [
-  "/",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
