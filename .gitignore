@@ -55,3 +55,6 @@ Thumbs.db
 *.pem
 *.key
 secrets/
+
+# Private onboarding prompt — contains real credentials, never commit
+CLAUDE-ONBOARD-PRIVATE.md
