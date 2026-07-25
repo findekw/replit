@@ -21,7 +21,7 @@ import {
   Users, Shield, LogOut, RefreshCw, LayoutDashboard,
   Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus, CreditCard,
-  Image as ImageIcon, Plus, Upload, Loader2, Flag, Edit2,
+  Image as ImageIcon, Plus, Upload, Loader2, Flag, Edit2, FileText, Clock, Compass, X,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -233,6 +233,73 @@ export default function Admin() {
   // tabs are filtered to their role's permissions. The server enforces the
   // same rules, this is just the matching UI.
   const [myPerms, setMyPerms]   = useState<string[] | null>(null); // null = owner/full
+  const [trialDaysDraft, setTrialDaysDraft] = useState("14");
+  const [trialDaysBusy, setTrialDaysBusy] = useState(false);
+
+  // Legal pages editor (client: "السياسات لازم نعدلها حسب قوانين الدولة").
+  type LegalDoc = { titleAr: string; intro: string; sections: { title: string; content: string }[] };
+  const [legalSlug, setLegalSlug] = useState<"terms" | "privacy" | "disclaimer" | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+  const [legalBusy, setLegalBusy] = useState(false);
+
+  async function openLegal(slug: "terms" | "privacy" | "disclaimer") {
+    setLegalSlug(slug); setLegalDoc(null); setLegalBusy(true);
+    try {
+      const res = await fetch(`${BASE}/api/legal/${slug}`);
+      if (res.ok) {
+        const d = await res.json();
+        setLegalDoc({ titleAr: d.titleAr ?? "", intro: d.intro ?? "", sections: d.sections ?? [] });
+      } else {
+        setLegalDoc({ titleAr: "", intro: "", sections: [{ title: "", content: "" }] });
+      }
+    } catch {
+      toast({ title: "تعذّر تحميل الصفحة", variant: "destructive" });
+      setLegalSlug(null);
+    } finally { setLegalBusy(false); }
+  }
+
+  // ── Guided tour: walks the client through each tab and what it's for ──
+  const TOUR_STEPS = [
+    { tab: "offices" as const, title: "طلبات تسجيل المكاتب", text: "هنا تشوف المكاتب الجديدة. التسجيل بيتفعّل تلقائياً بعد تأكيد البريد، وتقدر ترفض أي مكتب مخالف — الرفض يخفي كل إعلاناته فوراً." },
+    { tab: "listings" as const, title: "مراقبة الإعلانات", text: "آخر الإعلانات المنشورة على المنصة. الإعلانات بتنشر تلقائياً، ودورك هنا رقابي: أي إعلان مخالف اضغط «حظر» يختفي من الموقع، وتقدر ترجّعه بعدين." },
+    { tab: "reports" as const, title: "البلاغات", text: "لو زائر بلّغ عن إعلان (احتيال، بيانات خاطئة...) البلاغ يوصل هنا. راجعه وقرر: تحظر الإعلان أو تتجاهل البلاغ." },
+    { tab: "subscriptions" as const, title: "الاشتراكات والباقات", text: "من هنا تتحكم في مدة التجربة المجانية (اليوم اللي فوق)، وتضيف وتعدّل الباقات وأسعارها — أي باقة تضيفها تظهر في صفحة الاشتراك فوراً. وتحت: كل مكتب وحالة اشتراكه، وتقدر تفعّل أو توقف أو تمنح تجربة يدوياً." },
+    { tab: "locations" as const, title: "المناطق", text: "المحافظات والمناطق اللي بتظهر في البحث وفي إضافة الإعلان. أضف منطقة جديدة تظهر فوراً، وعطّل منطقة تختفي من البحث بدون ما تأثر على الإعلانات القديمة." },
+    { tab: "catalog" as const, title: "خيارات الإعلان", text: "القوائم اللي المكتب يختار منها وقت إضافة الإعلان: حالات التأثيث، مميزات العقار، وحالات عملاء الـ CRM (مهتم، جاد...). كلها بإيدك — أضف وعدّل وعطّل." },
+    { tab: "tools" as const, title: "الأدوات", text: "كل الباقي هنا: تعيين موظفين وأدوار بصلاحيات محددة، تحرير نصوص السياسات القانونية بنفسك، بانرات الصفحة الرئيسية، وإعادة تعيين كلمة مرور أي مكتب." },
+  ];
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  const visibleTourSteps = TOUR_STEPS.filter((s) => canSee(s.tab));
+
+  function startTour() { if (visibleTourSteps.length) { setTourStep(0); setActiveTab(visibleTourSteps[0].tab); } }
+  function goTour(delta: number) {
+    if (tourStep === null) return;
+    const next = tourStep + delta;
+    if (next < 0 || next >= visibleTourSteps.length) { setTourStep(null); return; }
+    setTourStep(next);
+    setActiveTab(visibleTourSteps[next].tab);
+  }
+
+  async function saveLegal() {
+    if (!legalSlug || !legalDoc) return;
+    setLegalBusy(true);
+    try {
+      const res = await fetch(`${BASE}/api/admin/legal/${legalSlug}`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(legalDoc),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { toast({ title: "لم يتم الحفظ", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+      toast({ title: "تم الحفظ", description: d?.message });
+    } finally { setLegalBusy(false); }
+  }
+  useEffect(() => {
+    fetch(`${BASE}/api/platform/trial-days`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { days?: number }) => { if (d.days) setTrialDaysDraft(String(d.days)); })
+      .catch(() => undefined);
+  }, []);
   const [roles, setRoles]       = useState<AdminRole[]>([]);
   const [rolesBusy, setRolesBusy] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
@@ -858,6 +925,10 @@ export default function Admin() {
               <BarChart2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">التحليلات والتقارير</span>
             </Button>
+            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5 text-sm" onClick={startTour} data-testid="button-tour">
+              <Compass className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">جولة تعريفية</span>
+            </Button>
             <Button size="sm" className="gap-1.5 text-sm text-white border-0" style={{ background: RED }} onClick={handleLogout}>
               <LogOut className="h-3.5 w-3.5" />
               <span>خروج</span>
@@ -1335,6 +1406,52 @@ export default function Admin() {
         {/* ═══════════════ SUBSCRIPTIONS TAB ═══════════════ */}
         {activeTab === "subscriptions" && (
           <>
+          {/* Trial length — admin-editable, applies to every new signup and
+              every "تجربة مجانية" grant from the table below. */}
+          <div className="adm-card" style={{ padding: "18px 24px", marginBottom: 18 }}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4.5 w-4.5" style={{ color: BLUE }} />
+                  <h3 className="text-base font-bold" style={{ color: NAVY }}>مدة التجربة المجانية</h3>
+                </div>
+                <p className="text-sm mt-1" style={{ color: BODY }}>تُطبَّق على كل تسجيل جديد وكل تجربة تمنحها من الجدول بالأسفل.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={trialDaysDraft}
+                  onChange={(e) => setTrialDaysDraft(e.target.value)}
+                  className="adm-input"
+                  style={{ width: 90, textAlign: "center", fontWeight: 800 }}
+                  dir="ltr"
+                />
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: BODY }}>يوم</span>
+                <button
+                  className="adm-btn adm-btn--blue"
+                  disabled={trialDaysBusy}
+                  style={{ opacity: trialDaysBusy ? 0.6 : 1 }}
+                  onClick={async () => {
+                    setTrialDaysBusy(true);
+                    try {
+                      const res = await fetch(`${BASE}/api/admin/settings/trial-days`, {
+                        method: "PUT", credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ days: Number(trialDaysDraft) }),
+                      });
+                      const d = await res.json().catch(() => ({}));
+                      if (!res.ok) { toast({ title: "لم يتم الحفظ", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                      toast({ title: "تم", description: d?.message });
+                    } finally { setTrialDaysBusy(false); }
+                  }}
+                >
+                  حفظ
+                </button>
+              </div>
+            </div>
+          </div>
           <AdminPlans />
           <div className="adm-card overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
@@ -2015,6 +2132,102 @@ export default function Admin() {
               </form>
             </div>
 
+            {/* 3b — Legal pages editor (full width) */}
+            <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4.5 w-4.5" style={{ color: BLUE }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>تحرير السياسات والصفحات القانونية</h3>
+              </div>
+              <p className="text-sm mb-4" style={{ color: BODY }}>
+                عدّل نصوص الشروط والخصوصية وإخلاء المسؤولية بنفسك حسب قوانين الدولة — الحفظ يظهر للزوار فوراً بدون أي تدخل برمجي.
+              </p>
+              <div className="flex gap-2 flex-wrap mb-4">
+                {([
+                  { slug: "terms" as const, label: "الشروط والأحكام" },
+                  { slug: "privacy" as const, label: "سياسة الخصوصية" },
+                  { slug: "disclaimer" as const, label: "إخلاء المسؤولية" },
+                ]).map(({ slug, label }) => (
+                  <button
+                    key={slug}
+                    onClick={() => openLegal(slug)}
+                    className="adm-btn"
+                    style={{
+                      background: legalSlug === slug ? BLUE : "#fff",
+                      color: legalSlug === slug ? "#fff" : NAVY,
+                      border: `1.5px solid ${legalSlug === slug ? BLUE : BORDER}`,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {legalBusy && !legalDoc && <Skeleton className="h-40 rounded-xl" />}
+
+              {legalDoc && legalSlug && (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <input
+                    className="adm-input"
+                    placeholder="عنوان الصفحة"
+                    value={legalDoc.titleAr}
+                    onChange={(e) => setLegalDoc({ ...legalDoc, titleAr: e.target.value })}
+                  />
+                  <textarea
+                    className="adm-input"
+                    style={{ height: 70, padding: "10px 12px", resize: "vertical" }}
+                    placeholder="مقدمة قصيرة تظهر أعلى الصفحة (اختياري)"
+                    value={legalDoc.intro}
+                    onChange={(e) => setLegalDoc({ ...legalDoc, intro: e.target.value })}
+                  />
+                  {legalDoc.sections.map((sec, i) => (
+                    <div key={i} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, background: "#F8FAFC" }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input
+                          className="adm-input"
+                          style={{ flex: 1, background: "#fff" }}
+                          placeholder={`عنوان البند ${i + 1}`}
+                          value={sec.title}
+                          onChange={(e) => setLegalDoc({ ...legalDoc, sections: legalDoc.sections.map((s, j) => (j === i ? { ...s, title: e.target.value } : s)) })}
+                        />
+                        <button
+                          title="حذف البند"
+                          onClick={() => setLegalDoc({ ...legalDoc, sections: legalDoc.sections.filter((_, j) => j !== i) })}
+                          style={{ width: 38, height: 38, borderRadius: 9, border: "1px solid #FECACA", background: "#FEF2F2", color: "#DC2626", cursor: "pointer", flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <Trash2 style={{ width: 14, height: 14 }} />
+                        </button>
+                      </div>
+                      <textarea
+                        className="adm-input"
+                        style={{ height: 90, padding: "10px 12px", resize: "vertical", background: "#fff", width: "100%" }}
+                        placeholder="نص البند"
+                        value={sec.content}
+                        onChange={(e) => setLegalDoc({ ...legalDoc, sections: legalDoc.sections.map((s, j) => (j === i ? { ...s, content: e.target.value } : s)) })}
+                      />
+                    </div>
+                  ))}
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      className="adm-btn"
+                      onClick={() => setLegalDoc({ ...legalDoc, sections: [...legalDoc.sections, { title: "", content: "" }] })}
+                    >
+                      <Plus style={{ width: 14, height: 14 }} />
+                      إضافة بند
+                    </button>
+                    <button
+                      className="adm-btn adm-btn--blue"
+                      disabled={legalBusy}
+                      style={{ opacity: legalBusy ? 0.6 : 1 }}
+                      onClick={saveLegal}
+                    >
+                      {legalBusy ? <Loader2 className="animate-spin" style={{ width: 15, height: 15 }} /> : <CheckCircle style={{ width: 15, height: 15 }} />}
+                      حفظ — يظهر للزوار فوراً
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* 4 — Homepage hero banners (full width) */}
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
               <div className="flex items-center gap-2 mb-2">
@@ -2205,6 +2418,51 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {/* ── Guided tour overlay: fixed card, the active tab switches under it ── */}
+      {tourStep !== null && visibleTourSteps[tourStep] && (
+        <div
+          dir="rtl"
+          style={{
+            position: "fixed", bottom: 18, insetInline: 0, zIndex: 90,
+            display: "flex", justifyContent: "center", padding: "0 14px", pointerEvents: "none",
+          }}
+        >
+          <div style={{
+            pointerEvents: "auto", width: "100%", maxWidth: 480, background: "#111827",
+            color: "#fff", borderRadius: 18, padding: "18px 20px",
+            boxShadow: "0 18px 50px rgba(15,23,42,0.45)", fontFamily: "'Cairo', sans-serif",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(102,126,234,0.25)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <Compass style={{ width: 16, height: 16, color: "#A5B4FC" }} />
+                </span>
+                <span style={{ fontSize: 15.5, fontWeight: 800 }}>{visibleTourSteps[tourStep].title}</span>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.55)" }} dir="ltr">
+                {tourStep + 1} / {visibleTourSteps.length}
+              </span>
+            </div>
+            <p style={{ fontSize: 13.5, lineHeight: 1.9, color: "rgba(255,255,255,0.85)", margin: "0 0 14px" }}>
+              {visibleTourSteps[tourStep].text}
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              {tourStep > 0 && (
+                <button onClick={() => goTour(-1)} style={{ flex: 1, height: 42, borderRadius: 11, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
+                  السابق
+                </button>
+              )}
+              <button onClick={() => goTour(1)} style={{ flex: 2, height: 42, borderRadius: 11, border: "none", background: "#667EEA", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                {tourStep === visibleTourSteps.length - 1 ? "إنهاء الجولة ✓" : "التالي"}
+              </button>
+              <button onClick={() => setTourStep(null)} aria-label="إغلاق" style={{ width: 42, height: 42, borderRadius: 11, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "rgba(255,255,255,0.7)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                <X style={{ width: 15, height: 15 }} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

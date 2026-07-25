@@ -1,4 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
+import { useLegalPage } from "@/hooks/useLegalPage";
 import { Link } from "wouter";
 import { ShieldAlert, ArrowRight } from "lucide-react";
 
@@ -36,6 +37,7 @@ const SECTIONS = [
 ];
 
 export default function Disclaimer() {
+  const page = useLegalPage("disclaimer", { titleAr: "إخلاء المسؤولية", intro: "", sections: SECTIONS });
   return (
     <MainLayout>
       <div dir="rtl" className="min-h-screen bg-white">
@@ -44,7 +46,7 @@ export default function Disclaimer() {
             <div className="w-14 h-14 rounded-2xl bg-white/10 ring-1 ring-white/15 shadow-lg flex items-center justify-center mx-auto mb-4">
               <ShieldAlert className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-3xl font-black mb-2 text-white">إخلاء المسؤولية</h1>
+            <h1 className="text-3xl font-black mb-2 text-white">{page.titleAr}</h1>
             <p className="inline-block rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs text-white/65">
               آخر تحديث: 1 يناير 2026
             </p>
@@ -57,7 +59,7 @@ export default function Disclaimer() {
           </div>
 
           <div className="space-y-8">
-            {SECTIONS.map((s) => (
+            {page.sections.map((s) => (
               <div key={s.title}>
                 <h2 className="text-base font-bold text-[hsl(221,54%,23%)] mb-2">{s.title}</h2>
                 <p className="text-muted-foreground text-sm leading-relaxed">{s.content}</p>

@@ -45,6 +45,13 @@ export default function Plans() {
   // Live plans from the admin panel — this page was fully hardcoded, so a plan
   // the admin added ("الباقة الماسية") never appeared anywhere on the site.
   const [plans, setPlans] = useState<PublicPlan[]>([]);
+  const [trialDays, setTrialDays] = useState(14);
+  useEffect(() => {
+    fetch(`${PLANS_BASE}/api/platform/trial-days`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { days?: number }) => { if (d.days) setTrialDays(d.days); })
+      .catch(() => undefined);
+  }, []);
   useEffect(() => {
     fetch(`${PLANS_BASE}/api/plans`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -246,7 +253,7 @@ export default function Plans() {
                   {p.maxListings > 0 && (
                     <div className="pricing-desc">حتى {p.maxListings} إعلان — كل ما تحتاجه لإدارة وعرض عقاراتك</div>
                   )}
-                  <div className="trial-line">👇 جرب المنصة مجانًا لمدة 14 يوم بدون دفع</div>
+                  <div className="trial-line">👇 جرب المنصة مجانًا لمدة {trialDays} يوم بدون دفع</div>
                   <button
                     className="cta-btn"
                     onClick={handleCTA}

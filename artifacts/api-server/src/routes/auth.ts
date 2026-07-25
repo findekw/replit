@@ -8,6 +8,7 @@ import { logger } from "../lib/logger";
 import { setSession, clearSession, getSessionId } from "../lib/session";
 import { safe } from "../lib/authHelpers";
 import { sendOfficeVerificationOtp, sendOfficePasswordReset } from "../lib/email";
+import { getTrialDays } from "../lib/settings";
 
 const router: IRouter = Router();
 
@@ -275,7 +276,7 @@ router.post("/auth/office/verify-email", async (req: Request, res: Response): Pr
     }
 
     const now = new Date();
-    const trialEnds = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const trialEnds = new Date(now.getTime() + (await getTrialDays()) * 24 * 60 * 60 * 1000);
 
     const [verified] = await db
       .update(officeUsersTable)

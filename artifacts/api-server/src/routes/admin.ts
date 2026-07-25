@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import type { Request, Response, NextFunction } from "express";
 import { requireAdmin } from "../lib/authHelpers";
 import { getSessionId } from "../lib/session";
+import { getTrialDays } from "../lib/settings";
 
 const router: IRouter = Router();
 
@@ -29,7 +30,8 @@ const PERM_RULES: [RegExp, string][] = [
   [/^\/admin\/reports/, "reports"],
   [/^\/admin\/(locations|governorates|areas)/, "locations"],
   [/^\/admin\/catalog/, "catalog"],
-  [/^\/admin\/(hero|demo-data)/, "tools"],
+  [/^\/admin\/(hero|demo-data|legal)/, "tools"],
+  [/^\/admin\/settings/, "subscriptions"],
 ];
 
 router.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -94,8 +96,9 @@ router.post("/admin/offices/:id/approve", requireAdmin, async (req: Request, res
     return;
   }
   try {
+    const trialDays = await getTrialDays();
     const trialStartedAt = new Date();
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
     await db.update(officesTable).set({
       active: true,
       subscriptionPlan: "basic",
@@ -104,7 +107,7 @@ router.post("/admin/offices/:id/approve", requireAdmin, async (req: Request, res
       trialEndsAt,
     }).where(eq(officesTable.id, officeId));
     await db.update(officeUsersTable).set({ status: "active" }).where(eq(officeUsersTable.officeId, officeId));
-    res.json({ message: "تم تفعيل المكتب وبدأت التجربة المجانية (14 يومًا)" });
+    res.json({ message: `تم تفعيل المكتب وبدأت التجربة المجانية (${trialDays} يوم)` });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
@@ -277,7 +280,7 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
     const updates: Record<string, unknown> = { subscriptionStatus: status };
     if (status === "trial") {
       updates.trialStartedAt = new Date();
-      updates.trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      updates.trialEndsAt = new Date(Date.now() + (await getTrialDays()) * 24 * 60 * 60 * 1000);
     }
     // Activating a paid subscription should also make the office visible.
     if (status === "active") updates.active = true;

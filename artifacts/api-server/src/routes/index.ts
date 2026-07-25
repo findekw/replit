@@ -16,6 +16,7 @@ import reportsRouter from "./reports";
 import paymentsRouter from "./payments";
 import ogRouter from "./og";
 import catalogRouter from "./catalog";
+import contentRouter from "./content";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(reportsRouter);
 router.use(paymentsRouter);
 router.use(ogRouter);
 router.use(catalogRouter);
+router.use(contentRouter);
 
 export default router;
