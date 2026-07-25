@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListGovernorates, useListAreas } from "@workspace/api-client-react";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, CheckCircle, AlertCircle, ArrowRight,
-  Camera, X, ImagePlus, Upload, Star, ChevronDown, Video, Trash2
+  Camera, X, ImagePlus, Upload, Star, Video, Trash2
 } from "lucide-react";
 import { Link } from "wouter";
 import { LocationCombobox } from "@/components/LocationCombobox";
@@ -30,9 +29,9 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/we
 const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-// Fallbacks only. The live lists come from /api/catalog (admin-editable); these
-// keep the form working if that request fails.
-const FURNISHED_FALLBACK = ["مفروش", "غير مفروش", "شبه مفروش"];
+// Furnishing states are shown as the first two amenity chips (stored in
+// `amenities` like any other feature) — there is no separate furnishing field.
+const FURNISH_AMENITIES = ["مفروش", "غير مفروش"];
 const AMENITY_FALLBACK = [
   "مواقف سيارات",
   "مصعد",
@@ -80,25 +79,21 @@ export default function DashboardAddListing() {
   const [areaSize, setAreaSize] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
-  const [furnished, setFurnished] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
 
-  // Admin-editable option lists; fall back to the built-in defaults on failure.
-  const [furnishedOptions, setFurnishedOptions] = useState<string[]>(FURNISHED_FALLBACK);
+  // Admin-editable amenity list; falls back to the built-in defaults on failure.
   const [amenityOptions, setAmenityOptions] = useState<string[]>(AMENITY_FALLBACK);
   useEffect(() => {
     let alive = true;
     fetch(`${BASE}/api/catalog`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data: { furnished?: string[]; amenity?: string[] }) => {
+      .then((data: { amenity?: string[] }) => {
         if (!alive) return;
-        if (data.furnished?.length) setFurnishedOptions(data.furnished);
         if (data.amenity?.length) setAmenityOptions(data.amenity);
       })
       .catch(() => {/* keep fallbacks */});
     return () => { alive = false; };
   }, []);
-  const [showExtras, setShowExtras] = useState(false);
   const [governorateId, setGovernorateId] = useState("");
   const [areaId, setAreaId] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
@@ -151,7 +146,6 @@ export default function DashboardAddListing() {
           areaSize: areaSize ? Number(areaSize) : undefined,
           bedrooms: bedrooms ? Number(bedrooms) : undefined,
           bathrooms: bathrooms ? Number(bathrooms) : undefined,
-          furnished: furnished || undefined,
           amenities,
           governorateId: governorateId ? Number(governorateId) : undefined,
           areaId: areaId ? Number(areaId) : undefined,
@@ -272,9 +266,14 @@ export default function DashboardAddListing() {
   }
 
   function toggleAmenity(value: string) {
-    setAmenities((prev) =>
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
-    );
+    setAmenities((prev) => {
+      if (prev.includes(value)) return prev.filter((item) => item !== value);
+      // "مفروش" / "غير مفروش" are mutually exclusive — picking one clears the other.
+      const base = FURNISH_AMENITIES.includes(value)
+        ? prev.filter((item) => !FURNISH_AMENITIES.includes(item))
+        : prev;
+      return [...base, value];
+    });
   }
 
   async function handleVideoFile(file: File) {
@@ -760,53 +759,23 @@ export default function DashboardAddListing() {
               </div>
             </div>
 
-            <div className="rounded-xl border bg-muted/30">
-              <button
-                type="button"
-                onClick={() => setShowExtras((v) => !v)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right"
-                disabled={submitting}
-              >
-                <span className="font-semibold text-foreground">خيارات إضافية <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showExtras ? "rotate-180" : ""}`} />
-              </button>
-
-              {showExtras && (
-                <div className="px-4 pb-4 space-y-4">
-                  <div>
-                    <Label className="mb-1 block">حالة التأثيث</Label>
-                    <Select value={furnished || "none"} onValueChange={(v) => setFurnished(v === "none" ? "" : v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الحالة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">غير محدد</SelectItem>
-                        {furnishedOptions.map((option) => (
-                          <SelectItem key={option} value={option}>{option}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="mb-2 block">مميزات العقار</Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {amenityOptions.map((option) => {
-                        const active = amenities.includes(option);
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => toggleAmenity(option)}
-                            className={`min-h-10 rounded-lg border px-3 text-sm font-semibold transition-colors ${active ? "bg-primary/10 text-primary border-primary/40" : "bg-white text-foreground border-border hover:border-primary/40"}`}
-                          >
-                            {option}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div>
+              <Label className="mb-2 block">مميزات العقار <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[...FURNISH_AMENITIES, ...amenityOptions.filter((o) => !FURNISH_AMENITIES.includes(o))].map((option) => {
+                  const active = amenities.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => toggleAmenity(option)}
+                      className={`min-h-10 rounded-lg border px-3 text-sm font-semibold transition-colors ${active ? "bg-primary/10 text-primary border-primary/40" : "bg-white text-foreground border-border hover:border-primary/40"}`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
