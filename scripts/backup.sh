@@ -43,3 +43,10 @@ echo "[backup] uploads ok: $(du -sh "$BACKUP_DIR/uploads" | cut -f1)"
 # ── Rotation ────────────────────────────────────────────────────────────────
 find "$BACKUP_DIR/db" -name 'finde-*.sql.gz' -mtime "+$KEEP_DAYS" -delete
 echo "[backup] done — keeping $(ls -1 "$BACKUP_DIR/db" | wc -l) db snapshots"
+
+# ── Housekeeping ────────────────────────────────────────────────────────────
+# Every --build deploy leaves layers behind; they ate 55GB once and 30GB again
+# within days. Trim anything older than 48h so the cache still speeds up
+# consecutive deploys but can never crowd the disk.
+docker builder prune -af --filter "until=48h" >/dev/null 2>&1 || true
+echo "[backup] build cache trimmed (>48h)"
