@@ -269,7 +269,6 @@ export default function Admin() {
     { tab: "tools" as const, title: "الأدوات", text: "كل الباقي هنا: تعيين موظفين وأدوار بصلاحيات محددة، تحرير نصوص السياسات القانونية بنفسك، بانرات الصفحة الرئيسية، وإعادة تعيين كلمة مرور أي مكتب." },
   ];
   const [tourStep, setTourStep] = useState<number | null>(null);
-  const visibleTourSteps = TOUR_STEPS.filter((s) => canSee(s.tab));
 
   function startTour() { if (visibleTourSteps.length) { setTourStep(0); setActiveTab(visibleTourSteps[0].tab); } }
   function goTour(delta: number) {
@@ -317,6 +316,7 @@ export default function Admin() {
   }, [user]);
 
   const canSee = useCallback((perm: string) => myPerms === null || myPerms.includes(perm), [myPerms]);
+  const visibleTourSteps = TOUR_STEPS.filter((s) => canSee(s.tab));
 
   const loadRoles = useCallback(async () => {
     try {
