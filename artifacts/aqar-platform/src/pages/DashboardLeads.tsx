@@ -51,7 +51,7 @@ type Lead = {
 };
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-KW", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleDateString("ar-KW-u-nu-latn", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function DashboardLeads() {

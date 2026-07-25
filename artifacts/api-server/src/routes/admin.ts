@@ -1,15 +1,63 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, subscriptionPlansTable, catalogOptionsTable } from "@workspace/db";
+import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, adminRolesTable, subscriptionPlansTable, catalogOptionsTable } from "@workspace/db";
 import { eq, and, desc, asc, sql, like, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { requireAdmin } from "../lib/authHelpers";
+import { getSessionId } from "../lib/session";
 
 const router: IRouter = Router();
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+// ── Role-based access ───────────────────────────────────────────────────────
+// The owner (admins.role_id NULL) can do everything, including managing the
+// admins and the roles themselves. Everyone else carries a role whose
+// permissions are the admin-panel sections. Enforced HERE, not just hidden in
+// the UI — a keyed URL must fail too.
+export const ADMIN_PERMISSIONS = ["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const;
+
+const PERM_RULES: [RegExp, string][] = [
+  [/^\/admin\/analytics/, "any"], // read-only overview: any signed-in admin
+  [/^\/admin\/(admins|roles)/, "owner"],
+  [/^\/admin\/offices\/\d+\/set-subscription/, "subscriptions"],
+  [/^\/admin\/(subscriptions|plans)/, "subscriptions"],
+  [/^\/admin\/(pending-offices|all-offices|offices)/, "offices"],
+  [/^\/admin\/(pending-listings|listings)/, "listings"],
+  [/^\/admin\/reports/, "reports"],
+  [/^\/admin\/(locations|governorates|areas)/, "locations"],
+  [/^\/admin\/catalog/, "catalog"],
+  [/^\/admin\/(hero|demo-data)/, "tools"],
+];
+
+router.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.path.startsWith("/admin")) { next(); return; }
+  const adminId = getSessionId(req, "admin");
+  if (!adminId) { next(); return; } // each route's requireAdmin rejects unauthenticated calls
+
+  try {
+    const [row] = await db
+      .select({ roleId: adminsTable.roleId, permissions: adminRolesTable.permissions })
+      .from(adminsTable)
+      .leftJoin(adminRolesTable, eq(adminsTable.roleId, adminRolesTable.id))
+      .where(eq(adminsTable.id, adminId))
+      .limit(1);
+
+    if (!row || row.roleId == null) { next(); return; } // owner (or vanished session — requireAdmin handles it)
+
+    const need = (PERM_RULES.find(([re]) => re.test(req.path)) ?? [null, "owner"])[1];
+    if (need === "any") { next(); return; }
+    if (need === "owner" || !((row.permissions as string[] | null) ?? []).includes(need)) {
+      res.status(403).json({ error: "ليست لديك صلاحية لهذا القسم" });
+      return;
+    }
+    next();
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
 
 // GET /api/admin/pending-offices
 router.get("/admin/pending-offices", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
@@ -424,27 +472,131 @@ router.post("/admin/offices/:id/reset-password", requireAdmin, async (req: Reque
 // ── GET /api/admin/admins — list platform admins ──
 router.get("/admin/admins", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
-    const admins = await db.select({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email, status: adminsTable.status, createdAt: adminsTable.createdAt }).from(adminsTable).orderBy(adminsTable.createdAt);
+    const admins = await db
+      .select({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email, status: adminsTable.status, createdAt: adminsTable.createdAt, roleId: adminsTable.roleId, roleName: adminRolesTable.nameAr })
+      .from(adminsTable)
+      .leftJoin(adminRolesTable, eq(adminsTable.roleId, adminRolesTable.id))
+      .orderBy(adminsTable.createdAt);
     res.json({ admins });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
 });
 
-// ── POST /api/admin/admins — create a new admin ──
+// ── POST /api/admin/admins — create a new admin (owner only via the guard) ──
 router.post("/admin/admins", requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const name = String((req.body as any)?.name ?? "").trim();
   const email = String((req.body as any)?.email ?? "").trim().toLowerCase();
   const password = String((req.body as any)?.password ?? "");
+  const roleIdRaw = (req.body as any)?.roleId;
   if (name.length < 2) { res.status(400).json({ error: "الاسم يجب أن يكون حرفين على الأقل" }); return; }
   if (!isValidEmail(email)) { res.status(400).json({ error: "البريد الإلكتروني غير صالح" }); return; }
   if (password.length < 8) { res.status(400).json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }); return; }
   try {
+    let roleId: number | null = null;
+    if (roleIdRaw != null && roleIdRaw !== "") {
+      roleId = Number(roleIdRaw);
+      const [role] = await db.select({ id: adminRolesTable.id }).from(adminRolesTable).where(eq(adminRolesTable.id, roleId)).limit(1);
+      if (!role) { res.status(400).json({ error: "الدور غير موجود" }); return; }
+    }
     const [existing] = await db.select({ id: adminsTable.id }).from(adminsTable).where(eq(adminsTable.email, email)).limit(1);
     if (existing) { res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" }); return; }
     const passwordHash = await bcrypt.hash(password, 12);
-    const [created] = await db.insert(adminsTable).values({ name, email, passwordHash, status: "active" }).returning({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email });
+    const [created] = await db.insert(adminsTable).values({ name, email, passwordHash, status: "active", roleId }).returning({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email });
     res.status(201).json({ admin: created, message: "تم إنشاء حساب المسؤول بنجاح" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── PUT /api/admin/admins/:id/role — reassign an employee's role ──
+router.put("/admin/admins/:id/role", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const roleIdRaw = (req.body as any)?.roleId;
+  try {
+    let roleId: number | null = null;
+    if (roleIdRaw != null && roleIdRaw !== "") {
+      roleId = Number(roleIdRaw);
+      const [role] = await db.select({ id: adminRolesTable.id }).from(adminRolesTable).where(eq(adminRolesTable.id, roleId)).limit(1);
+      if (!role) { res.status(400).json({ error: "الدور غير موجود" }); return; }
+    }
+    const [updated] = await db.update(adminsTable).set({ roleId }).where(eq(adminsTable.id, id)).returning({ id: adminsTable.id });
+    if (!updated) { res.status(404).json({ error: "المسؤول غير موجود" }); return; }
+    res.json({ message: "تم تحديث الدور" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── Roles CRUD (owner only via the guard) ──
+router.get("/admin/roles", requireAdmin, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const roles = await db.select().from(adminRolesTable).orderBy(asc(adminRolesTable.id));
+    const counts = await db
+      .select({ roleId: adminsTable.roleId, n: sql<number>`count(*)::int` })
+      .from(adminsTable)
+      .groupBy(adminsTable.roleId);
+    const byRole = new Map((counts as { roleId: number | null; n: number }[]).map((c) => [c.roleId, c.n]));
+    res.json({
+      roles: roles.map((r: typeof adminRolesTable.$inferSelect) => ({ ...r, admins: byRole.get(r.id) ?? 0 })),
+      allPermissions: ADMIN_PERMISSIONS,
+    });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.post("/admin/roles", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const nameAr = String((req.body as any)?.nameAr ?? "").trim();
+  const permissions = Array.isArray((req.body as any)?.permissions)
+    ? ((req.body as any).permissions as unknown[]).map(String).filter((p) => (ADMIN_PERMISSIONS as readonly string[]).includes(p))
+    : [];
+  if (!nameAr) { res.status(400).json({ error: "اسم الدور مطلوب" }); return; }
+  if (!permissions.length) { res.status(400).json({ error: "اختر صلاحية واحدة على الأقل" }); return; }
+  try {
+    const [role] = await db.insert(adminRolesTable).values({ nameAr, permissions }).returning();
+    res.status(201).json({ role });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.put("/admin/roles/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const patch: Record<string, unknown> = {};
+  if ((req.body as any)?.nameAr !== undefined) {
+    const v = String((req.body as any).nameAr).trim();
+    if (!v) { res.status(400).json({ error: "اسم الدور مطلوب" }); return; }
+    patch["nameAr"] = v;
+  }
+  if ((req.body as any)?.permissions !== undefined) {
+    const perms = Array.isArray((req.body as any).permissions)
+      ? ((req.body as any).permissions as unknown[]).map(String).filter((p) => (ADMIN_PERMISSIONS as readonly string[]).includes(p))
+      : [];
+    if (!perms.length) { res.status(400).json({ error: "اختر صلاحية واحدة على الأقل" }); return; }
+    patch["permissions"] = perms;
+  }
+  if (!Object.keys(patch).length) { res.status(400).json({ error: "لا يوجد تغيير" }); return; }
+  try {
+    const [role] = await db.update(adminRolesTable).set(patch).where(eq(adminRolesTable.id, id)).returning();
+    if (!role) { res.status(404).json({ error: "الدور غير موجود" }); return; }
+    res.json({ role });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+router.delete("/admin/roles/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  try {
+    const [assigned] = await db.select({ id: adminsTable.id }).from(adminsTable).where(eq(adminsTable.roleId, id)).limit(1);
+    if (assigned) { res.status(409).json({ error: "الدور مُسند لموظفين. انقلهم لدور آخر أولاً." }); return; }
+    const [role] = await db.delete(adminRolesTable).where(eq(adminRolesTable.id, id)).returning();
+    if (!role) { res.status(404).json({ error: "الدور غير موجود" }); return; }
+    res.json({ message: "تم حذف الدور" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }

@@ -233,36 +233,29 @@ export default function Plans() {
               </div>
             </div>
 
-            <div className="pricing-card" style={{ paddingTop: 36 }}>
-              <h2>باقة المكاتب العقارية</h2>
-              {plans.length === 0 ? (
-                <>
-                  <div className="price-new">14.5 <span>د.ك / شهرياً</span></div>
-                </>
-              ) : (
-                <div style={{ display: "grid", gap: 14, margin: "6px 0 4px" }}>
-                  {plans.map((p) => (
-                    <div key={p.id} style={{ border: "1px solid #E5E9F2", borderRadius: 14, padding: "14px 16px", background: "#FBFCFF" }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>{p.nameAr}</div>
-                      <div className="price-new" style={{ margin: "4px 0" }}>
-                        {p.price} <span>د.ك / {durationLabel(p.durationDays)}</span>
-                      </div>
-                      {p.maxListings > 0 && (
-                        <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>حتى {p.maxListings} إعلان</div>
-                      )}
-                    </div>
-                  ))}
+            {/* One separate card per plan (client: "صارت مدموجة مع بعض — مش
+                منفصلة"), each with its own CTA. This page is the shop window;
+                the actual payment happens inside the office dashboard. */}
+            <div style={{ display: "grid", gap: 18 }}>
+              {(plans.length ? plans : [{ id: 0, nameAr: "باقة المكاتب العقارية", price: 14.5, currency: "KWD", maxListings: 30, durationDays: 30 }]).map((p) => (
+                <div key={p.id} className="pricing-card" style={{ paddingTop: 30 }}>
+                  <h2>{p.nameAr}</h2>
+                  <div className="price-new">
+                    {p.price} <span>د.ك / {durationLabel(p.durationDays)}</span>
+                  </div>
+                  {p.maxListings > 0 && (
+                    <div className="pricing-desc">حتى {p.maxListings} إعلان — كل ما تحتاجه لإدارة وعرض عقاراتك</div>
+                  )}
+                  <div className="trial-line">👇 جرب المنصة مجانًا لمدة 14 يوم بدون دفع</div>
+                  <button
+                    className="cta-btn"
+                    onClick={handleCTA}
+                    data-testid={`button-start-trial-${p.id}`}
+                  >
+                    ابدأ التجربة المجانية
+                  </button>
                 </div>
-              )}
-              <div className="pricing-desc">كل ما تحتاجه لإدارة وعرض عقاراتك في مكان واحد</div>
-              <div className="trial-line">👇 جرب المنصة مجانًا لمدة 14 يومًا بدون دفع</div>
-              <button
-                className="cta-btn"
-                onClick={handleCTA}
-                data-testid="button-start-trial"
-              >
-                ابدأ التجربة المجانية
-              </button>
+              ))}
             </div>
           </div>
         </div>

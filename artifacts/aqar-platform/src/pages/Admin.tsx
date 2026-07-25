@@ -73,7 +73,27 @@ interface AdminUser {
   email: string;
   status: string;
   createdAt: string;
+  roleId?: number | null;
+  roleName?: string | null;
 }
+
+interface AdminRole {
+  id: number;
+  nameAr: string;
+  permissions: string[];
+  admins: number;
+}
+
+// Arabic labels for the permission keys (= admin panel sections).
+const PERM_LABELS: Record<string, string> = {
+  offices: "طلبات المكاتب",
+  listings: "مراقبة الإعلانات",
+  reports: "البلاغات",
+  subscriptions: "الاشتراكات والباقات",
+  locations: "المناطق",
+  catalog: "خيارات الإعلان",
+  tools: "الأدوات والبانرات",
+};
 
 interface AllOffice {
   officeId: number;
@@ -144,7 +164,7 @@ async function adminPost(path: string): Promise<{ message: string }> {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-KW", {
+  return new Date(iso).toLocaleDateString("ar-KW-u-nu-latn", {
     year: "numeric", month: "long", day: "numeric",
   });
 }
@@ -207,7 +227,36 @@ export default function Admin() {
   const [allOffices, setAllOffices]       = useState<AllOffice[]>([]);
   const [toolsBusy, setToolsBusy]         = useState<string | null>(null);
   const [confirmClearDemo, setConfirmClearDemo] = useState(false);
-  const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "" });
+  const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "", roleId: "" });
+
+  // Role-based access: the owner (no role) sees everything; an employee's
+  // tabs are filtered to their role's permissions. The server enforces the
+  // same rules, this is just the matching UI.
+  const [myPerms, setMyPerms]   = useState<string[] | null>(null); // null = owner/full
+  const [roles, setRoles]       = useState<AdminRole[]>([]);
+  const [rolesBusy, setRolesBusy] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newRolePerms, setNewRolePerms] = useState<string[]>([]);
+  const [confirmRoleDel, setConfirmRoleDel] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch(`${BASE}/api/auth/admin/me`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { permissions?: string[] | null; isOwner?: boolean }) => {
+        setMyPerms(d.isOwner ? null : (d.permissions ?? []));
+      })
+      .catch(() => setMyPerms(null));
+  }, [user]);
+
+  const canSee = useCallback((perm: string) => myPerms === null || myPerms.includes(perm), [myPerms]);
+
+  const loadRoles = useCallback(async () => {
+    try {
+      const d = await adminFetch<{ roles: AdminRole[] }>("/api/admin/roles");
+      setRoles(d.roles);
+    } catch { /* non-owner: 403 — roles UI hidden anyway */ }
+  }, []);
   const [resetOfficeId, setResetOfficeId] = useState("");
   const [resetPassword, setResetPassword] = useState("");
 
@@ -417,10 +466,21 @@ export default function Admin() {
       loadAdmins();
       loadAllOffices();
       loadHeroSlides();
+      loadRoles();
     }
     if (activeTab === "locations" && user) loadLocations();
     if (activeTab === "catalog" && user) loadCatalog();
-  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides, loadLocations, loadCatalog]);
+  }, [activeTab, user, loadAdmins, loadAllOffices, loadHeroSlides, loadLocations, loadCatalog, loadRoles]);
+
+  // If the signed-in employee can't see the current tab, jump to their first
+  // allowed one (the server would 403 its data anyway).
+  useEffect(() => {
+    if (myPerms === null) return;
+    if (!myPerms.includes(activeTab)) {
+      const first = (["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const).find((t) => myPerms.includes(t));
+      if (first) setActiveTab(first);
+    }
+  }, [myPerms, activeTab]);
 
   // Load subscriptions when that tab is opened
   useEffect(() => {
@@ -454,8 +514,18 @@ export default function Admin() {
 
   async function addAdmin(e: React.FormEvent) {
     e.preventDefault();
-    if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
-      toast({ title: "خطأ", description: "يرجى تعبئة جميع الحقول", variant: "destructive" });
+    // Field-specific errors — the generic "يرجى تعبئة جميع الحقول" left the
+    // client hunting for which field was the problem.
+    if (newAdmin.name.trim().length < 2) {
+      toast({ title: "الاسم ناقص", description: "اكتب اسم الموظف (حرفين على الأقل)", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAdmin.email.trim())) {
+      toast({ title: "البريد الإلكتروني غير صحيح", description: "اكتب بريداً بصيغة صحيحة مثل name@example.com", variant: "destructive" });
+      return;
+    }
+    if (newAdmin.password.length < 8) {
+      toast({ title: "كلمة المرور قصيرة", description: `كلمة المرور ${newAdmin.password.length} من 8 أحرف مطلوبة على الأقل`, variant: "destructive" });
       return;
     }
     setToolsBusy("add-admin");
@@ -469,8 +539,9 @@ export default function Admin() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل إضافة المسؤول");
       toast({ title: "تم", description: (data as { message?: string }).message ?? "تمت إضافة المسؤول" });
-      setNewAdmin({ name: "", email: "", password: "" });
+      setNewAdmin({ name: "", email: "", password: "", roleId: "" });
       await loadAdmins();
+      await loadRoles();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "حدث خطأ";
       toast({ title: "خطأ", description: msg, variant: "destructive" });
@@ -826,13 +897,15 @@ export default function Admin() {
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {([
-            { key: "offices"       as const, icon: Users,      label: "طلبات تسجيل المكاتب", count: offices.length },
-            { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
-            { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
-            { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
-            { key: "locations"     as const, icon: MapPin,     label: "المناطق",             count: undefined },
-            { key: "catalog"       as const, icon: ClipboardList, label: "خيارات الإعلان",   count: undefined },
-            { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
+            ...([
+              { key: "offices"       as const, icon: Users,      label: "طلبات تسجيل المكاتب", count: offices.length },
+              { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
+              { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
+              { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
+              { key: "locations"     as const, icon: MapPin,     label: "المناطق",             count: undefined },
+              { key: "catalog"       as const, icon: ClipboardList, label: "خيارات الإعلان",   count: undefined },
+              { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
+            ].filter((t) => canSee(t.key))),
           ]).map(({ key, icon: Icon, label, count }) => {
             const active = activeTab === key;
             return (
@@ -1332,36 +1405,31 @@ export default function Admin() {
                             )}
                           </td>
                           <td>
-                            <div className="flex gap-2 justify-center flex-wrap">
-                              <button
-                                disabled={busy || s.subscriptionStatus === "active"}
-                                onClick={() => setSubscription(s.officeId, "active", s.officeName)}
-                                className="adm-btn adm-btn--approve"
-                                style={{ height: 34, padding: "0 12px", opacity: (busy || s.subscriptionStatus === "active") ? 0.5 : 1 }}
-                                data-testid={`sub-activate-${s.officeId}`}
-                              >
-                                {busy ? <Loader2 className="animate-spin" style={{ width: 15, height: 15 }} /> : <CheckCircle style={{ width: 15, height: 15 }} />}
-                                تفعيل الاشتراك
-                              </button>
-                              <button
+                            {/* One compact select instead of three stacked buttons —
+                                the client manages this from his phone and the pile
+                                looked broken there. Digits kept Latin (14 not ١٤). */}
+                            <div className="flex items-center gap-2 justify-center">
+                              {busy && <Loader2 className="animate-spin" style={{ width: 15, height: 15, color: BLUE }} />}
+                              <select
                                 disabled={busy}
-                                onClick={() => setSubscription(s.officeId, "trial", s.officeName)}
-                                className="adm-btn"
-                                style={{ height: 34, padding: "0 12px", background: "#fff", color: BLUE, border: `1px solid ${BLUE}`, opacity: busy ? 0.5 : 1 }}
-                                data-testid={`sub-trial-${s.officeId}`}
+                                value=""
+                                data-testid={`sub-action-${s.officeId}`}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === "active" || v === "trial" || v === "expired") setSubscription(s.officeId, v, s.officeName);
+                                }}
+                                style={{
+                                  height: 38, borderRadius: 10, border: `1.5px solid ${BORDER}`, background: "#fff",
+                                  padding: "0 10px", fontSize: 13, fontWeight: 700, color: NAVY,
+                                  fontFamily: "'Cairo', sans-serif", cursor: busy ? "not-allowed" : "pointer", outline: "none",
+                                  maxWidth: 170,
+                                }}
                               >
-                                {/* The backend grants 14 days — the label said ٧ and confused the client. */}
-                                تجربة ١٤ يومًا
-                              </button>
-                              <button
-                                disabled={busy || s.subscriptionStatus === "expired"}
-                                onClick={() => setSubscription(s.officeId, "expired", s.officeName)}
-                                className="adm-btn adm-btn--reject"
-                                style={{ height: 34, padding: "0 12px", opacity: (busy || s.subscriptionStatus === "expired") ? 0.5 : 1 }}
-                                data-testid={`sub-stop-${s.officeId}`}
-                              >
-                                إيقاف
-                              </button>
+                                <option value="" disabled>تغيير الحالة...</option>
+                                <option value="active" disabled={s.subscriptionStatus === "active"}>تفعيل الاشتراك</option>
+                                <option value="trial">تجربة مجانية 14 يوم</option>
+                                <option value="expired" disabled={s.subscriptionStatus === "expired"}>إيقاف</option>
+                              </select>
                             </div>
                           </td>
                         </tr>
@@ -1711,6 +1779,125 @@ export default function Admin() {
               </p>
             </div>
 
+            {/* 2a — Roles & permissions (owner only) */}
+            {myPerms === null && (
+              <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <KeyRound className="h-4.5 w-4.5" style={{ color: BLUE }} />
+                  <h3 className="text-base font-bold" style={{ color: NAVY }}>الأدوار والصلاحيات</h3>
+                </div>
+                <p className="text-sm mb-4" style={{ color: BODY }}>
+                  أنشئ دوراً (مثل «موظف إعلانات») واختر الأقسام المسموحة له، ثم أسنده للموظف بالأسفل. الموظف لا يرى — ولا يستطيع استخدام — إلا أقسام دوره.
+                </p>
+
+                {/* Existing roles */}
+                {roles.length > 0 && (
+                  <div className="flex flex-col gap-2 mb-4">
+                    {roles.map((r) => (
+                      <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm" style={{ color: NAVY }}>
+                            {r.nameAr}
+                            <span className="adm-chip mr-2" style={{ background: "#EEF2FF", color: BLUE }}>{r.admins} موظف</span>
+                          </div>
+                          <div className="flex gap-1.5 flex-wrap mt-1.5">
+                            {r.permissions.map((p) => (
+                              <span key={p} style={{ fontSize: 11, fontWeight: 700, color: "#475569", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "2px 9px" }}>
+                                {PERM_LABELS[p] ?? p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          disabled={rolesBusy}
+                          onClick={async () => {
+                            if (confirmRoleDel !== r.id) {
+                              setConfirmRoleDel(r.id);
+                              setTimeout(() => setConfirmRoleDel((c) => (c === r.id ? null : c)), 4000);
+                              return;
+                            }
+                            setConfirmRoleDel(null); setRolesBusy(true);
+                            try {
+                              const res = await fetch(`${BASE}/api/admin/roles/${r.id}`, { method: "DELETE", credentials: "include" });
+                              const d = await res.json().catch(() => ({}));
+                              if (!res.ok) { toast({ title: "لم يتم الحذف", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                              toast({ title: "تم حذف الدور" });
+                              await loadRoles();
+                            } finally { setRolesBusy(false); }
+                          }}
+                          className="adm-btn"
+                          style={{
+                            height: 34, padding: "0 12px",
+                            background: confirmRoleDel === r.id ? "#DC2626" : "#FEF2F2",
+                            color: confirmRoleDel === r.id ? "#fff" : "#DC2626",
+                            border: "1px solid #FECACA",
+                          }}
+                        >
+                          <Trash2 style={{ width: 14, height: 14 }} />
+                          {confirmRoleDel === r.id ? "تأكيد؟" : "حذف"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* New role */}
+                <div className="pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+                  <input
+                    className="adm-input mb-3"
+                    style={{ maxWidth: 300 }}
+                    placeholder="اسم الدور الجديد (مثال: موظف إعلانات)"
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                  />
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {Object.entries(PERM_LABELS).map(([key, label]) => {
+                      const on = newRolePerms.includes(key);
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setNewRolePerms((p) => (on ? p.filter((x) => x !== key) : [...p, key]))}
+                          style={{
+                            padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                            fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
+                            borderColor: on ? BLUE : BORDER,
+                            background: on ? "#EEF2FF" : "#fff",
+                            color: on ? BLUE : BODY,
+                          }}
+                        >
+                          {on ? "✓ " : ""}{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    disabled={rolesBusy || !newRoleName.trim() || newRolePerms.length === 0}
+                    className="adm-btn adm-btn--blue"
+                    style={{ opacity: rolesBusy || !newRoleName.trim() || newRolePerms.length === 0 ? 0.5 : 1 }}
+                    onClick={async () => {
+                      setRolesBusy(true);
+                      try {
+                        const res = await fetch(`${BASE}/api/admin/roles`, {
+                          method: "POST", credentials: "include",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ nameAr: newRoleName.trim(), permissions: newRolePerms }),
+                        });
+                        const d = await res.json().catch(() => ({}));
+                        if (!res.ok) { toast({ title: "لم يتم الإنشاء", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                        toast({ title: "تم إنشاء الدور" });
+                        setNewRoleName(""); setNewRolePerms([]);
+                        await loadRoles();
+                      } finally { setRolesBusy(false); }
+                    }}
+                  >
+                    <Plus style={{ width: 15, height: 15 }} />
+                    إنشاء الدور
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 2 — Manage admins (full width) */}
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
               <div className="flex items-center gap-2 mb-2">
@@ -1736,15 +1923,47 @@ export default function Admin() {
                         <div className="font-bold text-sm" style={{ color: NAVY }}>{a.name}</div>
                         <div className="text-xs" style={{ color: BODY }} dir="ltr">{a.email}</div>
                       </div>
-                      <span
-                        className="adm-chip"
-                        style={{
-                          background: a.status === "active" ? "#E7F6F0" : "#FEF6E7",
-                          color: a.status === "active" ? GREEN : AMBER,
-                        }}
-                      >
-                        {a.status}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                        {/* Role assignment (owner only) — "ضيف role للموظف" */}
+                        {myPerms === null ? (
+                          <select
+                            value={a.roleId == null ? "" : String(a.roleId)}
+                            onChange={async (e) => {
+                              const v = e.target.value;
+                              const res = await fetch(`${BASE}/api/admin/admins/${a.id}/role`, {
+                                method: "PUT", credentials: "include",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ roleId: v === "" ? null : Number(v) }),
+                              });
+                              const d = await res.json().catch(() => ({}));
+                              if (!res.ok) { toast({ title: "لم يتم التحديث", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                              toast({ title: "تم تحديث الدور" });
+                              await loadAdmins(); await loadRoles();
+                            }}
+                            style={{
+                              height: 34, borderRadius: 9, border: `1.5px solid ${BORDER}`, background: "#fff",
+                              padding: "0 9px", fontSize: 12.5, fontWeight: 700, color: NAVY,
+                              fontFamily: "'Cairo',sans-serif", cursor: "pointer", outline: "none", maxWidth: 170,
+                            }}
+                          >
+                            <option value="">كامل الصلاحيات (مالك)</option>
+                            {roles.map((r) => <option key={r.id} value={String(r.id)}>{r.nameAr}</option>)}
+                          </select>
+                        ) : (
+                          <span className="adm-chip" style={{ background: "#EEF2FF", color: BLUE }}>
+                            {a.roleName ?? "كامل الصلاحيات"}
+                          </span>
+                        )}
+                        <span
+                          className="adm-chip"
+                          style={{
+                            background: a.status === "active" ? "#E7F6F0" : "#FEF6E7",
+                            color: a.status === "active" ? GREEN : AMBER,
+                          }}
+                        >
+                          {a.status}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1773,6 +1992,15 @@ export default function Admin() {
                   placeholder="كلمة المرور (8 أحرف على الأقل)"
                   className="adm-input"
                 />
+                <select
+                  value={newAdmin.roleId}
+                  onChange={(e) => setNewAdmin((s) => ({ ...s, roleId: e.target.value }))}
+                  className="adm-input"
+                  style={{ fontWeight: 700, cursor: "pointer" }}
+                >
+                  <option value="">الدور: كامل الصلاحيات (مالك)</option>
+                  {roles.map((r) => <option key={r.id} value={String(r.id)}>الدور: {r.nameAr}</option>)}
+                </select>
                 <div className="sm:col-span-3">
                   <button
                     type="submit"

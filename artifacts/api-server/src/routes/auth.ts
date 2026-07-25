@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, adminsTable, officeUsersTable, officesTable } from "@workspace/db";
+import { db, usersTable, adminsTable, adminRolesTable, officeUsersTable, officesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { randomInt, randomBytes } from "node:crypto";
@@ -531,7 +531,17 @@ router.get("/auth/admin/me", async (req: Request, res: Response): Promise<void> 
   try {
     const [admin] = await db.select().from(adminsTable).where(eq(adminsTable.id, id)).limit(1);
     if (!admin) { clearSession(res, "admin"); res.status(401).json({ error: "الجلسة غير صالحة" }); return; }
-    res.json({ admin: safe(admin) });
+    // Role info for the panel: owner (roleId null) sees everything; an
+    // employee's tabs are filtered to their role's permissions (the server
+    // guard in admin.ts enforces the same list on every request).
+    let permissions: string[] | null = null;
+    let roleName: string | null = null;
+    if (admin.roleId != null) {
+      const [role] = await db.select().from(adminRolesTable).where(eq(adminRolesTable.id, admin.roleId)).limit(1);
+      permissions = (role?.permissions as string[] | undefined) ?? [];
+      roleName = role?.nameAr ?? null;
+    }
+    res.json({ admin: safe(admin), permissions, roleName, isOwner: admin.roleId == null });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }
