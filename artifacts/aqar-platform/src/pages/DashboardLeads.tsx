@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ export default function DashboardLeads() {
   const { toast } = useToast();
   const { officeId: oid, isLoading: authLoading } = useOfficeAuth();
   const officeId = oid ?? 0;
+  const [, navigate] = useLocation();
 
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -72,6 +74,18 @@ export default function DashboardLeads() {
 
   // Add-client form (opens automatically from the listing row's "عميل+").
   const [addOpen, setAddOpen] = useState(urlParams.get("add") === "1");
+  // When the form was launched from a listing shortcut (?add=1), closing it
+  // returns to إعلاناتي instead of staying on عملائي (client request).
+  const [returnToListings, setReturnToListings] = useState(urlParams.get("add") === "1");
+  function toggleAdd() {
+    if (addOpen) {
+      if (returnToListings) { navigate("/dashboard/listings"); return; }
+      setAddOpen(false);
+    } else {
+      setReturnToListings(false); // manual open on عملائي → close just closes
+      setAddOpen(true);
+    }
+  }
   const [fName, setFName] = useState("");
   const [fPhone, setFPhone] = useState("");
   const [fStatus, setFStatus] = useState("جديد");
@@ -131,7 +145,10 @@ export default function DashboardLeads() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { toast({ title: data?.error ?? "تعذّرت الإضافة", variant: "destructive" }); return; }
       toast({ title: "تمت إضافة العميل" });
-      setFName(""); setFPhone(""); setFNote(""); setFStatus("جديد"); setAddOpen(false);
+      // Keep the form open (just clear the fields) so the office can add more
+      // clients in a row and see them appear in the list below; "إغلاق" stays
+      // available to go back to إعلاناتي.
+      setFName(""); setFPhone(""); setFNote(""); setFStatus("جديد");
       await load();
     } catch {
       toast({ title: "تعذّر الاتصال بالخادم", variant: "destructive" });
@@ -206,7 +223,7 @@ export default function DashboardLeads() {
             </p>
           </div>
           <button
-            onClick={() => setAddOpen((o) => !o)}
+            onClick={toggleAdd}
             style={{
               display: "inline-flex", alignItems: "center", gap: 7, height: 44, padding: "0 22px",
               borderRadius: 12, border: "none", background: addOpen ? "#F1F5F9" : "#667EEA",
