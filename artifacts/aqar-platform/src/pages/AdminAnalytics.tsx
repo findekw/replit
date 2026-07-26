@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAdminAuth } from "@/lib/AuthContext";
+import AdminLayout, { type AdminSection } from "@/components/layout/AdminLayout";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
@@ -143,6 +145,8 @@ export default function AdminAnalytics() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [showAllOffices, setShowAllOffices] = useState(false);
+  const { admin, logout } = useAdminAuth();
+  const handleLogout = async () => { await logout(); nav("/admin/login"); };
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -220,48 +224,38 @@ export default function AdminAnalytics() {
     { id: "insights", label: "توصيات ذكية",    icon: Zap },
   ] as const;
 
-  /* ─── error state ─── */
-  if (error) return (
-    <div style={{ minHeight: "100vh", background: PAGE_BG, display: "flex", flexDirection: "column", fontFamily: "'Cairo', sans-serif" }} dir="rtl">
-      <AppHeader loading={false} onRefresh={load} nav={nav} />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
-        <AlertTriangle style={{ width: 40, height: 40, color: "#dc2626" }} />
-        <p style={{ color: "#374151", fontSize: 15, textAlign: "center" }}>{error}</p>
-        <button onClick={load} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>إعادة المحاولة</button>
-      </div>
-    </div>
-  );
+  const sections: AdminSection[] = TABS.map((t) => ({
+    key: t.id,
+    icon: t.icon,
+    label: t.label,
+    count: t.id === "insights" ? (insights.length || undefined) : undefined,
+  }));
+  const pageTitle = TABS.find((t) => t.id === tab)?.label ?? "التحليلات والتقارير";
 
   return (
-    <div className="adm-an-root" style={{ minHeight: "100vh", background: PAGE_BG, fontFamily: "'Cairo', sans-serif" }} dir="rtl">
-      <style>{`.adm-an-root, .adm-an-root * { font-family: 'Cairo', sans-serif; }`}</style>
-      <AppHeader loading={loading} onRefresh={load} nav={nav} />
-
-      {/* ── tab bar ── */}
-      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, overflowX: "auto" }}>
-        <div style={{ display: "flex", maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id as any)} style={{
-              padding: "13px 16px", border: "none", background: "transparent", cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 500,
-              color: tab === t.id ? NAVY : "#6b7280",
-              borderBottom: `2px solid ${tab === t.id ? NAVY : "transparent"}`,
-              whiteSpace: "nowrap", position: "relative",
-            }}>
-              <t.icon style={{ width: 14, height: 14 }} />
-              {t.label}
-              {t.id === "insights" && insights.length > 0 && (
-                <span style={{ background: "#dc2626", color: "#fff", borderRadius: "50%", width: 16, height: 16, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
-                  {insights.length}
-                </span>
-              )}
-            </button>
-          ))}
+    <AdminLayout
+      user={admin}
+      sections={sections}
+      activeKey={tab}
+      onSelect={(k) => setTab(k as typeof tab)}
+      pageTitle={pageTitle}
+      onLogout={handleLogout}
+      bottomActions={[
+        { key: "back", icon: LayoutDashboard, label: "العودة للوحة الإدارة", onClick: () => nav("/admin") },
+        { key: "refresh", icon: RefreshCw, label: "تحديث البيانات", onClick: load },
+      ]}
+      onNavigate={nav}
+    >
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      {error && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40 }}>
+          <AlertTriangle style={{ width: 40, height: 40, color: "#dc2626" }} />
+          <p style={{ color: "#374151", fontSize: 15, textAlign: "center" }}>{error}</p>
+          <button onClick={load} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>إعادة المحاولة</button>
         </div>
-      </div>
+      )}
 
-      {/* ── body ── */}
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 16px" }}>
+<div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
 
         {/* loading */}
         {loading && !data && (
@@ -703,33 +697,7 @@ export default function AdminAnalytics() {
         )}
 
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </AdminLayout>
   );
 }
 
-/* ─── sub-component: header ─── */
-function AppHeader({ loading, onRefresh, nav }: { loading: boolean; onRefresh: () => void; nav: (to: string) => void }) {
-  return (
-    <div style={{ background: NAVY, color: "#fff", padding: "0 20px", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <BarChart2 style={{ width: 18, height: 18, opacity: 0.8 }} />
-        <span style={{ fontWeight: 700, fontSize: 14 }}>لوحة SaaS للمشرف</span>
-      </div>
-      <div style={{ display: "flex", gap: 6 }}>
-        <NavBtn icon={RefreshCw} label="تحديث" onClick={onRefresh} spin={loading} />
-        <NavBtn icon={LayoutDashboard} label="الإدارة" onClick={() => nav("/admin")} />
-        <NavBtn icon={Home} label="الموقع" onClick={() => nav("/")} />
-      </div>
-    </div>
-  );
-}
-
-function NavBtn({ icon: Icon, label, onClick, spin }: { icon: any; label: string; onClick: () => void; spin?: boolean }) {
-  return (
-    <button onClick={onClick} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: 8, padding: "5px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 500 }}>
-      <Icon style={{ width: 13, height: 13, animation: spin ? "spin 1s linear infinite" : "none" }} />
-      <span>{label}</span>
-    </button>
-  );
-}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminPlans from "@/components/AdminPlans";
+import AdminLayout, { type AdminSection } from "@/components/layout/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -18,8 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Building2, CheckCircle, XCircle, ClipboardList,
-  Users, Shield, LogOut, RefreshCw, LayoutDashboard,
-  Home, MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
+  Users, Shield, RefreshCw, LayoutDashboard,
+  MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus, CreditCard,
   Image as ImageIcon, Plus, Upload, Loader2, Flag, Edit2, FileText, Clock, Compass, X,
 } from "lucide-react";
@@ -830,8 +831,31 @@ export default function Admin() {
   const activeListings = listings.filter(l => l.active).length;
   const blockedListings = listings.filter(l => !l.active).length;
 
+  const sections = ([
+    { key: "offices",       icon: Users,         label: "طلبات تسجيل المكاتب", count: offices.length },
+    { key: "listings",      icon: Building2,     label: "مراقبة الإعلانات",     count: blockedListings || undefined },
+    { key: "reports",       icon: Flag,          label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
+    { key: "subscriptions", icon: CreditCard,    label: "الاشتراكات" },
+    { key: "locations",     icon: MapPin,        label: "المناطق" },
+    { key: "catalog",       icon: ClipboardList, label: "خيارات الإعلان" },
+    { key: "tools",         icon: Settings,      label: "أدوات" },
+  ] as AdminSection[]).filter((s) => canSee(s.key));
+  const pageTitle = sections.find((s) => s.key === activeTab)?.label ?? "لوحة الإدارة";
+
   return (
-    <div className="adm-root" style={{ minHeight: "100vh", background: PAGE_BG, fontFamily: "'Cairo', sans-serif" }} dir="rtl">
+    <AdminLayout
+      user={user}
+      sections={sections}
+      activeKey={activeTab}
+      onSelect={(k) => setActiveTab(k as typeof activeTab)}
+      pageTitle={pageTitle}
+      onLogout={handleLogout}
+      bottomActions={[
+        { key: "analytics", icon: BarChart2, label: "التحليلات والتقارير", onClick: () => navigate("/admin/analytics") },
+        { key: "tour", icon: Compass, label: "جولة تعريفية", onClick: startTour },
+      ]}
+      onNavigate={navigate}
+    >
       <style>{`
         .adm-root * { font-family: 'Cairo', sans-serif; }
         .adm-card { background:#fff; border-radius:16px; border:1px solid ${BORDER}; box-shadow:${CARD_SHADOW}; }
@@ -840,10 +864,7 @@ export default function Admin() {
         .adm-kpi-icon { width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .adm-kpi-val { font-size:30px; font-weight:800; line-height:1; color:${NAVY}; }
         .adm-kpi-lbl { font-size:13px; color:${BODY}; margin-top:5px; font-weight:600; }
-        .adm-tab { padding:11px 18px; border:none; background:transparent; cursor:pointer; font-size:14px; font-weight:700; color:${BODY}; border-radius:10px; display:flex; align-items:center; gap:8px; transition:all .15s ease; }
-        .adm-tab--active { background:${BLUE}; color:#fff; box-shadow:0 4px 12px rgba(63,91,216,0.25); }
-        .adm-tab:not(.adm-tab--active):hover { background:#EEF1F5; color:${NAVY}; }
-        .adm-tab-count { font-size:11px; font-weight:800; border-radius:999px; padding:1px 8px; line-height:1.6; }
+        .adm-content { min-width:0; }
         .adm-table { width:100%; border-collapse:collapse; font-size:13.5px; }
         .adm-table thead th { padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:${BODY}; background:#F8FAFC; border-bottom:1px solid ${BORDER}; white-space:nowrap; }
         .adm-table tbody td { padding:14px 16px; border-bottom:1px solid #F1F5F9; color:#334155; vertical-align:middle; }
@@ -903,43 +924,7 @@ export default function Admin() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50" style={{ background: NAVY, boxShadow: "0 4px 16px rgba(15,23,42,0.12)" }}>
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <button onClick={() => navigate("/admin")} className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: BLUE }}>
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-right">
-              <h1 className="text-base font-bold leading-tight text-white">لوحة الإدارة</h1>
-              <p className="text-xs leading-tight" style={{ color: "rgba(255,255,255,0.55)" }}>منصة Finde الكويت</p>
-            </div>
-          </button>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-sm hidden sm:block ml-2" style={{ color: "rgba(255,255,255,0.6)" }}>{user.name}</span>
-            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5 text-sm" onClick={() => navigate("/")}>
-              <Home className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">العودة للموقع</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5 text-sm" onClick={() => navigate("/admin/analytics")}>
-              <BarChart2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">التحليلات والتقارير</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5 text-sm" onClick={startTour} data-testid="button-tour">
-              <Compass className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">جولة تعريفية</span>
-            </Button>
-            <Button size="sm" className="gap-1.5 text-sm text-white border-0" style={{ background: RED }} onClick={handleLogout}>
-              <LogOut className="h-3.5 w-3.5" />
-              <span>خروج</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-
-        {/* Page title */}
+      {/* Page title */}
         <div className="mb-6">
           <h2 className="text-xl font-bold" style={{ color: NAVY }}>نظرة عامة على المنصة</h2>
           <p className="text-sm mt-1" style={{ color: BODY }}>تابع وأدِر طلبات المكاتب والإعلانات من مكان واحد</p>
@@ -965,43 +950,8 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {([
-            ...([
-              { key: "offices"       as const, icon: Users,      label: "طلبات تسجيل المكاتب", count: offices.length },
-              { key: "listings"      as const, icon: Building2,  label: "مراقبة الإعلانات",     count: blockedListings || undefined },
-              { key: "reports"       as const, icon: Flag,       label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
-              { key: "subscriptions" as const, icon: CreditCard, label: "الاشتراكات",          count: undefined },
-              { key: "locations"     as const, icon: MapPin,     label: "المناطق",             count: undefined },
-              { key: "catalog"       as const, icon: ClipboardList, label: "خيارات الإعلان",   count: undefined },
-              { key: "tools"         as const, icon: Settings,   label: "أدوات",               count: undefined },
-            ].filter((t) => canSee(t.key))),
-          ]).map(({ key, icon: Icon, label, count }) => {
-            const active = activeTab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`adm-tab ${active ? "adm-tab--active" : ""}`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-                {count ? (
-                  <span
-                    className="adm-tab-count"
-                    style={{
-                      background: active ? "rgba(255,255,255,0.25)" : "#FEF6E7",
-                      color: active ? "#fff" : AMBER,
-                    }}
-                  >
-                    {count}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
+        <div className="adm-content">
+          {/* ═══════════════ tab content starts here ═══════════════ */}
 
         {/* ═══════════════ OFFICES TAB ═══════════════ */}
         {activeTab === "offices" && (
@@ -2417,7 +2367,7 @@ export default function Admin() {
 
           </div>
         )}
-      </div>
+        </div>{/* .adm-content */}
 
       {/* ── Guided tour overlay: fixed card, the active tab switches under it ── */}
       {tourStep !== null && visibleTourSteps[tourStep] && (
@@ -2463,6 +2413,6 @@ export default function Admin() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }
