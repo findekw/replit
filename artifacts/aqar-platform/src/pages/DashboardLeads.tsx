@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import PhoneField from "@/components/PhoneField";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -127,7 +129,7 @@ export default function DashboardLeads() {
 
   async function addLead() {
     if (fName.trim().length < 2) { toast({ title: "اكتب اسم العميل", variant: "destructive" }); return; }
-    if (!/^[0-9+\s-]{6,20}$/.test(fPhone.trim())) { toast({ title: "رقم الهاتف غير صالح", variant: "destructive" }); return; }
+    if (fPhone.trim().length !== 8) { toast({ title: "رقم الهاتف يجب أن يكون 8 أرقام", variant: "destructive" }); return; }
     setSaving(true);
     try {
       const res = await fetch(`${BASE}/api/leads`, {
@@ -241,24 +243,24 @@ export default function DashboardLeads() {
           <div style={{ background: "#fff", border: "1px solid #DBE4FF", borderRadius: 16, padding: 18, marginBottom: 20, boxShadow: "0 6px 20px rgba(63,91,216,0.08)" }}>
             <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
               <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الإعلان (اختياري)</label>
+                <select style={selStyle} value={fProperty} onChange={(e) => setFProperty(e.target.value)}>
+                  <option value="">بدون إعلان محدد</option>
+                  {myListings.map((p) => <option key={p.id} value={String(p.id)}>{p.titleAr}</option>)}
+                </select>
+              </div>
+              <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>اسم العميل *</label>
                 <input style={inputStyle} value={fName} onChange={(e) => setFName(e.target.value)} placeholder="مثال: أبو محمد" />
               </div>
               <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>رقم الهاتف *</label>
-                <input style={{ ...inputStyle, direction: "ltr", textAlign: "right" }} value={fPhone} onChange={(e) => setFPhone(e.target.value)} placeholder="9XXXXXXX" inputMode="tel" />
+                <PhoneField value={fPhone} onChange={setFPhone} />
               </div>
               <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الحالة</label>
                 <select style={selStyle} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
                   {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الإعلان (اختياري)</label>
-                <select style={selStyle} value={fProperty} onChange={(e) => setFProperty(e.target.value)}>
-                  <option value="">بدون إعلان محدد</option>
-                  {myListings.map((p) => <option key={p.id} value={String(p.id)}>{p.titleAr}</option>)}
                 </select>
               </div>
             </div>
@@ -382,7 +384,7 @@ export default function DashboardLeads() {
                           <>
                             <a href={`https://wa.me/${intl}`} target="_blank" rel="noopener noreferrer" title="واتساب"
                               style={{ width: 34, height: 34, borderRadius: 9, background: "#ECFDF5", color: "#059669", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                              <MessageCircle style={{ width: 15, height: 15 }} />
+                              <WhatsAppIcon size={15} />
                             </a>
                             <a href={`tel:+${intl}`} title="اتصال"
                               style={{ width: 34, height: 34, borderRadius: 9, background: "#EEF2FF", color: "#4338CA", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>

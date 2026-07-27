@@ -4,6 +4,7 @@ import { useGetProperty, useGetSimilarProperties } from "@workspace/api-client-r
 import MainLayout from "@/components/layout/MainLayout";
 import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
+import PhoneField from "@/components/PhoneField";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
@@ -599,7 +600,7 @@ function InterestForm({ propertyId }: { propertyId: number }) {
     e.preventDefault();
     setError("");
     if (name.trim().length < 2) { setError("اكتب اسمك"); return; }
-    if (!/^[0-9+\s-]{6,20}$/.test(phone.trim())) { setError("اكتب رقم هاتف صحيح"); return; }
+    if (phone.trim().length !== 8) { setError("اكتب رقم هاتف صحيح (8 أرقام)"); return; }
     setSending(true);
     try {
       const res = await fetch(`${BASE}/api/leads`, {
@@ -638,7 +639,7 @@ function InterestForm({ propertyId }: { propertyId: number }) {
           <div style={{ fontSize: 12.5, color: "#64748B", marginBottom: 12 }}>اترك بياناتك وسيتواصل معك المكتب مباشرة</div>
           <div style={{ display: "grid", gap: 9 }}>
             <input style={input} placeholder="اسمك" value={name} onChange={(e) => { setName(e.target.value); setError(""); }} />
-            <input style={{ ...input, direction: "ltr", textAlign: "right" }} placeholder="رقم هاتفك" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setError(""); }} />
+            <PhoneField value={phone} onChange={(v) => { setPhone(v); setError(""); }} />
             <input style={input} placeholder="ملاحظة (اختياري)" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           {error && <div style={{ fontSize: 12.5, color: "#b91c1c", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 9, padding: "7px 11px", marginTop: 9 }}>{error}</div>}

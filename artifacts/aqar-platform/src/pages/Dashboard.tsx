@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1014,7 +1015,7 @@ export default function Dashboard() {
                   fontSize: 12, fontWeight: 600, color: "#374151",
                   marginBottom: 8, display: "flex", alignItems: "center", gap: 5,
                 }}>
-                  <MessageCircle style={{ width: 13, height: 13, color: "#6b7280" }} />
+                  <WhatsAppIcon size={13} color="#25D366" />
                   رقم واتساب
                 </div>
                 {editMode ? (
