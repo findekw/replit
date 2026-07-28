@@ -1,7 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { useLegalPage } from "@/hooks/useLegalPage";
-import { Link } from "wouter";
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -57,7 +56,7 @@ export default function Terms() {
     <MainLayout>
       <div dir="rtl" className="min-h-screen bg-white">
         {/* Header */}
-        <div className="bg-[#0b1220] text-white py-14 px-4">
+        <div className="bg-[#002b46] text-white py-14 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="w-14 h-14 rounded-2xl bg-white/10 ring-1 ring-white/15 shadow-lg flex items-center justify-center mx-auto mb-4">
               <FileText className="h-7 w-7 text-white" />
@@ -82,16 +81,6 @@ export default function Terms() {
                 <p className="text-muted-foreground text-sm leading-relaxed">{s.content}</p>
               </div>
             ))}
-          </div>
-
-          <div className="mt-12 pt-8 border-t text-center">
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#667EEA] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#5568d8] hover:shadow-md"
-            >
-              <ArrowRight className="h-4 w-4" />
-              العودة إلى صفحة التسجيل
-            </Link>
           </div>
         </div>
       </div>
