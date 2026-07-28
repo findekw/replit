@@ -6,7 +6,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
 import PhoneField from "@/components/PhoneField";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, CalendarDays } from "lucide-react";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
 import { toIntlPhone } from "@/lib/phone";
@@ -86,6 +86,7 @@ const styles = `
 .pd-price-sub { font-size: 13px; color: #64748B; font-weight: 600; }
 .pd-title { font-size: 22px; font-weight: 800; color: #111827; margin: 14px 0 8px; line-height: 1.4; }
 .pd-loc { display: flex; align-items: center; gap: 6px; color: #64748B; font-size: 14px; }
+.pd-date { display: flex; align-items: center; gap: 6px; color: #94A3B8; font-size: 13px; margin-top: 7px; }
 .pd-ref { font-size: 12px; color: #94A3B8; margin-top: 10px; }
 
 
@@ -373,6 +374,12 @@ export default function PropertyDetail() {
                   <MapPin size={16} color="#667EEA" />
                   <span>{[property.governorateName, property.areaName].filter(Boolean).join("، ")}</span>
                 </div>
+                {property.createdAt && (
+                  <div className="pd-date">
+                    <CalendarDays size={15} />
+                    <span>نُشر في {new Date(property.createdAt).toLocaleDateString("ar-KW-u-nu-latn", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  </div>
+                )}
 
                 <div className="pd-specs">
                   {property.bedrooms != null && (
