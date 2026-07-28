@@ -140,7 +140,26 @@ export default function DashboardListings() {
             </div>
           ) : (
             <>
-              <table className="w-full">
+              <style>{`
+                /* Phones: the 5-col table can't sit side-by-side, so each row
+                   becomes a stacked card — property info on top, and the action
+                   icons as an evenly-spread row below a divider (they used to be
+                   crammed into a narrow left cell). */
+                @media (max-width: 767px){
+                  .dl-table thead { display: none; }
+                  .dl-table, .dl-table tbody, .dl-table tr { display: block; width: 100%; }
+                  .dl-table tr { padding: 14px 16px; }
+                  /* Only the two mobile-visible cells go block — leave the
+                     hidden md/lg columns as display:none (don't out-specify
+                     Tailwind's .hidden or they'd reappear as empty blocks). */
+                  .dl-cell-main, .dl-cell-actions { display: block; padding: 0 !important; }
+                  .dl-cell-actions { margin-top: 14px; padding-top: 12px !important; border-top: 1px solid #F1F5F9; }
+                  .dl-cell-actions > div { justify-content: space-around; gap: 6px; }
+                  .dl-cell-actions > div > * { flex: 1; }
+                  .dl-cell-actions button { width: 100%; }
+                }
+              `}</style>
+              <table className="w-full dl-table">
                 <thead>
                   <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #EEF1F5" }}>
                     <th className="text-right p-4" style={{ fontSize: 12, fontWeight: 700, color: "#64748B" }}>العقار</th>
@@ -153,7 +172,7 @@ export default function DashboardListings() {
                 <tbody className="divide-y" style={{ borderColor: "#EEF1F5" }}>
                   {properties.map((p) => (
                     <tr key={p.id} className="transition-colors" style={{ }} onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")} onMouseLeave={e => (e.currentTarget.style.background = "")} data-testid={`listing-row-${p.id}`}>
-                      <td className="p-4">
+                      <td className="p-4 dl-cell-main">
                         <div className="flex items-center gap-3">
                           {p.primaryImage ? (
                             <img src={p.primaryImage} alt={p.titleAr} className="w-14 h-12 rounded-xl object-cover flex-shrink-0" style={{ border: "1px solid #EEF1F5" }} />
@@ -211,7 +230,7 @@ export default function DashboardListings() {
                           <span className="flex items-center gap-1" title="نقرات اتصال" style={{ color: "#667EEA" }}><Phone className="h-3.5 w-3.5" />{(p as any).callClicks ?? 0}</span>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 dl-cell-actions">
                         <div className="flex items-center gap-1">
                           {/* Per-listing CRM entry: opens عملائي with the add form
                               pre-targeted at this listing (client's ask). */}
