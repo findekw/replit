@@ -202,7 +202,7 @@ export default function Admin() {
   type CatalogOption = { id: number; kind: "furnished" | "amenity" | "lead_status"; nameAr: string; active: boolean; sortOrder: number; listings: number };
   const [catalog, setCatalog] = useState<CatalogOption[]>([]);
   const [catBusy, setCatBusy] = useState(false);
-  const [newCatName, setNewCatName] = useState<{ furnished: string; amenity: string; lead_status: string }>({ furnished: "", amenity: "", lead_status: "" });
+  const [newCatName, setNewCatName] = useState<{ amenity: string; lead_status: string }>({ amenity: "", lead_status: "" });
   const [editingCat, setEditingCat] = useState<number | null>(null);
   const [editCatName, setEditCatName] = useState("");
 
@@ -266,7 +266,7 @@ export default function Admin() {
     { tab: "reports" as const, title: "البلاغات", text: "لو زائر بلّغ عن إعلان (احتيال، بيانات خاطئة...) البلاغ يوصل هنا. راجعه وقرر: تحظر الإعلان أو تتجاهل البلاغ." },
     { tab: "subscriptions" as const, title: "الاشتراكات والباقات", text: "من هنا تتحكم في مدة التجربة المجانية (اليوم اللي فوق)، وتضيف وتعدّل الباقات وأسعارها — أي باقة تضيفها تظهر في صفحة الاشتراك فوراً. وتحت: كل مكتب وحالة اشتراكه، وتقدر تفعّل أو توقف أو تمنح تجربة يدوياً." },
     { tab: "locations" as const, title: "المناطق", text: "المحافظات والمناطق اللي بتظهر في البحث وفي إضافة الإعلان. أضف منطقة جديدة تظهر فوراً، وعطّل منطقة تختفي من البحث بدون ما تأثر على الإعلانات القديمة." },
-    { tab: "catalog" as const, title: "خيارات الإعلان", text: "القوائم اللي المكتب يختار منها وقت إضافة الإعلان: حالات التأثيث، مميزات العقار، وحالات عملاء الـ CRM (مهتم، جاد...). كلها بإيدك — أضف وعدّل وعطّل." },
+    { tab: "catalog" as const, title: "خيارات الإعلان", text: "القوائم اللي المكتب يختار منها وقت إضافة الإعلان: مميزات العقار (مفروش، مصعد، مسبح...)، وحالات عملاء الـ CRM (مهتم، جاد...). كلها بإيدك — أضف وعدّل وعطّل." },
     { tab: "tools" as const, title: "الأدوات", text: "كل الباقي هنا: تعيين موظفين وأدوار بصلاحيات محددة، تحرير نصوص السياسات القانونية بنفسك، بانرات الصفحة الرئيسية، وإعادة تعيين كلمة مرور أي مكتب." },
   ];
   const [tourStep, setTourStep] = useState<number | null>(null);
@@ -1456,6 +1456,7 @@ export default function Admin() {
                       <th>المكتب</th>
                       <th>الباقة</th>
                       <th>الحالة</th>
+                      <th>تاريخ البدء</th>
                       <th>التجربة المجانية</th>
                       <th style={{ textAlign: "center" }}>تغيير الحالة</th>
                     </tr>
@@ -1479,6 +1480,16 @@ export default function Admin() {
                           </td>
                           <td data-label="الباقة" style={{ color: BODY }}>{s.subscriptionPlan ?? "—"}</td>
                           <td data-label="الحالة"><span className="adm-chip" style={{ background: info.bg, color: info.color }}>{info.text}</span></td>
+                          <td data-label="تاريخ البدء">
+                            {s.trialStartedAt ? (
+                              <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: BODY }}>
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                {formatDate(s.trialStartedAt)}
+                              </span>
+                            ) : (
+                              <span style={{ color: "#94a3b8" }}>—</span>
+                            )}
+                          </td>
                           <td data-label="التجربة المجانية">
                             {s.subscriptionStatus === "trial" && s.trialDaysLeft != null ? (
                               <span style={{ fontWeight: 700, fontSize: 13, color: s.trialDaysLeft <= 2 ? AMBER : NAVY }}>
@@ -1705,8 +1716,7 @@ export default function Admin() {
         {activeTab === "catalog" && (
           <div className="grid gap-5">
             {([
-              { kind: "furnished" as const, title: "حالة التأثيث", hint: "الخيارات المتاحة في «حالة التأثيث» عند إضافة إعلان." },
-              { kind: "amenity" as const, title: "مميزات العقار", hint: "المميزات التي يختار منها المكتب عند إضافة إعلان (مصعد، مسبح، ...)." },
+              { kind: "amenity" as const, title: "مميزات العقار", hint: "المميزات التي يختار منها المكتب عند إضافة إعلان (مفروش، مصعد، مسبح، ...)." },
               { kind: "lead_status" as const, title: "حالات العملاء (CRM)", hint: "الحالات التي يصنّف بها المكتب عملاءه (مهتم، جاد، متردد، ...)." },
             ]).map(({ kind, title, hint }) => {
               const items = catalog.filter((o) => o.kind === kind);
@@ -1725,7 +1735,7 @@ export default function Admin() {
                     <input
                       className="adm-input"
                       style={{ maxWidth: 260 }}
-                      placeholder={kind === "furnished" ? "حالة جديدة" : kind === "lead_status" ? "حالة عميل جديدة" : "ميزة جديدة"}
+                      placeholder={kind === "lead_status" ? "حالة عميل جديدة" : "ميزة جديدة"}
                       value={newCatName[kind]}
                       onChange={(e) => setNewCatName((p) => ({ ...p, [kind]: e.target.value }))}
                     />
