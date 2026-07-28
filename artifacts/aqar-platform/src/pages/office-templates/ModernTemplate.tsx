@@ -226,6 +226,8 @@ const CSS = `
 .tm-sticky-spacer { height: 80px; }
 @media (min-width: 1024px){ .tm-sticky, .tm-sticky-spacer { display: none; } }
 /* Mobile: the floating contact bar is hidden (sticky bottom bar covers it), so
-   also collapse the gap it left between the hero and the first card. */
-@media (max-width: 1023px){ .tm-contact-wrap { display: none; } .tm-main { padding-top: 14px; } .tm-hero-inner { padding-bottom: 24px; } }
+   also collapse the gap it left between the hero and the first card. The hero is
+   a <section>, which a global rule gives margin-bottom:40px — override it here so
+   the grey gap above the first card stays tight on phones. */
+@media (max-width: 1023px){ .tm-contact-wrap { display: none; } .tm-main { padding-top: 14px; } .tm-hero-inner { padding-bottom: 24px; } .tm-hero { margin-bottom: 8px; } }
 `;
