@@ -1,5 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { useLegalPage } from "@/hooks/useLegalPage";
+import { Link } from "wouter";
 import { FileText } from "lucide-react";
 
 const SECTIONS = [
@@ -45,8 +46,7 @@ const SECTIONS = [
   },
   {
     title: "9. التواصل",
-    content:
-      "لأي استفسار بشأن هذه الشروط، يمكنك التواصل معنا عبر واتساب على الرقم 96595005151.",
+    content: "لأي استفسار بشأن هذه الشروط، يمكنك ",
   },
 ];
 
@@ -75,12 +75,20 @@ export default function Terms() {
           </div>
 
           <div className="space-y-8">
-            {page.sections.map((s) => (
-              <div key={s.title}>
-                <h2 className="text-base font-bold text-[hsl(221,54%,23%)] mb-2">{s.title}</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">{s.content}</p>
-              </div>
-            ))}
+            {page.sections.map((s) => {
+              const isContact = s.title.includes("التواصل");
+              return (
+                <div key={s.title}>
+                  <h2 className="text-base font-bold text-[hsl(221,54%,23%)] mb-2">{s.title}</h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {s.content}
+                    {isContact && (
+                      <Link href="/contact" className="font-bold text-[#667EEA] hover:underline">التواصل معنا</Link>
+                    )}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
