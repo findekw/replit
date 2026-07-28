@@ -880,6 +880,23 @@ export default function Admin() {
         .adm-input { height:40px; padding:0 14px; border-radius:10px; border:1px solid ${BORDER}; background:#fff; font-size:13.5px; color:${NAVY}; outline:none; width:100%; transition:border-color .15s ease, box-shadow .15s ease; }
         .adm-input:focus { border-color:${BLUE}; box-shadow:0 0 0 3px rgba(63,91,216,0.12); }
         .adm-input::placeholder { color:#94a3b8; }
+        /* Mobile (≤680px): the multi-column tables can't fit a phone, so each row
+           becomes a stacked card. Cells show "label: value"; cells flagged
+           data-full (identity + actions) span the whole width without a label. */
+        @media (max-width: 680px){
+          .adm-table thead { display:none; }
+          .adm-table, .adm-table tbody { display:block; width:100%; }
+          .adm-table tbody tr { display:block; border:1px solid ${BORDER}; border-radius:14px; margin-bottom:12px; background:#fff; overflow:hidden; }
+          .adm-table tbody tr:last-child { margin-bottom:0; }
+          .adm-table tbody tr:hover { background:#fff; }
+          .adm-table tbody td { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:10px 14px; border-bottom:1px solid #F1F5F9; text-align:start; white-space:normal; }
+          .adm-table tbody tr td:last-child { border-bottom:none; }
+          .adm-table tbody td::before { content:attr(data-label); font-size:12px; font-weight:700; color:${BODY}; flex-shrink:0; }
+          .adm-table tbody td[data-full]{ display:block; }
+          .adm-table tbody td[data-full]::before { display:none; }
+          .adm-table tbody td[data-full] .adm-btn { flex:1; }
+          .adm-table tbody td[data-full] select { max-width:none !important; width:100%; }
+        }
       `}</style>
 
       {/* Confirm dialog */}
@@ -997,7 +1014,7 @@ export default function Admin() {
                   <tbody>
                     {offices.map((office) => (
                       <tr key={office.officeId} data-testid={`office-row-${office.officeId}`}>
-                        <td>
+                        <td data-full>
                           <div className="flex items-center gap-3">
                             <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#ECEFFB" }}>
                               <Building2 className="h-5 w-5" style={{ color: BLUE }} />
@@ -1010,18 +1027,18 @@ export default function Admin() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ color: BODY }}>{office.userEmail}</td>
-                        <td><span className="text-xs font-mono" style={{ color: BLUE }}>finde.co/{office.officeSlug}</span></td>
-                        <td>
+                        <td data-label="البريد" style={{ color: BODY }}>{office.userEmail}</td>
+                        <td data-label="الرابط"><span className="text-xs font-mono" style={{ color: BLUE }}>finde.co/{office.officeSlug}</span></td>
+                        <td data-label="التاريخ">
                           <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: BODY }}>
                             <CalendarDays className="h-3.5 w-3.5" />
                             {formatDate(office.createdAt)}
                           </span>
                         </td>
-                        <td>
+                        <td data-label="الحالة">
                           <span className="adm-chip" style={{ background: "#FEF6E7", color: AMBER }}>قيد المراجعة</span>
                         </td>
-                        <td>
+                        <td data-full>
                           <div className="flex gap-2 justify-center">
                             <button
                               disabled={!!actionLoading}
@@ -1449,7 +1466,7 @@ export default function Admin() {
                       const busy = subBusy === s.officeId;
                       return (
                         <tr key={s.officeId} data-testid={`sub-row-${s.officeId}`}>
-                          <td>
+                          <td data-full>
                             <div className="flex items-center gap-3">
                               <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#ECEFFB" }}>
                                 <Building2 className="h-5 w-5" style={{ color: BLUE }} />
@@ -1460,9 +1477,9 @@ export default function Admin() {
                               </div>
                             </div>
                           </td>
-                          <td style={{ color: BODY }}>{s.subscriptionPlan ?? "—"}</td>
-                          <td><span className="adm-chip" style={{ background: info.bg, color: info.color }}>{info.text}</span></td>
-                          <td>
+                          <td data-label="الباقة" style={{ color: BODY }}>{s.subscriptionPlan ?? "—"}</td>
+                          <td data-label="الحالة"><span className="adm-chip" style={{ background: info.bg, color: info.color }}>{info.text}</span></td>
+                          <td data-label="التجربة المجانية">
                             {s.subscriptionStatus === "trial" && s.trialDaysLeft != null ? (
                               <span style={{ fontWeight: 700, fontSize: 13, color: s.trialDaysLeft <= 2 ? AMBER : NAVY }}>
                                 {s.trialDaysLeft} يوم متبقٍ
@@ -1471,7 +1488,7 @@ export default function Admin() {
                               <span style={{ color: "#94a3b8" }}>—</span>
                             )}
                           </td>
-                          <td>
+                          <td data-full>
                             {/* One compact select instead of three stacked buttons —
                                 the client manages this from his phone and the pile
                                 looked broken there. Digits kept Latin (14 not ١٤). */}
@@ -1983,12 +2000,12 @@ export default function Admin() {
                   {admins.map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-center justify-between gap-3 px-4 py-3"
+                      className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
                       style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}
                     >
-                      <div className="min-w-0">
-                        <div className="font-bold text-sm" style={{ color: NAVY }}>{a.name}</div>
-                        <div className="text-xs" style={{ color: BODY }} dir="ltr">{a.email}</div>
+                      <div className="min-w-0 flex-1" style={{ minWidth: 150 }}>
+                        <div className="font-bold text-sm truncate" style={{ color: NAVY }}>{a.name}</div>
+                        <div className="text-xs truncate" style={{ color: BODY }} dir="ltr">{a.email}</div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap justify-end">
                         {/* Role assignment (owner only) — "ضيف role للموظف" */}
@@ -2202,7 +2219,7 @@ export default function Admin() {
                     return (
                       <div
                         key={slide.id}
-                        className="flex items-center gap-3 px-3 py-2.5"
+                        className="flex items-center gap-3 px-3 py-2.5 flex-wrap"
                         style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}
                         data-testid={`hero-slide-${slide.id}`}
                       >
@@ -2211,7 +2228,7 @@ export default function Admin() {
                           alt={slide.title ?? "بانر"}
                           style={{ width: 64, height: 40, objectFit: "cover", borderRadius: 8, flexShrink: 0, background: "#e2e8f0" }}
                         />
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1" style={{ minWidth: 130 }}>
                           <div className="font-bold text-sm truncate" style={{ color: NAVY }}>
                             {slide.title || "بدون عنوان"}
                           </div>
@@ -2219,33 +2236,37 @@ export default function Admin() {
                             <div className="text-xs truncate" style={{ color: BLUE }} dir="ltr">{slide.ctaUrl}</div>
                           )}
                         </div>
-                        <span
-                          className="adm-chip"
-                          style={{
-                            background: slide.active ? "#E7F6F0" : "#FEECEC",
-                            color: slide.active ? GREEN : RED,
-                          }}
-                        >
-                          {slide.active ? "نشط" : "غير نشط"}
-                        </span>
-                        <button
-                          disabled={busy}
-                          onClick={() => toggleHeroSlide(slide)}
-                          className="adm-btn"
-                          style={{ height: 34, padding: "0 12px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, opacity: busy ? 0.6 : 1 }}
-                        >
-                          {slide.active ? "إخفاء" : "تفعيل"}
-                        </button>
-                        <button
-                          disabled={busy}
-                          onClick={() => deleteHeroSlide(slide)}
-                          className="adm-btn adm-btn--reject"
-                          style={{ height: 34, padding: "0 12px", opacity: busy ? 0.6 : 1 }}
-                          data-testid={`delete-hero-${slide.id}`}
-                        >
-                          <Trash2 style={{ width: 15, height: 15 }} />
-                          حذف
-                        </button>
+                        {/* On a phone this control group wraps to its own line under
+                            the title instead of crushing it into a sliver. */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className="adm-chip"
+                            style={{
+                              background: slide.active ? "#E7F6F0" : "#FEECEC",
+                              color: slide.active ? GREEN : RED,
+                            }}
+                          >
+                            {slide.active ? "نشط" : "غير نشط"}
+                          </span>
+                          <button
+                            disabled={busy}
+                            onClick={() => toggleHeroSlide(slide)}
+                            className="adm-btn"
+                            style={{ height: 34, padding: "0 12px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, opacity: busy ? 0.6 : 1 }}
+                          >
+                            {slide.active ? "إخفاء" : "تفعيل"}
+                          </button>
+                          <button
+                            disabled={busy}
+                            onClick={() => deleteHeroSlide(slide)}
+                            className="adm-btn adm-btn--reject"
+                            style={{ height: 34, padding: "0 12px", opacity: busy ? 0.6 : 1 }}
+                            data-testid={`delete-hero-${slide.id}`}
+                          >
+                            <Trash2 style={{ width: 15, height: 15 }} />
+                            حذف
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
