@@ -39,15 +39,8 @@ export default function ModernTemplate(p: TemplateProps) {
         </div>
       </section>
 
-      {/* Floating contact bar */}
-      {(hasWA || hasPhone) && (
-        <div className="tm-contact-wrap">
-          <div className="tm-contact">
-            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp}><MessageCircle size={20} /> تواصل واتساب</button>}
-            {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall}><Phone size={20} /> اتصال</button>}
-          </div>
-        </div>
-      )}
+      {/* Contact CTAs live only in the floating bottom bar now (same on every
+          screen size — client wanted the mobile-style floating bar everywhere). */}
 
       <main className="tm-main">
         {/* About + address + legal identifiers — kept at the top (client preference).
@@ -142,7 +135,7 @@ export default function ModernTemplate(p: TemplateProps) {
       {(hasWA || hasPhone) && (
         <>
           <div className="tm-sticky">
-            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><MessageCircle size={20} /> واتساب</button>}
+            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><MessageCircle size={20} /> تواصل واتساب</button>}
             {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall} style={{ height: 48 }}><Phone size={20} /> اتصال</button>}
           </div>
           <div className="tm-sticky-spacer" />
@@ -155,7 +148,7 @@ export default function ModernTemplate(p: TemplateProps) {
 const CSS = `
 .tm-root { font-family: 'Cairo', sans-serif; background: #F6F8FC; min-height: 100vh; }
 .tm-root * { box-sizing: border-box; }
-.tm-hero { position: relative; overflow: hidden; background: linear-gradient(160deg,#1B2440 0%,#243056 55%,#3B4884 100%); }
+.tm-hero { position: relative; overflow: hidden; margin-bottom: 8px; background: linear-gradient(160deg,#1B2440 0%,#243056 55%,#3B4884 100%); }
 .tm-hero-bg { position: absolute; inset: 0; }
 .tm-hero-bg img { width: 100%; height: 100%; object-fit: cover; }
 .tm-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,22,40,0.55), rgba(16,22,40,0.82)); }
@@ -179,7 +172,7 @@ const CSS = `
 .tm-iconbtn { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #E2E8F0; color: #111827; flex-shrink: 0; }
 .tm-iconbtn:hover { border-color: #667EEA; color: #667EEA; }
 
-.tm-main { max-width: 1180px; margin: 0 auto; padding: 30px 22px 0; }
+.tm-main { max-width: 1180px; margin: 0 auto; padding: 24px 22px 0; }
 .tm-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 26px; }
 @media (min-width:700px){ .tm-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tm-stat { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; padding: 22px 16px; text-align: center; box-shadow: 0 6px 22px rgba(15,23,42,0.05); }
@@ -211,6 +204,9 @@ const CSS = `
 }
 .tm-tab-on { background: #667EEA; color: #fff; border-color: #667EEA; }
 .tm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+/* Phones: one full-width card per row so the photo, title and details are all
+   legible (two columns squeezed them into an unreadable sliver). */
+@media (max-width:640px){ .tm-grid { grid-template-columns: 1fr; gap: 16px; } }
 @media (min-width:980px){ .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tm-empty { text-align: center; padding: 64px 20px; }
 .tm-empty p { color: #64748B; font-weight: 700; font-size: 16px; margin: 16px 0 0; }
@@ -222,12 +218,10 @@ const CSS = `
 .tm-footer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 999px; background: #EEF2FF; border: 1px solid #DBE4FF; color: #475569; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: background .18s; box-shadow: 0 2px 10px rgba(63,91,216,0.08); }
 .tm-footer-badge:hover { background: #E0E7FF; }
 .tm-footer-badge b { color: #667EEA; font-weight: 800; }
-.tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
+/* Floating contact bar — pinned to the bottom on every screen size (client
+   wanted the mobile-style floating bar everywhere, not a top bar on desktop).
+   Centered with a max button width so it doesn't stretch across wide screens. */
+.tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; justify-content: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
+.tm-sticky .tm-btn { max-width: 320px; }
 .tm-sticky-spacer { height: 80px; }
-@media (min-width: 1024px){ .tm-sticky, .tm-sticky-spacer { display: none; } }
-/* Mobile: the floating contact bar is hidden (sticky bottom bar covers it), so
-   also collapse the gap it left between the hero and the first card. The hero is
-   a <section>, which a global rule gives margin-bottom:40px — override it here so
-   the grey gap above the first card stays tight on phones. */
-@media (max-width: 1023px){ .tm-contact-wrap { display: none; } .tm-main { padding-top: 14px; } .tm-hero-inner { padding-bottom: 24px; } .tm-hero { margin-bottom: 8px; } }
 `;
