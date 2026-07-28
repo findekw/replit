@@ -392,9 +392,6 @@ export default function PropertyDetail() {
                   )}
                 </div>
 
-                {property.referenceId && (
-                  <div className="pd-ref">رقم المرجع: {property.referenceId}</div>
-                )}
               </div>
 
               {/* Description */}

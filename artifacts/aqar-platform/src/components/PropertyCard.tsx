@@ -1,7 +1,8 @@
 import { Property } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useState } from "react";
-import { Bed, Bath, Maximize2, MapPin, Building2, Heart } from "lucide-react";
+import { Bed, Bath, Maximize2, MapPin, Building2, Heart, Clock, Eye } from "lucide-react";
+import { timeAgo } from "@/lib/timeAgo";
 
 interface PropertyCardProps {
   property: Property;
@@ -91,6 +92,20 @@ export function PropertyCard({ property }: PropertyCardProps) {
               <span className="property-agency-name">{officeName}</span>
             </div>
           )}
+
+          {/* Posted-time + views — shown to visitors in search results */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10, paddingTop: 9, borderTop: "1px solid #EEF1F5", fontSize: 12, color: "#94A3B8", fontWeight: 600 }}>
+            {property.createdAt && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Clock style={{ width: 13, height: 13 }} />
+                {timeAgo(property.createdAt)}
+              </span>
+            )}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <Eye style={{ width: 13, height: 13 }} />
+              {((property as { views?: number }).views ?? 0).toLocaleString("en-US")}
+            </span>
+          </div>
         </div>
       </article>
     </Link>

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
 
@@ -21,7 +21,16 @@ const PAGE_TITLES: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Enable the sidebar's slide transition only AFTER the first paint. On mobile
+  // Safari the initial layout can briefly evaluate at a desktop width (before the
+  // viewport meta applies), which would otherwise animate the drawer out on load.
+  const [ready, setReady] = useState(false);
   const { officeUser: user, logout } = useOfficeAuth();
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setReady(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -32,16 +41,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const initial = (user?.name?.trim()?.[0] ?? "م").toUpperCase();
 
   return (
-    <div dir="rtl" className="dsh-root">
+    <div dir="rtl" className={`dsh-root ${ready ? "dsh-ready" : ""}`}>
       <style>{`
         .dsh-root { min-height:100vh; display:flex; background:#F6F8FC; font-family:'Cairo',system-ui,sans-serif; }
         .dsh-sidebar {
           position:fixed; top:0; bottom:0; right:0; z-index:50; width:272px; max-width:84vw;
           background:linear-gradient(185deg,#243150 0%,#111827 60%,#1A2238 100%);
           display:flex; flex-direction:column;
-          transform:translateX(100%); transition:transform .32s cubic-bezier(.4,0,.2,1);
+          transform:translateX(100%);
           box-shadow:-8px 0 32px rgba(15,23,42,0.28);
         }
+        .dsh-ready .dsh-sidebar { transition:transform .32s cubic-bezier(.4,0,.2,1); }
         .dsh-sidebar.open { transform:translateX(0); }
         @media (min-width:768px){ .dsh-sidebar{ position:static; transform:none; box-shadow:none; max-width:none; } }
         .dsh-logo-wrap {

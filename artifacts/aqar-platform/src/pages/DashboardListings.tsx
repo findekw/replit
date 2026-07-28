@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle, MessageCircle, Phone, UserPlus } from "lucide-react";
+import { Eye, Pencil, Trash2, Star, Building, Plus, X, AlertTriangle, Phone, UserPlus, Clock } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { Link, useLocation } from "wouter";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -163,7 +164,12 @@ export default function DashboardListings() {
                           )}
                           <div>
                             <div className="font-bold text-sm line-clamp-1" style={{ color: "#111827" }}>{p.titleAr}</div>
-                            <div className="text-xs" style={{ color: "#94A3B8" }}>{p.referenceId}</div>
+                            {p.createdAt && (
+                              <div className="text-xs mt-0.5 inline-flex items-center gap-1" style={{ color: "#94A3B8" }}>
+                                <Clock style={{ width: 12, height: 12 }} />
+                                {new Date(p.createdAt).toLocaleDateString("ar-KW-u-nu-latn", { day: "numeric", month: "short", year: "numeric" })}
+                              </div>
+                            )}
                             <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                               {/* Mobile-only: show status and price */}
                               <span className="text-xs md:hidden" style={{ color: "#64748B" }}>{p.status} · {p.price.toLocaleString("en-US")} KWD</span>
@@ -184,7 +190,7 @@ export default function DashboardListings() {
                             {/* Per-ad engagement — visible on small screens where the dedicated column is hidden */}
                             <div className="flex items-center gap-3 mt-1 text-xs lg:hidden" style={{ color: "#94A3B8", fontWeight: 600 }}>
                               <span className="flex items-center gap-0.5" title="مشاهدات"><Eye className="h-3 w-3" />{p.views}</span>
-                              <span className="flex items-center gap-0.5" title="واتساب"><MessageCircle className="h-3 w-3" />{(p as any).whatsappClicks ?? 0}</span>
+                              <span className="flex items-center gap-0.5" title="واتساب"><WhatsAppIcon size={12} color="#16a34a" />{(p as any).whatsappClicks ?? 0}</span>
                               <span className="flex items-center gap-0.5" title="اتصال"><Phone className="h-3 w-3" />{(p as any).callClicks ?? 0}</span>
                             </div>
                           </div>
@@ -201,7 +207,7 @@ export default function DashboardListings() {
                       <td className="p-4 hidden lg:table-cell">
                         <div className="flex items-center gap-3 text-sm" style={{ color: "#64748B", fontWeight: 600 }}>
                           <span className="flex items-center gap-1" title="مشاهدات"><Eye className="h-3.5 w-3.5" />{p.views}</span>
-                          <span className="flex items-center gap-1" title="نقرات واتساب" style={{ color: "#16a34a" }}><MessageCircle className="h-3.5 w-3.5" />{(p as any).whatsappClicks ?? 0}</span>
+                          <span className="flex items-center gap-1" title="نقرات واتساب" style={{ color: "#16a34a" }}><WhatsAppIcon size={14} />{(p as any).whatsappClicks ?? 0}</span>
                           <span className="flex items-center gap-1" title="نقرات اتصال" style={{ color: "#667EEA" }}><Phone className="h-3.5 w-3.5" />{(p as any).callClicks ?? 0}</span>
                         </div>
                       </td>

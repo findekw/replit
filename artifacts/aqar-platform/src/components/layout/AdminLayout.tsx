@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, LogOut, Menu, X, Home, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -42,9 +42,10 @@ const ADMIN_LAYOUT_CSS = `
     position:fixed; top:0; bottom:0; right:0; z-index:50; width:272px; max-width:84vw;
     background:linear-gradient(185deg,#243150 0%,#111827 60%,#1A2238 100%);
     display:flex; flex-direction:column; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    transform:translateX(100%); transition:transform .32s cubic-bezier(.4,0,.2,1);
+    transform:translateX(100%);
     box-shadow:-8px 0 32px rgba(15,23,42,0.28);
   }
+  .adm-ready .adm-sidebar { transition:transform .32s cubic-bezier(.4,0,.2,1); }
   .adm-sidebar.open { transform:translateX(0); }
   @media (min-width:768px){
     .adm-sidebar{ position:sticky; top:0; height:100vh; align-self:flex-start; transform:none; box-shadow:none; max-width:none; overflow-y:hidden; }
@@ -88,10 +89,19 @@ export default function AdminLayout({
   user, sections, activeKey, onSelect, pageTitle, onLogout, bottomActions, onNavigate, children,
 }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Enable the drawer's slide transition only after the first paint — see the
+  // matching note in DashboardLayout. Prevents a flash where mobile Safari
+  // briefly renders the sidebar as the static desktop column, then slides it out.
+  const [ready, setReady] = useState(false);
   const initial = (user?.name?.trim()?.[0] ?? "أ").toUpperCase();
 
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setReady(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
-    <div dir="rtl" className="adm-root">
+    <div dir="rtl" className={`adm-root ${ready ? "adm-ready" : ""}`}>
       <style>{ADMIN_LAYOUT_CSS}</style>
 
       {/* Sidebar */}

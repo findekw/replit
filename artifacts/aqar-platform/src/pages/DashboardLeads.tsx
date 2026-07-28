@@ -94,6 +94,9 @@ export default function DashboardLeads() {
   const [fNote, setFNote] = useState("");
   const [fProperty, setFProperty] = useState(urlParams.get("propertyId") ?? "");
   const [saving, setSaving] = useState(false);
+  // Inline per-field validation errors, shown in red under each field instead
+  // of a top toast (client request).
+  const [fErrors, setFErrors] = useState<{ name?: string; phone?: string }>({});
 
   // The office's listings, for the pickers.
   const { data: propsData } = useGetOfficeProperties(
@@ -128,8 +131,11 @@ export default function DashboardLeads() {
   }, []);
 
   async function addLead() {
-    if (fName.trim().length < 2) { toast({ title: "اكتب اسم العميل", variant: "destructive" }); return; }
-    if (fPhone.trim().length !== 8) { toast({ title: "رقم الهاتف يجب أن يكون 8 أرقام", variant: "destructive" }); return; }
+    const next: { name?: string; phone?: string } = {};
+    if (fName.trim().length < 2) next.name = "اكتب اسم العميل";
+    if (fPhone.trim().length !== 8) next.phone = "رقم الهاتف يجب أن يكون 8 أرقام";
+    setFErrors(next);
+    if (next.name || next.phone) return;
     setSaving(true);
     try {
       const res = await fetch(`${BASE}/api/leads`, {
@@ -150,7 +156,7 @@ export default function DashboardLeads() {
       // Keep the form open (just clear the fields) so the office can add more
       // clients in a row and see them appear in the list below; "إغلاق" stays
       // available to go back to إعلاناتي.
-      setFName(""); setFPhone(""); setFNote(""); setFStatus("جديد");
+      setFName(""); setFPhone(""); setFNote(""); setFStatus("جديد"); setFErrors({});
       await load();
     } catch {
       toast({ title: "تعذّر الاتصال بالخادم", variant: "destructive" });
@@ -208,6 +214,7 @@ export default function DashboardLeads() {
     padding: "0 12px", fontSize: 14, fontFamily: "'Cairo',sans-serif", background: "#fff", outline: "none",
   };
   const selStyle: React.CSSProperties = { ...inputStyle, cursor: "pointer", fontWeight: 700, color: "#334155" };
+  const errStyle: React.CSSProperties = { margin: "5px 0 0", fontSize: 12, fontWeight: 600, color: "#DC2626" };
 
   if (authLoading) {
     return <DashboardLayout><div className="p-6 space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div></DashboardLayout>;
@@ -251,11 +258,22 @@ export default function DashboardLeads() {
               </div>
               <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>اسم العميل *</label>
-                <input style={inputStyle} value={fName} onChange={(e) => setFName(e.target.value)} placeholder="مثال: أبو محمد" />
+                <input
+                  style={fErrors.name ? { ...inputStyle, borderColor: "#f87171" } : inputStyle}
+                  value={fName}
+                  onChange={(e) => { setFName(e.target.value); if (fErrors.name) setFErrors((p) => ({ ...p, name: undefined })); }}
+                  placeholder="مثال: أبو محمد"
+                />
+                {fErrors.name && <p style={errStyle}>{fErrors.name}</p>}
               </div>
               <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>رقم الهاتف *</label>
-                <PhoneField value={fPhone} onChange={setFPhone} />
+                <PhoneField
+                  value={fPhone}
+                  onChange={(v) => { setFPhone(v); if (fErrors.phone) setFErrors((p) => ({ ...p, phone: undefined })); }}
+                  invalid={!!fErrors.phone}
+                />
+                {fErrors.phone && <p style={errStyle}>{fErrors.phone}</p>}
               </div>
               <div>
                 <label style={{ fontSize: 12.5, fontWeight: 700, color: "#475569", display: "block", marginBottom: 5 }}>الحالة</label>
