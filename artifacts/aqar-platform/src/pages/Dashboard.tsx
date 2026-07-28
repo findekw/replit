@@ -167,6 +167,7 @@ export default function Dashboard() {
 
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
   const [subLoading, setSubLoading] = useState(true);
 
   /* Load subscription status */
@@ -174,8 +175,8 @@ export default function Dashboard() {
     if (!officeId) return;
     fetch(`${BASE}/api/subscription/status`, { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
-      .then((data: { subscriptionStatus?: string; trialDaysLeft?: number | null } | null) => {
-        if (data) { setSubStatus(data.subscriptionStatus ?? null); setTrialDaysLeft(data.trialDaysLeft ?? null); }
+      .then((data: { subscriptionStatus?: string; trialDaysLeft?: number | null; trialStartedAt?: string | null } | null) => {
+        if (data) { setSubStatus(data.subscriptionStatus ?? null); setTrialDaysLeft(data.trialDaysLeft ?? null); setTrialStartedAt(data.trialStartedAt ?? null); }
       })
       .catch(() => {})
       .finally(() => setSubLoading(false));
@@ -1229,6 +1230,14 @@ export default function Dashboard() {
                   {{ active: "نشط", trial: "تجريبي", pending_payment: "قيد المراجعة", expired: "منتهي", inactive: "غير نشط" }[subStatus] ?? subStatus}
                 </span>
               </div>
+              {trialStartedAt && (
+                <div>
+                  <p className="mb-1" style={{ fontSize: 13, color: "#0f172a" }}>تاريخ البدء</p>
+                  <p className="font-semibold" style={{ fontSize: 15, color: "#0f172a" }}>
+                    {new Date(trialStartedAt).toLocaleDateString("ar-KW-u-nu-latn", { year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                </div>
+              )}
               {trialDaysLeft !== null && subStatus === "trial" && (
                 <div>
                   <p className="mb-1" style={{ fontSize: 13, color: "#0f172a" }}>المدة المتبقية</p>
