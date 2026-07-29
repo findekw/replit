@@ -383,7 +383,7 @@ export default function PropertyDetail() {
 
                 <div className="pd-specs">
                   {property.bedrooms != null && (
-                    <div className="pd-spec"><Bed size={17} /> {property.bedrooms} غرف</div>
+                    <div className="pd-spec"><Bed size={17} /> {Number(property.bedrooms) >= 6 ? "+5" : property.bedrooms} غرف</div>
                   )}
                   {property.bathrooms != null && (
                     <div className="pd-spec"><Bath size={17} /> {property.bathrooms} حمامات</div>

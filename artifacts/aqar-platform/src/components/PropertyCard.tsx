@@ -125,7 +125,7 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
 
           {(property.bedrooms || property.bathrooms || property.area) && (
             <div className="property-specs">
-              {property.bedrooms ? <span className="property-spec"><Bed className="w-4 h-4" />{property.bedrooms}</span> : null}
+              {property.bedrooms ? <span className="property-spec"><Bed className="w-4 h-4" />{Number(property.bedrooms) >= 6 ? "+5" : property.bedrooms}</span> : null}
               {property.bathrooms ? <span className="property-spec"><Bath className="w-4 h-4" />{property.bathrooms}</span> : null}
               {property.area ? <span className="property-spec"><Maximize2 className="w-4 h-4" />{property.area} م²</span> : null}
             </div>
