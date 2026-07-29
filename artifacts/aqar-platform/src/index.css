@@ -267,26 +267,36 @@ body::-webkit-scrollbar,
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.13);
   border-color: #D8DFEC;
 }
-/* Offices upload poster-style ads with the details written into the image, so
-   the card shows the whole thing letterboxed — same as the listing page — and
-   the old hover zoom is gone because it cropped the very poster it reveals.
-   The card still lifts on hover.
-   4/5 portrait frame: the real inventory is phone photos (3:4) and poster ads
-   (~4:5), which filled barely half of the old 4:3 landscape frame — portrait
-   media now spans nearly the full card width; landscape still shows whole. */
+/* 4/3 landscape frame, object-fit:cover — every card shows the same size photo
+   regardless of the source aspect ratio (client's redesign ask). The card lifts
+   on hover; the image itself no longer zooms. */
 .property-media {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: #111827;
 }
+/* Uniform frame: every photo fills the same box regardless of its own aspect
+   ratio (client asked for a consistent card size), cropping as needed. */
 .property-img {
-  width: 100%; height: 100%; object-fit: contain;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
 }
 .property-img-fallback {
   width: 100%; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   background: linear-gradient(135deg, #111827 0%, #667EEA 100%);
+}
+/* List view (≥640px): lay the card out as a horizontal row so the media is a
+   fixed-width side panel instead of a full-width, over-tall image. Below 640px
+   it stays the normal vertical card. */
+@media (min-width: 640px) {
+  .property-card--list { flex-direction: row; align-items: stretch; }
+  /* Fixed-width media panel that stretches to the card's height. The image is
+     absolutely positioned + object-fit:cover, so it fills without dictating
+     height (a full-width row would otherwise blow the image up). */
+  .property-card--list .property-media { width: 240px; flex-shrink: 0; aspect-ratio: auto; align-self: stretch; }
+  .property-card--list .property-body { flex: 1; justify-content: center; }
 }
 .property-badges {
   position: absolute; top: 12px; inset-inline-start: 12px;
@@ -299,22 +309,54 @@ body::-webkit-scrollbar,
   backdrop-filter: blur(2px);
 }
 .property-badge-feat { background: linear-gradient(135deg, #D97706, #F59E0B); }
-.property-save {
+.property-actions {
   position: absolute; top: 12px; inset-inline-end: 12px; z-index: 3;
+  display: flex; gap: 8px;
+}
+.property-iconbtn {
   width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,0.92); color: #64748B;
   box-shadow: 0 4px 12px rgba(15,23,42,0.16);
   transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.property-save:hover { transform: scale(1.08); background: #fff; }
-.property-save.on { color: #EF4444; }
+.property-iconbtn:hover { transform: scale(1.08); background: #fff; color: #667EEA; }
+.property-iconbtn.on { color: #EF4444; }
+/* Carousel arrows + dots — only rendered when there is more than one image */
+.property-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.9); color: #111827;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.2);
+  transition: background 0.15s ease;
+}
+.property-nav:hover { background: #fff; }
+.property-nav-prev { inset-inline-start: 10px; }
+.property-nav-next { inset-inline-end: 10px; }
+.property-dots {
+  position: absolute; bottom: 10px; inset-inline: 0; z-index: 3;
+  display: flex; gap: 5px; justify-content: center; pointer-events: none;
+}
+.property-dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.55);
+  transition: background 0.15s ease, width 0.15s ease;
+}
+.property-dots span.on { background: #fff; width: 16px; border-radius: 3px; }
 .property-body { padding: 15px 16px 16px; display: flex; flex-direction: column; flex: 1; }
 .property-price {
-  font-size: 21px; font-weight: 800; color: var(--text-heading);
-  letter-spacing: -0.3px; line-height: 1.1; margin-bottom: 7px; direction: ltr; text-align: start;
+  font-size: 21px; font-weight: 800; color: #667EEA;
+  letter-spacing: -0.3px; line-height: 1.1;
+  margin-top: 12px; padding: 12px 0;
+  border-top: 1px solid #F1F4F9; border-bottom: 1px solid #F1F4F9;
+  text-align: right;
 }
 .property-cur { font-size: 12.5px; font-weight: 600; color: #64748B; margin-inline-start: 4px; }
+.property-meta {
+  display: flex; align-items: center; gap: 14px; margin-top: 8px;
+  font-size: 12px; color: #94A3B8; font-weight: 600;
+}
+.property-meta-item { display: inline-flex; align-items: center; gap: 4px; }
 .property-title {
   font-size: 15.5px; font-weight: 700; color: var(--text-heading); margin: 0 0 7px;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; line-height: 1.4;
@@ -325,23 +367,11 @@ body::-webkit-scrollbar,
 .property-loc svg { color: #94A3B8; }
 .property-loc-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .property-specs {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; padding-top: 12px;
-  border-top: 1px solid #F1F4F9; color: #475569; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px;
+  color: #475569; font-size: 13px; font-weight: 600;
 }
 .property-spec { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .property-spec svg { color: #94A3B8; }
-.property-agency {
-  display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 12px;
-}
-.property-agency-logo {
-  width: 24px; height: 24px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
-  background: #F1F5F9; border: 1px solid #E7ECF3; display: flex; align-items: center; justify-content: center;
-}
-.property-agency-logo img { width: 100%; height: 100%; object-fit: cover; }
-.property-agency-name {
-  font-size: 12.5px; font-weight: 600; color: #64748B;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
 
 /* ── General spacing ── */
 section { margin-bottom: 40px; }

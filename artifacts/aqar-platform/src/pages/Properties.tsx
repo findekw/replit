@@ -885,7 +885,7 @@ export default function Properties() {
                   }
                 >
                   {properties.map((p) => (
-                    <PropertyCard key={p.id} property={p} />
+                    <PropertyCard key={p.id} property={p} layout={view} />
                   ))}
                 </div>
 
