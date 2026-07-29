@@ -96,19 +96,20 @@ function buildPropertyObject(
   };
 }
 
-async function getPrimaryImages(propertyIds: number[]): Promise<Record<number, string>> {
+// All images per property, ordered primary-first then by sortOrder, so [0] is
+// the primary image and the full array powers the card carousel.
+async function getAllImages(propertyIds: number[]): Promise<Record<number, string[]>> {
   if (!propertyIds.length) return {};
   const images = await db
     .select()
     .from(propertyImagesTable)
-    .where(and(
-      inArray(propertyImagesTable.propertyId, propertyIds),
-      eq(propertyImagesTable.isPrimary, true)
-    ));
-  const map: Record<number, string> = {};
+    .where(inArray(propertyImagesTable.propertyId, propertyIds))
+    .orderBy(desc(propertyImagesTable.isPrimary), asc(propertyImagesTable.sortOrder));
+  const map: Record<number, string[]> = {};
   for (const img of images) {
     const normalized = normalizeImageUrl(img.url);
-    if (normalized) map[img.propertyId] = normalized;
+    if (!normalized) continue;
+    (map[img.propertyId] ??= []).push(normalized);
   }
   return map;
 }
@@ -198,24 +199,30 @@ router.get("/properties", async (req, res): Promise<void> => {
     db.select({ count: count() }).from(propertiesTable).leftJoin(officesTable, eq(propertiesTable.officeId, officesTable.id)).where(whereClause),
   ]);
 
-  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+  const galleryMap = await getAllImages(propsRaw.map((p) => p.property.id));
   const total = Number(totalRaw[0]?.count ?? 0);
 
-  res.json(ListPropertiesResponse.parse({
+  const payload = ListPropertiesResponse.parse({
     properties: propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
       buildPropertyObject(property, {
         governorateName: governorateName ?? null,
         areaName: areaName ?? null,
         officeName: officeName ?? null,
         officeLogo: officeLogo ?? null,
-        primaryImage: imageMap[property.id] ?? null,
+        primaryImage: galleryMap[property.id]?.[0] ?? null,
       })
     ),
     total,
     page,
     limit,
     totalPages: Math.ceil(total / limit),
-  }));
+  });
+  // `images` isn't in the generated response schema (it strips unknown keys),
+  // so attach the full gallery after parsing — the card carousel reads it.
+  res.json({
+    ...payload,
+    properties: payload.properties.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })),
+  });
 });
 
 router.get("/properties/featured", async (_req, res): Promise<void> => {
@@ -235,19 +242,20 @@ router.get("/properties/featured", async (_req, res): Promise<void> => {
     .orderBy(desc(propertiesTable.createdAt))
     .limit(8);
 
-  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+  const galleryMap = await getAllImages(propsRaw.map((p) => p.property.id));
 
-  res.json(GetFeaturedPropertiesResponse.parse(
+  const payload = GetFeaturedPropertiesResponse.parse(
     propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
       buildPropertyObject(property, {
         governorateName: governorateName ?? null,
         areaName: areaName ?? null,
         officeName: officeName ?? null,
         officeLogo: officeLogo ?? null,
-        primaryImage: imageMap[property.id] ?? null,
+        primaryImage: galleryMap[property.id]?.[0] ?? null,
       })
     )
-  ));
+  );
+  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
 });
 
 router.get("/properties/latest", async (req, res): Promise<void> => {
@@ -275,19 +283,20 @@ router.get("/properties/latest", async (req, res): Promise<void> => {
     .orderBy(desc(propertiesTable.createdAt))
     .limit(limit);
 
-  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+  const galleryMap = await getAllImages(propsRaw.map((p) => p.property.id));
 
-  res.json(GetLatestPropertiesResponse.parse(
+  const payload = GetLatestPropertiesResponse.parse(
     propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
       buildPropertyObject(property, {
         governorateName: governorateName ?? null,
         areaName: areaName ?? null,
         officeName: officeName ?? null,
         officeLogo: officeLogo ?? null,
-        primaryImage: imageMap[property.id] ?? null,
+        primaryImage: galleryMap[property.id]?.[0] ?? null,
       })
     )
-  ));
+  );
+  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
 });
 
 router.get("/properties/:id", async (req, res): Promise<void> => {
@@ -437,19 +446,20 @@ router.get("/properties/:id/similar", async (req, res): Promise<void> => {
     .orderBy(desc(propertiesTable.createdAt))
     .limit(4);
 
-  const imageMap = await getPrimaryImages(propsRaw.map((p) => p.property.id));
+  const galleryMap = await getAllImages(propsRaw.map((p) => p.property.id));
 
-  res.json(GetSimilarPropertiesResponse.parse(
+  const payload = GetSimilarPropertiesResponse.parse(
     propsRaw.map(({ property, governorateName, areaName, officeName, officeLogo }) =>
       buildPropertyObject(property, {
         governorateName: governorateName ?? null,
         areaName: areaName ?? null,
         officeName: officeName ?? null,
         officeLogo: officeLogo ?? null,
-        primaryImage: imageMap[property.id] ?? null,
+        primaryImage: galleryMap[property.id]?.[0] ?? null,
       })
     )
-  ));
+  );
+  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
 });
 
 router.post("/properties", async (req: Request, res: Response): Promise<void> => {
