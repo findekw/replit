@@ -22,6 +22,19 @@ const TYPES_BY_STATUS: Record<string, string[]> = {
   "للبدل":   ["بيت", "قسيمة", "ارض", "شقة", "طلب"],
 };
 
+// Bare-land types: no rooms/bathrooms — only the area applies.
+const LAND_TYPES = new Set(["ارض", "قسيمة", "قسيمة صناعية", "قسيمة حرفية"]);
+// Bedrooms are picked from a fixed set (1–5, then "+5" stored as 6).
+const BEDROOM_OPTIONS: { label: string; value: string }[] = [
+  { label: "1", value: "1" }, { label: "2", value: "2" }, { label: "3", value: "3" },
+  { label: "4", value: "4" }, { label: "5", value: "5" }, { label: "+5", value: "6" },
+];
+// Bathrooms: 1–5 only (no "+5").
+const BATHROOM_OPTIONS: { label: string; value: string }[] = [
+  { label: "1", value: "1" }, { label: "2", value: "2" }, { label: "3", value: "3" },
+  { label: "4", value: "4" }, { label: "5", value: "5" },
+];
+
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
 
@@ -79,6 +92,7 @@ export default function DashboardAddListing() {
   const [areaSize, setAreaSize] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
+  const isLand = LAND_TYPES.has(type);
   const [amenities, setAmenities] = useState<string[]>([]);
 
   // Admin-editable amenity list; falls back to the built-in defaults on failure.
@@ -123,6 +137,7 @@ export default function DashboardAddListing() {
     if (!status) clientErrors.push("يرجى اختيار نوع العرض");
     if (!type) clientErrors.push("يرجى اختيار نوع العقار");
     if (!price || Number(price) <= 0) clientErrors.push("يرجى إدخال سعر صحيح");
+    if (!areaSize || Number(areaSize) <= 0) clientErrors.push("يرجى إدخال المساحة");
     if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
     if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
     if (descriptionAr.trim().length < 10) clientErrors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
@@ -675,7 +690,7 @@ export default function DashboardAddListing() {
                 <LocationCombobox
                   items={(TYPES_BY_STATUS[status] ?? []).map((t) => ({ value: t, label: t }))}
                   value={type}
-                  onChange={setType}
+                  onChange={(v) => { setType(v); if (LAND_TYPES.has(v)) { setBedrooms(""); setBathrooms(""); } }}
                   placeholder={status ? "اختر نوع العقار" : "اختر نوع العرض أولاً"}
                   searchPlaceholder="ابحث عن نوع..."
                   emptyText="لا يوجد نوع بهذا الاسم"
@@ -740,24 +755,42 @@ export default function DashboardAddListing() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="areaSize">المساحة <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
+                <Label htmlFor="areaSize" className="mb-1 block">المساحة <span className="text-destructive">*</span></Label>
                 <Input id="areaSize" type="number" placeholder="م²" value={areaSize}
-                  onChange={(e) => setAreaSize(e.target.value)} className="mt-1" min={0}
+                  onChange={(e) => setAreaSize(e.target.value)} min={0}
                   disabled={submitting} data-testid="input-listing-area" />
               </div>
               <div>
-                <Label htmlFor="bedrooms">عدد الغرف <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
-                <Input id="bedrooms" type="number" placeholder="0" value={bedrooms}
-                  onChange={(e) => setBedrooms(e.target.value)} className="mt-1" min={0}
-                  disabled={submitting} data-testid="input-listing-bedrooms" />
+                <Label className="mb-1 block">عدد الغرف {!isLand && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
+                {/* Fixed range 1–5 then "+5"; disabled for bare-land types. */}
+                <LocationCombobox
+                  items={BEDROOM_OPTIONS}
+                  value={bedrooms}
+                  onChange={setBedrooms}
+                  placeholder="اختر عدد الغرف"
+                  showSearch={false}
+                  listMaxHeight="none"
+                  emptyText="—"
+                  disabled={isLand || submitting}
+                />
               </div>
               <div>
-                <Label htmlFor="bathrooms">عدد الحمامات <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
-                <Input id="bathrooms" type="number" placeholder="0" value={bathrooms}
-                  onChange={(e) => setBathrooms(e.target.value)} className="mt-1" min={0}
-                  disabled={submitting} data-testid="input-listing-bathrooms" />
+                <Label className="mb-1 block">عدد الحمامات {!isLand && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
+                <LocationCombobox
+                  items={BATHROOM_OPTIONS}
+                  value={bathrooms}
+                  onChange={setBathrooms}
+                  placeholder="اختر عدد الحمامات"
+                  showSearch={false}
+                  listMaxHeight="none"
+                  emptyText="—"
+                  disabled={isLand || submitting}
+                />
               </div>
             </div>
+            {isLand && (
+              <p className="text-xs" style={{ color: "#64748b" }}>نوع «أرض» — عدد الغرف والحمامات غير متاح، المساحة فقط.</p>
+            )}
 
             <div>
               <Label className="mb-2 block">مميزات العقار <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span></Label>
