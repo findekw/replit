@@ -289,7 +289,8 @@ export default function Home() {
         .fh-sec-title { font-size:23px; font-weight:800; color:#111827; margin:0; letter-spacing:-0.5px; }
         .fh-sec-link { font-size:14px; font-weight:700; color:#667EEA; display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:999px; background:#EEF2FF; transition:background .18s, gap .18s; white-space:nowrap; }
         .fh-sec-link:hover { background:#E0E7FF; gap:9px; }
-        .fh-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+        .fh-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+        @media (min-width:600px){ .fh-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
         @media (min-width:700px){ .fh-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
         @media (min-width:1024px){ .fh-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
 
