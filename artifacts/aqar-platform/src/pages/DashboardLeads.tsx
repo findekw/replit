@@ -107,8 +107,10 @@ export default function DashboardLeads() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // Status is filtered client-side so the tab counts always reflect the
+      // full set (previously filtering server-side zeroed out "الكل" and the
+      // other counts whenever a status chip was picked).
       const qs = new URLSearchParams();
-      if (filterStatus) qs.set("status", filterStatus);
       if (filterProperty) qs.set("propertyId", filterProperty);
       const res = await fetch(`${BASE}/api/leads?${qs}`, { credentials: "include" });
       if (!res.ok) throw new Error();
@@ -118,7 +120,7 @@ export default function DashboardLeads() {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterProperty, toast]);
+  }, [filterProperty, toast]);
 
   useEffect(() => { if (officeId > 0) load(); }, [officeId, load]);
 
@@ -208,6 +210,7 @@ export default function DashboardLeads() {
   }
 
   const counts = statuses.map((s) => ({ s, n: leads.filter((l) => l.status === s).length }));
+  const visibleLeads = filterStatus ? leads.filter((l) => l.status === filterStatus) : leads;
 
   const inputStyle: React.CSSProperties = {
     width: "100%", height: 42, borderRadius: 10, border: "1.5px solid #E2E8F0",
@@ -343,19 +346,23 @@ export default function DashboardLeads() {
         {/* Leads */}
         {loading ? (
           <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
-        ) : leads.length === 0 ? (
+        ) : visibleLeads.length === 0 ? (
           <div style={{ background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16, padding: "60px 20px", textAlign: "center" }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: "#F5F7FA", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               <Users className="h-9 w-9" style={{ color: "#94A3B8" }} />
             </div>
-            <p style={{ fontSize: 18, fontWeight: 800, color: "#111827", margin: 0 }}>لا يوجد عملاء بعد</p>
+            <p style={{ fontSize: 18, fontWeight: 800, color: "#111827", margin: 0 }}>
+              {leads.length === 0 ? "لا يوجد عملاء بعد" : "لا يوجد عملاء بهذا التصنيف"}
+            </p>
             <p style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>
-              أضف عميلك الأول بزر «إضافة عميل»، أو انتظر تسجيلات «أنا مهتم» من صفحات إعلاناتك
+              {leads.length === 0
+                ? "أضف عميلك الأول بزر «إضافة عميل»، أو انتظر تسجيلات «أنا مهتم» من صفحات إعلاناتك"
+                : "جرّب تصنيفاً آخر أو اختر «الكل»."}
             </p>
           </div>
         ) : (
           <div style={{ display: "grid", gap: 12 }}>
-            {leads.map((l) => {
+            {visibleLeads.map((l) => {
               const src = SOURCE_META[l.sourcePage ?? ""] ?? { label: l.inquiryType, icon: MessageCircle };
               const SrcIcon = src.icon;
               const st = statusStyle(l.status);
