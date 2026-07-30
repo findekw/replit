@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
-import { db, officesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, officesTable, subscriptionPlansTable, paymentsTable, propertiesTable } from "@workspace/db";
+import { eq, and, count, sum } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { requireOffice, getOfficeId } from "../lib/authHelpers";
+import { getTrialDays, getSetting } from "../lib/settings";
 
 const router: IRouter = Router();
 
@@ -22,6 +23,7 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
       trialStartedAt: officesTable.trialStartedAt,
       trialEndsAt: officesTable.trialEndsAt,
       subscriptionEndsAt: officesTable.subscriptionEndsAt,
+      planId: officesTable.planId,
     })
     .from(officesTable)
     .where(eq(officesTable.id, officeId));
@@ -60,6 +62,46 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     status = "expired";
   }
 
+  // Published-listings usage + payment history (paid only).
+  const [{ used }] = await db
+    .select({ used: count() })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.officeId, officeId), eq(propertiesTable.active, true)));
+  const [pay] = await db
+    .select({ cnt: count(), total: sum(paymentsTable.amountFils) })
+    .from(paymentsTable)
+    .where(and(eq(paymentsTable.officeId, officeId), eq(paymentsTable.status, "paid")));
+  const paymentsCount = Number(pay?.cnt ?? 0);
+
+  // The office is on a PAID plan only if it's active, has a paid-subscription
+  // end date, or has actually paid before. Otherwise (trial / never paid) it's
+  // on the free plan — the linked planId is ignored so a trial never shows a
+  // paid plan's limits/price.
+  const onPaidPlan = status === "active" || office.subscriptionEndsAt != null || paymentsCount > 0;
+
+  let planNameAr: string | null = "الباقة المجانية";
+  let planPriceFils: number | null = null;
+  let planDurationDays: number | null = await getTrialDays();
+  let planMaxListings: number | null = Number(await getSetting("trial_max_listings", "5"));
+
+  if (onPaidPlan && office.planId) {
+    const [row] = await db
+      .select({
+        nameAr: subscriptionPlansTable.nameAr,
+        price: subscriptionPlansTable.price,
+        durationDays: subscriptionPlansTable.durationDays,
+        maxListings: subscriptionPlansTable.maxListings,
+      })
+      .from(subscriptionPlansTable)
+      .where(eq(subscriptionPlansTable.id, office.planId));
+    if (row) {
+      planNameAr = row.nameAr;
+      planPriceFils = row.price;
+      planDurationDays = row.durationDays;
+      planMaxListings = row.maxListings;
+    }
+  }
+
   res.json({
     subscriptionPlan: office.subscriptionPlan,
     subscriptionStatus: status,
@@ -68,6 +110,15 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     subscriptionEndsAt: office.subscriptionEndsAt?.toISOString() ?? null,
     trialDaysLeft,
     canPublish: status === "trial" || status === "active",
+    // Enriched fields for the dashboard subscription card
+    isFreePlan: !onPaidPlan,
+    planNameAr,
+    planPriceFils,
+    planDurationDays,
+    planMaxListings,
+    listingsUsed: Number(used ?? 0),
+    paymentsCount,
+    paymentsTotalFils: Number(pay?.total ?? 0),
   });
 });
 
