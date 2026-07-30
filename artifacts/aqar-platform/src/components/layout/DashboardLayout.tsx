@@ -53,7 +53,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dsh-ready .dsh-sidebar { transition:transform .32s cubic-bezier(.4,0,.2,1); }
         .dsh-sidebar.open { transform:translateX(0); }
-        @media (min-width:768px){ .dsh-sidebar{ position:static; transform:none; box-shadow:none; max-width:none; } }
+        /* Desktop: pin the sidebar to the viewport (sticky, 100vh) instead of
+           letting it stretch with a long page — otherwise the bottom menu
+           (back-to-site / logout) drifts far below the nav on tall pages like
+           the dashboard. Matches the admin panel's static sidebar. */
+        @media (min-width:768px){
+          .dsh-sidebar{ position:sticky; top:0; height:100vh; align-self:flex-start; transform:none; box-shadow:none; max-width:none; overflow-y:hidden; }
+          .dsh-navlist{ flex:1 1 auto; min-height:0; overflow-y:auto; }
+        }
         .dsh-logo-wrap {
           height:78px; display:flex; align-items:center; gap:11px; padding:0 22px;
           border-bottom:1px solid rgba(255,255,255,0.07);
