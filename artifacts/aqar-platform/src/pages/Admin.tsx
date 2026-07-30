@@ -227,7 +227,6 @@ export default function Admin() {
   const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [allOffices, setAllOffices]       = useState<AllOffice[]>([]);
   const [toolsBusy, setToolsBusy]         = useState<string | null>(null);
-  const [confirmClearDemo, setConfirmClearDemo] = useState(false);
   const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "", roleId: "" });
 
   // Role-based access: the owner (no role) sees everything; an employee's
@@ -559,26 +558,6 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === "reports" && user) loadReports();
   }, [activeTab, user, loadReports]);
-
-  async function clearDemoData() {
-    setConfirmClearDemo(false);
-    setToolsBusy("clear-demo");
-    try {
-      const res = await fetch(`${BASE}/api/admin/demo-data/clear`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل مسح البيانات");
-      toast({ title: "تم", description: (data as { message?: string }).message ?? "تم مسح البيانات التجريبية" });
-      await loadListings();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "حدث خطأ";
-      toast({ title: "خطأ", description: msg, variant: "destructive" });
-    } finally {
-      setToolsBusy(null);
-    }
-  }
 
   async function addAdmin(e: React.FormEvent) {
     e.preventDefault();
@@ -923,23 +902,6 @@ export default function Admin() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Clear demo data confirm dialog */}
-      <AlertDialog open={confirmClearDemo} onOpenChange={(o) => !o && setConfirmClearDemo(false)}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>مسح البيانات التجريبية</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف العقارات التجريبية FN-D* وصورها وعملائها نهائياً. لا يؤثر على حسابات المكاتب. هل تريد المتابعة؟
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={clearDemoData} style={{ background: RED, color: "#fff" }}>
-              مسح البيانات
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Page title */}
         <div className="mb-6">
@@ -1811,26 +1773,6 @@ export default function Admin() {
         {/* ═══════════════ TOOLS TAB ═══════════════ */}
         {activeTab === "tools" && (
           <div className="grid gap-5 lg:grid-cols-2">
-
-            {/* 1 — Clear demo data */}
-            <div className="adm-card" style={{ padding: "22px 24px" }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Trash2 className="h-4.5 w-4.5" style={{ color: RED }} />
-                <h3 className="text-base font-bold" style={{ color: NAVY }}>مسح البيانات التجريبية</h3>
-              </div>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: BODY }}>
-                يحذف العقارات التجريبية التجريبية FN-D* وصورها وعملائها. لا يؤثر على حسابات المكاتب.
-              </p>
-              <button
-                disabled={toolsBusy === "clear-demo"}
-                onClick={() => setConfirmClearDemo(true)}
-                className="adm-btn"
-                style={{ background: RED, color: "#fff", opacity: toolsBusy === "clear-demo" ? 0.6 : 1 }}
-              >
-                <Trash2 style={{ width: 16, height: 16 }} />
-                مسح البيانات التجريبية
-              </button>
-            </div>
 
             {/* 3 — Reset office password */}
             <div className="adm-card" style={{ padding: "22px 24px" }}>
