@@ -114,6 +114,23 @@ async function getAllImages(propertyIds: number[]): Promise<Record<number, strin
   return map;
 }
 
+// Enrich the parsed card objects with fields the response schema strips out
+// (image gallery + office contact) so the card can show a carousel and the
+// call/WhatsApp shortcuts. Keyed off the raw rows by property id.
+function withCardExtras(
+  parsed: Array<Record<string, unknown> & { id: number }>,
+  raw: Array<{ property: { id: number }; officePhone?: string | null; officeWhatsapp?: string | null }>,
+  galleryMap: Record<number, string[]>,
+) {
+  const byId = new Map(raw.map((r) => [r.property.id, r]));
+  return parsed.map((p) => ({
+    ...p,
+    images: galleryMap[p.id] ?? [],
+    officePhone: byId.get(p.id)?.officePhone ?? null,
+    officeWhatsapp: byId.get(p.id)?.officeWhatsapp ?? null,
+  }));
+}
+
 router.get("/properties", async (req, res): Promise<void> => {
   // type/areaId are read raw below to allow comma-separated multi-values; exclude
   // them from the generated single-value schema (which coerces areaId to a number
@@ -184,6 +201,8 @@ router.get("/properties", async (req, res): Promise<void> => {
         areaName: areasTable.nameAr,
         officeName: officesTable.nameAr,
         officeLogo: officesTable.logo,
+        officePhone: officesTable.phone,
+        officeWhatsapp: officesTable.whatsapp,
       })
       .from(propertiesTable)
       .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
@@ -221,7 +240,7 @@ router.get("/properties", async (req, res): Promise<void> => {
   // so attach the full gallery after parsing — the card carousel reads it.
   res.json({
     ...payload,
-    properties: payload.properties.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })),
+    properties: withCardExtras(payload.properties, propsRaw, galleryMap),
   });
 });
 
@@ -233,6 +252,8 @@ router.get("/properties/featured", async (_req, res): Promise<void> => {
       areaName: areasTable.nameAr,
       officeName: officesTable.nameAr,
       officeLogo: officesTable.logo,
+      officePhone: officesTable.phone,
+      officeWhatsapp: officesTable.whatsapp,
     })
     .from(propertiesTable)
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
@@ -255,7 +276,7 @@ router.get("/properties/featured", async (_req, res): Promise<void> => {
       })
     )
   );
-  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
+  res.json(withCardExtras(payload, propsRaw, galleryMap));
 });
 
 router.get("/properties/latest", async (req, res): Promise<void> => {
@@ -274,6 +295,8 @@ router.get("/properties/latest", async (req, res): Promise<void> => {
       areaName: areasTable.nameAr,
       officeName: officesTable.nameAr,
       officeLogo: officesTable.logo,
+      officePhone: officesTable.phone,
+      officeWhatsapp: officesTable.whatsapp,
     })
     .from(propertiesTable)
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
@@ -296,7 +319,7 @@ router.get("/properties/latest", async (req, res): Promise<void> => {
       })
     )
   );
-  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
+  res.json(withCardExtras(payload, propsRaw, galleryMap));
 });
 
 router.get("/properties/:id", async (req, res): Promise<void> => {
@@ -315,6 +338,8 @@ router.get("/properties/:id", async (req, res): Promise<void> => {
       areaName: areasTable.nameAr,
       officeName: officesTable.nameAr,
       officeLogo: officesTable.logo,
+      officePhone: officesTable.phone,
+      officeWhatsapp: officesTable.whatsapp,
       officePhone: officesTable.phone,
       officeWhatsapp: officesTable.whatsapp,
     })
@@ -437,6 +462,8 @@ router.get("/properties/:id/similar", async (req, res): Promise<void> => {
       areaName: areasTable.nameAr,
       officeName: officesTable.nameAr,
       officeLogo: officesTable.logo,
+      officePhone: officesTable.phone,
+      officeWhatsapp: officesTable.whatsapp,
     })
     .from(propertiesTable)
     .leftJoin(governoratesTable, eq(propertiesTable.governorateId, governoratesTable.id))
@@ -459,7 +486,7 @@ router.get("/properties/:id/similar", async (req, res): Promise<void> => {
       })
     )
   );
-  res.json(payload.map((p) => ({ ...p, images: galleryMap[p.id] ?? [] })));
+  res.json(withCardExtras(payload, propsRaw, galleryMap));
 });
 
 router.post("/properties", async (req: Request, res: Response): Promise<void> => {

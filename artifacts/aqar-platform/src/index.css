@@ -353,10 +353,21 @@ body::-webkit-scrollbar,
 }
 .property-cur { font-size: 12.5px; font-weight: 600; color: #64748B; margin-inline-start: 4px; }
 .property-meta {
-  display: flex; align-items: center; gap: 14px; margin-top: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px;
   font-size: 12px; color: #94A3B8; font-weight: 600;
 }
+.property-meta-stats { display: flex; align-items: center; gap: 14px; }
 .property-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+/* Call / WhatsApp shortcuts, bottom-end of the card */
+.property-contact { display: flex; align-items: center; gap: 8px; }
+.property-contact-btn {
+  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.property-contact-btn.wa { background: #25D366; }
+.property-contact-btn.call { background: #667EEA; }
+.property-contact-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
 .property-title {
   font-size: 15.5px; font-weight: 700; color: var(--text-heading); margin: 0 0 7px;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; line-height: 1.4;

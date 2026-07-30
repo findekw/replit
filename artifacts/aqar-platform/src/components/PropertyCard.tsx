@@ -1,8 +1,11 @@
 import { Property } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useState } from "react";
-import { Bed, Bath, Maximize2, MapPin, Building2, Heart, Clock, Eye, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bed, Bath, Maximize2, MapPin, Building2, Heart, Clock, Eye, Share2, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { timeAgo } from "@/lib/timeAgo";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { toIntlPhone } from "@/lib/phone";
+import { trackInteraction } from "@/lib/trackInteraction";
 
 interface PropertyCardProps {
   property: Property;
@@ -65,6 +68,27 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
       if (navigator.share) await navigator.share({ title: property.titleAr, url });
       else await navigator.clipboard.writeText(url);
     } catch { /* user dismissed the share sheet — ignore */ }
+  }
+
+  // Office contact shortcuts (numbers come from the list endpoint).
+  const officePhone = (property as { officePhone?: string | null }).officePhone ?? null;
+  const officeWhatsapp = (property as { officeWhatsapp?: string | null }).officeWhatsapp ?? null;
+
+  function openWhatsApp(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!officeWhatsapp) return;
+    if (property.officeId) trackInteraction(property.officeId, property.id, "whatsapp", "search_card");
+    const url = `${window.location.origin}/properties/${property.id}`;
+    const msg = `السلام عليكم، ممكن ترسل تفاصيل هذا الإعلان في فايند وشكراً\n${property.titleAr}\n${url}`;
+    window.open(`https://wa.me/${toIntlPhone(officeWhatsapp)}?text=${encodeURIComponent(msg)}`, "_blank");
+  }
+  function callOffice(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!officePhone) return;
+    if (property.officeId) trackInteraction(property.officeId, property.id, "call", "search_card");
+    window.open(`tel:+${toIntlPhone(officePhone)}`, "_blank");
   }
 
   return (
@@ -135,18 +159,34 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
             {property.price.toLocaleString("en-US")}<span className="property-cur">د.ك{property.status === "للإيجار" ? " / شهري" : ""}</span>
           </div>
 
-          {/* Posted-time + views */}
+          {/* Posted-time + views on the start; call/WhatsApp shortcuts on the end */}
           <div className="property-meta">
-            {property.createdAt && (
+            <div className="property-meta-stats">
+              {property.createdAt && (
+                <span className="property-meta-item">
+                  <Clock style={{ width: 13, height: 13 }} />
+                  {timeAgo(property.createdAt)}
+                </span>
+              )}
               <span className="property-meta-item">
-                <Clock style={{ width: 13, height: 13 }} />
-                {timeAgo(property.createdAt)}
+                <Eye style={{ width: 13, height: 13 }} />
+                {((property as { views?: number }).views ?? 0).toLocaleString("en-US")}
               </span>
+            </div>
+            {(officeWhatsapp || officePhone) && (
+              <div className="property-contact">
+                {officeWhatsapp && (
+                  <button type="button" className="property-contact-btn wa" onClick={openWhatsApp} aria-label="واتساب" title="تواصل واتساب">
+                    <WhatsAppIcon size={16} />
+                  </button>
+                )}
+                {officePhone && (
+                  <button type="button" className="property-contact-btn call" onClick={callOffice} aria-label="اتصال" title="اتصال">
+                    <Phone style={{ width: 15, height: 15 }} />
+                  </button>
+                )}
+              </div>
             )}
-            <span className="property-meta-item">
-              <Eye style={{ width: 13, height: 13 }} />
-              {((property as { views?: number }).views ?? 0).toLocaleString("en-US")}
-            </span>
           </div>
         </div>
       </article>
