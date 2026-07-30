@@ -62,6 +62,14 @@ const styles = `
 .pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; display: flex; align-items: center; justify-content: center; min-height: 200px; }
 .pd-gallery-img { display: block; max-width: 100%; max-height: 72vh; width: auto; height: auto; }
 .pd-gallery-ph { width: 100%; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
+/* Mobile: a fixed portrait frame so every listing's main image is the same
+   size (was rendering at the source aspect — some tall, some wide). Matches the
+   search cards' uniform look. Desktop keeps the natural, taller view. */
+@media (max-width: 1023px) {
+  .pd-gallery { aspect-ratio: 4 / 5; min-height: 0; }
+  .pd-gallery-img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
+  .pd-gallery-ph { aspect-ratio: auto; height: 100%; }
+}
 .pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .pd-gnav:hover { background: rgba(15,23,42,0.8); }
 .pd-gnav-prev { right: 14px; }
