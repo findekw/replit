@@ -6,7 +6,9 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
 import PhoneField from "@/components/PhoneField";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, CalendarDays } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, Clock } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { timeAgo } from "@/lib/timeAgo";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { trackInteraction } from "@/lib/trackInteraction";
 import { toIntlPhone } from "@/lib/phone";
@@ -127,8 +129,8 @@ const styles = `
 .pd-cta { width: 100%; height: 50px; border-radius: 12px; border: none; font-weight: 700; font-size: 15px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .15s; }
 .pd-cta-wa { background: #25D366; color: #fff; }
 .pd-cta-wa:hover { background: #1eb858; }
-.pd-cta-call { background: #fff; color: #111827; border: 1.5px solid #111827; }
-.pd-cta-call:hover { background: #111827; color: #fff; }
+.pd-cta-call { background: #667EEA; color: #fff; }
+.pd-cta-call:hover { background: #5568d8; }
 .pd-cta-stack { display: flex; flex-direction: column; gap: 10px; }
 
 .pd-share { display: flex; gap: 10px; }
@@ -384,8 +386,8 @@ export default function PropertyDetail() {
                 </div>
                 {property.createdAt && (
                   <div className="pd-date">
-                    <CalendarDays size={15} />
-                    <span>نُشر في {new Date(property.createdAt).toLocaleDateString("ar-KW-u-nu-latn", { year: "numeric", month: "long", day: "numeric" })}</span>
+                    <Clock size={15} />
+                    <span>{timeAgo(property.createdAt)}</span>
                   </div>
                 )}
 
@@ -467,14 +469,14 @@ export default function PropertyDetail() {
                   </a>
 
                   <div className="pd-cta-stack">
+                    {property.office.whatsapp && (
+                      <button className="pd-cta pd-cta-wa" data-testid="button-whatsapp" onClick={handleWhatsApp}>
+                        <WhatsAppIcon size={18} /> واتساب
+                      </button>
+                    )}
                     {property.office.phone && (
                       <button className="pd-cta pd-cta-call" data-testid="button-call" onClick={handleCall}>
                         <Phone size={18} /> اتصال
-                      </button>
-                    )}
-                    {property.office.whatsapp && (
-                      <button className="pd-cta pd-cta-wa" data-testid="button-whatsapp" onClick={handleWhatsApp}>
-                        <MessageCircle size={18} /> واتساب
                       </button>
                     )}
                     <a href={`/${property.office.slug}`} className="pd-office-link">عرض كل عقارات المكتب</a>
@@ -503,14 +505,14 @@ export default function PropertyDetail() {
       {/* Mobile sticky contact bar */}
       {property.office && (property.office.phone || property.office.whatsapp) && (
         <div className="pd-mobilebar" dir="rtl">
+          {property.office.whatsapp && (
+            <button className="pd-cta pd-cta-wa" style={{ flex: 1 }} onClick={handleWhatsApp} aria-label="واتساب">
+              <WhatsAppIcon size={18} /> واتساب
+            </button>
+          )}
           {property.office.phone && (
             <button className="pd-cta pd-cta-call" style={{ flex: 1 }} onClick={handleCall} aria-label="اتصال">
               <Phone size={18} /> اتصال
-            </button>
-          )}
-          {property.office.whatsapp && (
-            <button className="pd-cta pd-cta-wa" style={{ flex: 1 }} onClick={handleWhatsApp} aria-label="واتساب">
-              <MessageCircle size={18} /> واتساب
             </button>
           )}
         </div>
