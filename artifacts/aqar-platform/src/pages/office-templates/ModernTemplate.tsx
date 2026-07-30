@@ -2,10 +2,11 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2,
+  Phone, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
   ShieldCheck, BadgeCheck,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
@@ -135,7 +136,7 @@ export default function ModernTemplate(p: TemplateProps) {
       {(hasWA || hasPhone) && (
         <>
           <div className="tm-sticky">
-            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><MessageCircle size={20} /> تواصل واتساب</button>}
+            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><WhatsAppIcon size={20} /> واتساب</button>}
             {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall} style={{ height: 48 }}><Phone size={20} /> اتصال</button>}
           </div>
           <div className="tm-sticky-spacer" />
@@ -206,7 +207,7 @@ const CSS = `
 .tm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 /* Phones: one full-width card per row so the photo, title and details are all
    legible (two columns squeezed them into an unreadable sliver). */
-@media (max-width:640px){ .tm-grid { grid-template-columns: 1fr; gap: 16px; } }
+@media (max-width:768px){ .tm-grid { grid-template-columns: 1fr; gap: 16px; } }
 @media (min-width:980px){ .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tm-empty { text-align: center; padding: 64px 20px; }
 .tm-empty p { color: #64748B; font-weight: 700; font-size: 16px; margin: 16px 0 0; }
