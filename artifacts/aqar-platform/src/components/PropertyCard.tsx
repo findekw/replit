@@ -155,6 +155,9 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
             </div>
           )}
 
+          {/* Price + meta pinned to the bottom so cards with fewer specs (e.g.
+              no area) still line up their last row with the rest of the grid. */}
+          <div className="property-foot">
           <div className="property-price">
             {property.price.toLocaleString("en-US")}<span className="property-cur">د.ك{property.status === "للإيجار" ? " / شهري" : ""}</span>
           </div>
@@ -187,6 +190,7 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
                 )}
               </div>
             )}
+          </div>
           </div>
         </div>
       </article>
