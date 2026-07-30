@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, Home, CheckCircle2, MessageCircle } from "lucide-react";
+import { KeyRound, Home, CheckCircle2 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getApiBase } from "@/lib/apiBase";
 
 const BASE = getApiBase();
@@ -165,7 +166,7 @@ export default function ForgotPassword() {
               variant="outline"
               style={{ width: "100%", height: 44, fontWeight: 700, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
             >
-              <MessageCircle className="h-4 w-4" style={{ color: "#25D366" }} />
+              <WhatsAppIcon size={16} color="#25D366" />
               تواصل مع الدعم
             </Button>
           </a>

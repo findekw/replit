@@ -5,10 +5,14 @@ export default function WhatsAppIcon({
   size = 16,
   color = "currentColor",
   style,
+  className,
 }: {
   size?: number;
   color?: string;
   style?: React.CSSProperties;
+  /** Optional — lets it drop into slots that size icons via a class
+      (e.g. stat cards using `h-[22px] w-[22px]`). */
+  className?: string;
 }) {
   return (
     <svg
@@ -16,6 +20,7 @@ export default function WhatsAppIcon({
       fill={color}
       width={size}
       height={size}
+      className={className}
       style={{ display: "block", flexShrink: 0, ...style }}
       role="img"
       aria-label="واتساب"

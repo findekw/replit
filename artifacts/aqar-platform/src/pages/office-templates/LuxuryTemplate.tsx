@@ -2,9 +2,10 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2,
+  Phone, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
@@ -48,7 +49,7 @@ export default function LuxuryTemplate(p: TemplateProps) {
 
           {(hasWA || hasPhone) && (
             <div className="lx-hero-cta">
-              {hasWA && <button className="lx-btn lx-btn-gold" onClick={onWhatsApp}><MessageCircle size={19} /> تواصل واتساب</button>}
+              {hasWA && <button className="lx-btn lx-btn-gold" onClick={onWhatsApp}><WhatsAppIcon size={19} /> تواصل واتساب</button>}
               {hasPhone && <button className="lx-btn lx-btn-outline" onClick={onCall}><Phone size={18} /> اتصال</button>}
             </div>
           )}
@@ -144,7 +145,7 @@ export default function LuxuryTemplate(p: TemplateProps) {
       {(hasWA || hasPhone) && (
         <>
           <div className="lx-sticky">
-            {hasWA && <button className="lx-btn lx-btn-gold" onClick={onWhatsApp} style={{ height: 48 }}><MessageCircle size={19} /> واتساب</button>}
+            {hasWA && <button className="lx-btn lx-btn-gold" onClick={onWhatsApp} style={{ height: 48 }}><WhatsAppIcon size={19} /> واتساب</button>}
             {hasPhone && <button className="lx-btn lx-btn-outline" onClick={onCall} style={{ height: 48 }}><Phone size={18} /> اتصال</button>}
           </div>
           <div className="lx-sticky-spacer" />

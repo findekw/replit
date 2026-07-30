@@ -2,9 +2,10 @@ import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Phone, MessageCircle, MapPin, Building2,
+  Phone, MapPin, Building2,
   ChevronLeft, ChevronRight, Home as HomeIcon,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import type { TemplateProps, CardProperty } from "./types";
 import { emptyMessage } from "./types";
 import { TypeFilter } from "./TypeFilter";
@@ -98,7 +99,7 @@ export default function ClassicTemplate(p: TemplateProps) {
                       <button className="cl-contact-row" onClick={onCall}>{office.phone}</button></li>
                   )}
                   {hasWA && (
-                    <li><span className="cl-ci cl-ci-wa"><MessageCircle size={16} /></span>
+                    <li><span className="cl-ci cl-ci-wa"><WhatsAppIcon size={16} /></span>
                       <button className="cl-contact-row" onClick={onWhatsApp}>{office.whatsapp || "واتساب"}</button></li>
                   )}
                 </ul>
@@ -158,7 +159,7 @@ export default function ClassicTemplate(p: TemplateProps) {
         <>
           <div className="cl-sticky">
             {hasPhone && <button className="cl-btn cl-btn-call" onClick={onCall} style={{ height: 48, flex: 1 }}><Phone size={20} /> اتصال</button>}
-            {hasWA && <button className="cl-btn cl-btn-wa" onClick={onWhatsApp} style={{ height: 48, flex: 1 }}><MessageCircle size={20} /> واتساب</button>}
+            {hasWA && <button className="cl-btn cl-btn-wa" onClick={onWhatsApp} style={{ height: 48, flex: 1 }}><WhatsAppIcon size={20} /> واتساب</button>}
           </div>
           <div className="cl-sticky-spacer" />
         </>

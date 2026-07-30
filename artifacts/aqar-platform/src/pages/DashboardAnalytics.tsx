@@ -3,7 +3,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useOfficeAuth } from "@/lib/AuthContext";
-import { BarChart2, Building, TrendingUp, Eye, MessageCircle, Phone } from "lucide-react";
+import { BarChart2, Building, TrendingUp, Eye, Phone } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 const CARD_STYLE: React.CSSProperties = {
   background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16,
@@ -31,7 +32,7 @@ export default function DashboardAnalytics() {
         { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#667EEA", bg: "#EEF2FE" },
         { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", bg: "#ECFDF5" },
         { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", bg: "#EEF2FE" },
-        { label: "نقرات واتساب", value: stats.whatsappClicks, icon: MessageCircle, fg: "#059669", bg: "#ECFDF5" },
+        { label: "نقرات واتساب", value: stats.whatsappClicks, icon: WhatsAppIcon, fg: "#059669", bg: "#ECFDF5" },
         { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", bg: "#EEF2FE" },
       ]
     : [];

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Check, Crown, Loader2, ShieldCheck, MessageCircle, AlertTriangle } from "lucide-react";
+import { Check, Crown, Loader2, ShieldCheck, AlertTriangle } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getApiBase } from "@/lib/apiBase";
 
 const BASE = getApiBase();
@@ -122,7 +123,7 @@ export default function Subscribe() {
             <p style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>تواصل معنا لتفعيل اشتراكك.</p>
             <a href={`https://wa.me/96595005151?text=${encodeURIComponent("مرحبا، اريد الاشتراك في منصة Finde")}`} target="_blank" rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, background: "#16a34a", color: "#fff", padding: "11px 22px", borderRadius: 12, fontWeight: 700, textDecoration: "none" }}>
-              <MessageCircle className="h-4 w-4" /> تواصل عبر واتساب
+              <WhatsAppIcon size={16} /> تواصل عبر واتساب
             </a>
           </div>
         ) : (

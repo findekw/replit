@@ -2,7 +2,8 @@ import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useOfficeAuth } from "@/lib/AuthContext";
-import { MessageCircle, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getApiBase } from "@/lib/apiBase";
 
 const PLANS_BASE = getApiBase();
@@ -305,7 +306,7 @@ export default function Plans() {
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
               data-testid="button-contact-whatsapp"
             >
-              <MessageCircle style={{ width: 18, height: 18, flexShrink: 0 }} />
+              <WhatsAppIcon size={18} />
               واتساب
             </button>
           </div>

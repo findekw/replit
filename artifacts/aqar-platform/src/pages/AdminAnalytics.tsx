@@ -8,10 +8,11 @@ import {
 import {
   Building2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, XCircle,
   Home, LayoutDashboard, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown,
-  Eye, MessageCircle, Phone, Star, Clock, Zap, ShieldAlert,
+  Eye, Phone, Star, Clock, Zap, ShieldAlert,
   BarChart2, ExternalLink, Award, Target, Activity, Calendar,
   ChevronDown, ChevronUp,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
@@ -274,7 +275,7 @@ export default function AdminAnalytics() {
               <KpiCard label="إجمالي المكاتب" value={fmt(ov.totalOffices)}   icon={Building2}    color={NAVY}     />
               <KpiCard label="مكاتب نشطة"      value={fmt(offices.filter(o => o.active && o.subscriptionStatus !== "expired").length)} icon={CheckCircle2} color="#16a34a" sub="لديها اشتراك فعّال" />
               <KpiCard label="إجمالي الإعلانات" value={fmt(ov.totalAds)}      icon={Activity}     color="#667EEA"  sub={ov.pendingAds > 0 ? `${ov.pendingAds} معلّق` : undefined} />
-              <KpiCard label="نقرات واتساب"    value={fmt(ov.totalWhatsapp)} icon={MessageCircle} color="#22c55e" />
+              <KpiCard label="نقرات واتساب"    value={fmt(ov.totalWhatsapp)} icon={WhatsAppIcon} color="#22c55e" />
             </div>
 
             {/* Smart Alerts */}
