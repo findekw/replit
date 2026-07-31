@@ -415,9 +415,15 @@ export default function Dashboard() {
 
   const isLoading = authLoading || statsLoading;
 
+  // How many more listings the office can still publish on its plan.
+  const listingsRemaining = stats && subDetail?.planMaxListings != null
+    ? Math.max(0, subDetail.planMaxListings - stats.activeListings)
+    : null;
+
   const statCards = stats ? [
     { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
+    ...(listingsRemaining !== null ? [{ label: "الإعلانات المتبقية", value: listingsRemaining, icon: Plus, fg: "#D97706", g2: "#F59E0B", bg: "#FEF6E7" }] : []),
     { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
     { label: "نقرات واتساب", value: stats.whatsappClicks, icon: WhatsAppIcon, fg: "#059669", g2: "#10B981", bg: "#ECFDF5" },
     { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", g2: "#5B73E0", bg: "#EEF2FE" },
