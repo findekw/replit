@@ -97,7 +97,13 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
         {/* Media */}
         <div className="property-media">
           {gallery.length ? (
-            <img className="property-img" src={gallery[imgIndex]} alt={property.titleAr} loading="lazy" />
+            <>
+              {/* Blurred, zoomed copy fills the uniform frame so images with
+                  edge content (logos, phone numbers) show whole via `contain`
+                  below — no cropping — instead of black letterbox bars. */}
+              <img className="property-img-bg" src={gallery[imgIndex]} alt="" aria-hidden="true" loading="lazy" />
+              <img className="property-img" src={gallery[imgIndex]} alt={property.titleAr} loading="lazy" />
+            </>
           ) : (
             <div className="property-img-fallback">
               <Building2 className="h-9 w-9" style={{ color: "rgba(255,255,255,0.45)" }} />

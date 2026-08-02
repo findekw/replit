@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, officeUsersTable, officesTable, propertiesTable, propertyImagesTable, areasTable, governoratesTable, leadsTable, adminsTable, adminRolesTable, subscriptionPlansTable, catalogOptionsTable } from "@workspace/db";
-import { eq, and, desc, asc, sql, like, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, like, inArray, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import type { Request, Response, NextFunction } from "express";
 import { requireAdmin } from "../lib/authHelpers";
@@ -527,6 +527,72 @@ router.put("/admin/admins/:id/role", requireAdmin, async (req: Request, res: Res
     const [updated] = await db.update(adminsTable).set({ roleId }).where(eq(adminsTable.id, id)).returning({ id: adminsTable.id });
     if (!updated) { res.status(404).json({ error: "المسؤول غير موجود" }); return; }
     res.json({ message: "تم تحديث الدور" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── PUT /api/admin/admins/:id — edit an admin (owner only via the guard) ──
+// Any subset of name / email / password / status. Password is optional: an
+// empty value means "leave it unchanged" so an edit needn't reset it.
+router.put("/admin/admins/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  try {
+    const [target] = await db.select({ id: adminsTable.id }).from(adminsTable).where(eq(adminsTable.id, id)).limit(1);
+    if (!target) { res.status(404).json({ error: "المسؤول غير موجود" }); return; }
+
+    const patch: Record<string, unknown> = {};
+    if (body["name"] !== undefined) {
+      const name = String(body["name"]).trim();
+      if (name.length < 2) { res.status(400).json({ error: "الاسم يجب أن يكون حرفين على الأقل" }); return; }
+      patch["name"] = name;
+    }
+    if (body["email"] !== undefined) {
+      const email = String(body["email"]).trim().toLowerCase();
+      if (!isValidEmail(email)) { res.status(400).json({ error: "البريد الإلكتروني غير صالح" }); return; }
+      const [clash] = await db.select({ id: adminsTable.id }).from(adminsTable).where(eq(adminsTable.email, email)).limit(1);
+      if (clash && clash.id !== id) { res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" }); return; }
+      patch["email"] = email;
+    }
+    if (body["password"] !== undefined && String(body["password"]) !== "") {
+      const password = String(body["password"]);
+      if (password.length < 8) { res.status(400).json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }); return; }
+      patch["passwordHash"] = await bcrypt.hash(password, 12);
+    }
+    if (body["status"] !== undefined) {
+      const status = String(body["status"]);
+      if (status !== "active" && status !== "suspended") { res.status(400).json({ error: "حالة غير صالحة" }); return; }
+      // An owner suspending themselves would immediately lock them out.
+      if (status === "suspended" && id === getSessionId(req, "admin")) { res.status(400).json({ error: "لا يمكنك تعطيل حسابك الحالي" }); return; }
+      patch["status"] = status;
+    }
+    if (!Object.keys(patch).length) { res.status(400).json({ error: "لا يوجد تغيير" }); return; }
+
+    const [updated] = await db.update(adminsTable).set(patch).where(eq(adminsTable.id, id))
+      .returning({ id: adminsTable.id, name: adminsTable.name, email: adminsTable.email, status: adminsTable.status });
+    res.json({ admin: updated, message: "تم تحديث بيانات المسؤول" });
+  } catch {
+    res.status(500).json({ error: "حدث خطأ في الخادم" });
+  }
+});
+
+// ── DELETE /api/admin/admins/:id — remove an admin (owner only via the guard) ──
+router.delete("/admin/admins/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "معرّف غير صالح" }); return; }
+  if (id === getSessionId(req, "admin")) { res.status(400).json({ error: "لا يمكنك حذف حسابك الحالي" }); return; }
+  try {
+    const [target] = await db.select({ id: adminsTable.id, roleId: adminsTable.roleId }).from(adminsTable).where(eq(adminsTable.id, id)).limit(1);
+    if (!target) { res.status(404).json({ error: "المسؤول غير موجود" }); return; }
+    // Never delete the last owner (role_id NULL) — it would lock everyone out.
+    if (target.roleId == null) {
+      const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(adminsTable).where(isNull(adminsTable.roleId));
+      if (n <= 1) { res.status(400).json({ error: "لا يمكن حذف آخر مالك للمنصة" }); return; }
+    }
+    await db.delete(adminsTable).where(eq(adminsTable.id, id));
+    res.json({ message: "تم حذف المسؤول" });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });
   }

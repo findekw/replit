@@ -276,11 +276,19 @@ body::-webkit-scrollbar,
   overflow: hidden;
   background: #111827;
 }
-/* Uniform frame: every photo fills the same box regardless of its own aspect
-   ratio (client asked for a consistent card size), cropping as needed. */
+/* Uniform frame, no cropping: the photo is shown WHOLE (`contain`) centered in
+   the box, and a blurred, zoomed copy of the same photo fills the leftover space
+   behind it instead of black bars. This keeps every card the same size while
+   never cutting off edge content (office promo graphics with logos/phone/text). */
 .property-img {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; z-index: 1;
+  width: 100%; height: 100%; object-fit: contain;
+}
+.property-img-bg {
+  position: absolute; inset: 0; z-index: 0;
   width: 100%; height: 100%; object-fit: cover;
+  filter: blur(16px) brightness(0.7);
+  transform: scale(1.15); /* hide the soft transparent edge the blur creates */
 }
 .property-img-fallback {
   width: 100%; height: 100%;

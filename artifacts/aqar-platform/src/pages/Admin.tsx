@@ -228,6 +228,10 @@ export default function Admin() {
   const [allOffices, setAllOffices]       = useState<AllOffice[]>([]);
   const [toolsBusy, setToolsBusy]         = useState<string | null>(null);
   const [newAdmin, setNewAdmin]           = useState({ name: "", email: "", password: "", roleId: "" });
+  const [myId, setMyId]                   = useState<number | null>(null); // own admin id — hides self-delete
+  const [editAdminId, setEditAdminId]     = useState<number | null>(null); // row being edited inline
+  const [editAdmin, setEditAdmin]         = useState({ name: "", email: "", password: "" });
+  const [confirmAdminDel, setConfirmAdminDel] = useState<number | null>(null);
 
   // Role-based access: the owner (no role) sees everything; an employee's
   // tabs are filtered to their role's permissions. The server enforces the
@@ -309,8 +313,9 @@ export default function Admin() {
     if (!user) return;
     fetch(`${BASE}/api/auth/admin/me`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { permissions?: string[] | null; isOwner?: boolean }) => {
+      .then((d: { permissions?: string[] | null; isOwner?: boolean; admin?: { id?: number } }) => {
         setMyPerms(d.isOwner ? null : (d.permissions ?? []));
+        setMyId(d.admin?.id ?? null);
       })
       .catch(() => setMyPerms(null));
   }, [user]);
@@ -592,6 +597,84 @@ export default function Admin() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "حدث خطأ";
       toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  function startEditAdmin(a: AdminUser) {
+    setConfirmAdminDel(null);
+    setEditAdminId(a.id);
+    setEditAdmin({ name: a.name, email: a.email, password: "" });
+  }
+
+  async function saveAdminEdit(id: number) {
+    const name = editAdmin.name.trim();
+    if (name.length < 2) {
+      toast({ title: "الاسم ناقص", description: "اكتب اسم المسؤول (حرفين على الأقل)", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editAdmin.email.trim())) {
+      toast({ title: "البريد الإلكتروني غير صحيح", description: "اكتب بريداً بصيغة صحيحة مثل name@example.com", variant: "destructive" });
+      return;
+    }
+    if (editAdmin.password && editAdmin.password.length < 8) {
+      toast({ title: "كلمة المرور قصيرة", description: "اتركها فارغة للإبقاء عليها، أو اكتب 8 أحرف على الأقل", variant: "destructive" });
+      return;
+    }
+    setToolsBusy(`edit-admin-${id}`);
+    try {
+      const body: Record<string, string> = { name, email: editAdmin.email.trim() };
+      if (editAdmin.password) body["password"] = editAdmin.password;
+      const res = await fetch(`${BASE}/api/admin/admins/${id}`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((d as { error?: string }).error ?? "فشل حفظ التعديل");
+      toast({ title: "تم", description: (d as { message?: string }).message ?? "تم تحديث بيانات المسؤول" });
+      setEditAdminId(null);
+      await loadAdmins();
+    } catch (err: unknown) {
+      toast({ title: "خطأ", description: err instanceof Error ? err.message : "حدث خطأ", variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function toggleAdminStatus(a: AdminUser) {
+    const next = a.status === "active" ? "suspended" : "active";
+    setToolsBusy(`status-admin-${a.id}`);
+    try {
+      const res = await fetch(`${BASE}/api/admin/admins/${a.id}`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((d as { error?: string }).error ?? "فشل تحديث الحالة");
+      toast({ title: next === "active" ? "تم التفعيل" : "تم التعطيل" });
+      await loadAdmins();
+    } catch (err: unknown) {
+      toast({ title: "خطأ", description: err instanceof Error ? err.message : "حدث خطأ", variant: "destructive" });
+    } finally {
+      setToolsBusy(null);
+    }
+  }
+
+  async function deleteAdmin(id: number) {
+    setConfirmAdminDel(null);
+    setToolsBusy(`del-admin-${id}`);
+    try {
+      const res = await fetch(`${BASE}/api/admin/admins/${id}`, { method: "DELETE", credentials: "include" });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((d as { error?: string }).error ?? "فشل الحذف");
+      toast({ title: "تم حذف المسؤول" });
+      await loadAdmins();
+      await loadRoles();
+    } catch (err: unknown) {
+      toast({ title: "خطأ", description: err instanceof Error ? err.message : "حدث خطأ", variant: "destructive" });
     } finally {
       setToolsBusy(null);
     }
@@ -1934,7 +2017,8 @@ export default function Admin() {
               </div>
             )}
 
-            {/* 2 — Manage admins (full width) */}
+            {/* 2 — Manage admins (full width, owner only — the list/CRUD endpoints are owner-gated) */}
+            {myPerms === null && (
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="h-4.5 w-4.5" style={{ color: NAVY }} />
@@ -1949,59 +2033,159 @@ export default function Admin() {
                 <p className="text-sm my-3" style={{ color: BODY }}>لا يوجد مسؤولون.</p>
               ) : (
                 <div className="flex flex-col gap-2 my-3">
-                  {admins.map((a) => (
+                  {admins.map((a) => {
+                    const isSelf = a.id === myId;
+                    const editing = editAdminId === a.id;
+                    return (
                     <div
                       key={a.id}
-                      className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
-                      style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}
+                      className="flex flex-col gap-3 px-4 py-3"
+                      style={{ background: "#F8FAFC", border: `1px solid ${editing ? BLUE : BORDER}`, borderRadius: 12 }}
                     >
-                      <div className="min-w-0 flex-1" style={{ minWidth: 150 }}>
-                        <div className="font-bold text-sm truncate" style={{ color: NAVY }}>{a.name}</div>
-                        <div className="text-xs truncate" style={{ color: BODY }} dir="ltr">{a.email}</div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap justify-end">
-                        {/* Role assignment (owner only) — "ضيف role للموظف" */}
-                        {myPerms === null ? (
-                          <select
-                            value={a.roleId == null ? "" : String(a.roleId)}
-                            onChange={async (e) => {
-                              const v = e.target.value;
-                              const res = await fetch(`${BASE}/api/admin/admins/${a.id}/role`, {
-                                method: "PUT", credentials: "include",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ roleId: v === "" ? null : Number(v) }),
-                              });
-                              const d = await res.json().catch(() => ({}));
-                              if (!res.ok) { toast({ title: "لم يتم التحديث", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
-                              toast({ title: "تم تحديث الدور" });
-                              await loadAdmins(); await loadRoles();
-                            }}
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="min-w-0 flex-1" style={{ minWidth: 150 }}>
+                          <div className="font-bold text-sm truncate" style={{ color: NAVY }}>
+                            {a.name}{isSelf && <span className="adm-chip mr-2" style={{ background: "#EEF2FF", color: BLUE }}>أنت</span>}
+                          </div>
+                          <div className="text-xs truncate" style={{ color: BODY }} dir="ltr">{a.email}</div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                          {/* Role assignment (owner only) — not on your own row (would demote yourself) */}
+                          {myPerms === null && !isSelf ? (
+                            <select
+                              value={a.roleId == null ? "" : String(a.roleId)}
+                              onChange={async (e) => {
+                                const v = e.target.value;
+                                const res = await fetch(`${BASE}/api/admin/admins/${a.id}/role`, {
+                                  method: "PUT", credentials: "include",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ roleId: v === "" ? null : Number(v) }),
+                                });
+                                const d = await res.json().catch(() => ({}));
+                                if (!res.ok) { toast({ title: "لم يتم التحديث", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                                toast({ title: "تم تحديث الدور" });
+                                await loadAdmins(); await loadRoles();
+                              }}
+                              style={{
+                                height: 34, borderRadius: 9, border: `1.5px solid ${BORDER}`, background: "#fff",
+                                padding: "0 9px", fontSize: 12.5, fontWeight: 700, color: NAVY,
+                                fontFamily: "'Cairo',sans-serif", cursor: "pointer", outline: "none", maxWidth: 170,
+                              }}
+                            >
+                              <option value="">كامل الصلاحيات (مالك)</option>
+                              {roles.map((r) => <option key={r.id} value={String(r.id)}>{r.nameAr}</option>)}
+                            </select>
+                          ) : (
+                            <span className="adm-chip" style={{ background: "#EEF2FF", color: BLUE }}>
+                              {a.roleName ?? "كامل الصلاحيات"}
+                            </span>
+                          )}
+                          {/* Status chip doubles as an activate/suspend toggle (owner only, not self) */}
+                          <button
+                            type="button"
+                            disabled={isSelf || toolsBusy === `status-admin-${a.id}`}
+                            onClick={() => toggleAdminStatus(a)}
+                            title={isSelf ? "" : a.status === "active" ? "تعطيل الحساب" : "تفعيل الحساب"}
+                            className="adm-chip"
                             style={{
-                              height: 34, borderRadius: 9, border: `1.5px solid ${BORDER}`, background: "#fff",
-                              padding: "0 9px", fontSize: 12.5, fontWeight: 700, color: NAVY,
-                              fontFamily: "'Cairo',sans-serif", cursor: "pointer", outline: "none", maxWidth: 170,
+                              background: a.status === "active" ? "#E7F6F0" : "#FEF6E7",
+                              color: a.status === "active" ? GREEN : AMBER,
+                              cursor: isSelf ? "default" : "pointer", border: "none",
+                              opacity: toolsBusy === `status-admin-${a.id}` ? 0.5 : 1,
                             }}
                           >
-                            <option value="">كامل الصلاحيات (مالك)</option>
-                            {roles.map((r) => <option key={r.id} value={String(r.id)}>{r.nameAr}</option>)}
-                          </select>
-                        ) : (
-                          <span className="adm-chip" style={{ background: "#EEF2FF", color: BLUE }}>
-                            {a.roleName ?? "كامل الصلاحيات"}
-                          </span>
-                        )}
-                        <span
-                          className="adm-chip"
-                          style={{
-                            background: a.status === "active" ? "#E7F6F0" : "#FEF6E7",
-                            color: a.status === "active" ? GREEN : AMBER,
-                          }}
-                        >
-                          {a.status}
-                        </span>
+                            {a.status === "active" ? "نشط" : "معطّل"}
+                          </button>
+                          {/* Edit */}
+                          <button
+                            type="button"
+                            onClick={() => (editing ? setEditAdminId(null) : startEditAdmin(a))}
+                            className="adm-btn"
+                            style={{ height: 34, padding: "0 10px", background: "#EEF2FF", color: BLUE, border: "1px solid #C7D2FE" }}
+                          >
+                            <Edit2 style={{ width: 14, height: 14 }} />
+                            {editing ? "إغلاق" : "تعديل"}
+                          </button>
+                          {/* Delete (owner only, not self) */}
+                          {!isSelf && (
+                            <button
+                              type="button"
+                              disabled={toolsBusy === `del-admin-${a.id}`}
+                              onClick={() => {
+                                if (confirmAdminDel !== a.id) {
+                                  setConfirmAdminDel(a.id);
+                                  setTimeout(() => setConfirmAdminDel((c) => (c === a.id ? null : c)), 4000);
+                                  return;
+                                }
+                                deleteAdmin(a.id);
+                              }}
+                              className="adm-btn"
+                              style={{
+                                height: 34, padding: "0 12px",
+                                background: confirmAdminDel === a.id ? "#DC2626" : "#FEF2F2",
+                                color: confirmAdminDel === a.id ? "#fff" : "#DC2626",
+                                border: "1px solid #FECACA",
+                                opacity: toolsBusy === `del-admin-${a.id}` ? 0.5 : 1,
+                              }}
+                            >
+                              <Trash2 style={{ width: 14, height: 14 }} />
+                              {confirmAdminDel === a.id ? "تأكيد؟" : "حذف"}
+                            </button>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Inline edit form */}
+                      {editing && (
+                        <div className="grid gap-3 sm:grid-cols-3 pt-3" style={{ borderTop: `1px solid ${BORDER}` }}>
+                          <input
+                            type="text"
+                            value={editAdmin.name}
+                            onChange={(e) => setEditAdmin((s) => ({ ...s, name: e.target.value }))}
+                            placeholder="الاسم"
+                            className="adm-input"
+                          />
+                          <input
+                            type="email"
+                            value={editAdmin.email}
+                            onChange={(e) => setEditAdmin((s) => ({ ...s, email: e.target.value }))}
+                            placeholder="البريد الإلكتروني"
+                            className="adm-input"
+                            dir="ltr"
+                          />
+                          <input
+                            type="password"
+                            value={editAdmin.password}
+                            onChange={(e) => setEditAdmin((s) => ({ ...s, password: e.target.value }))}
+                            placeholder="كلمة مرور جديدة (اتركها فارغة للإبقاء)"
+                            className="adm-input"
+                          />
+                          <div className="sm:col-span-3 flex gap-2">
+                            <button
+                              type="button"
+                              disabled={toolsBusy === `edit-admin-${a.id}`}
+                              onClick={() => saveAdminEdit(a.id)}
+                              className="adm-btn adm-btn--blue"
+                              style={{ opacity: toolsBusy === `edit-admin-${a.id}` ? 0.6 : 1 }}
+                            >
+                              <CheckCircle style={{ width: 15, height: 15 }} />
+                              حفظ التعديل
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditAdminId(null)}
+                              className="adm-btn"
+                              style={{ background: "#fff", color: BODY, border: `1px solid ${BORDER}` }}
+                            >
+                              <X style={{ width: 15, height: 15 }} />
+                              إلغاء
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -2050,6 +2234,7 @@ export default function Admin() {
                 </div>
               </form>
             </div>
+            )}
 
             {/* 3b — Legal pages editor (full width) */}
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>

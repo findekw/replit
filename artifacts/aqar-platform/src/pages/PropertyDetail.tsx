@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useGetProperty, useGetSimilarProperties } from "@workspace/api-client-react";
 import MainLayout from "@/components/layout/MainLayout";
@@ -55,31 +55,39 @@ const styles = `
 .pd-card { background: #fff; border: 1px solid #EEF1F5; border-radius: 18px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); }
 
 /* Gallery */
-/* Adaptive gallery: the box takes the shape of the image itself (capped at
-   72vh) instead of forcing a fixed landscape ratio. Nearly all real uploads
-   are portrait phone photos / poster ads — inside the old 4:3 box they
-   rendered at ~56% of the width with big dark bars ("مش ظاهر كامل"). Now a
-   portrait photo fills the phone's full width, a landscape one still does,
-   and nothing is ever cropped. */
-.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-.pd-gallery-img { display: block; max-width: 100%; max-height: 72vh; width: auto; height: auto; }
-.pd-gallery-ph { width: 100%; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
-/* Mobile: a fixed portrait frame so every listing's main image is the same
-   size (was rendering at the source aspect — some tall, some wide). Matches the
-   search cards' uniform look. Desktop keeps the natural, taller view. */
-@media (max-width: 1023px) {
-  .pd-gallery { aspect-ratio: 4 / 5; min-height: 0; }
-  .pd-gallery-img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
-  .pd-gallery-ph { aspect-ratio: auto; height: 100%; }
-}
-.pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
+/* Fixed-frame gallery: every image sits in the same box (so switching between a
+   tall and a wide photo never changes the height) and is shown WHOLE via
+   object-fit contain — no cropping. A blurred, zoomed copy of the same photo
+   fills the leftover space behind it instead of dark bars, which is what used to
+   make portrait uploads look tiny. Uniform height + full image + no bars. */
+.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16 / 10; }
+.pd-gallery-img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: contain; display: block; }
+.pd-gallery-bg  { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(18px) brightness(0.7); transform: scale(1.15); }
+.pd-gallery-ph { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
+.pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .pd-gnav:hover { background: rgba(15,23,42,0.8); }
 .pd-gnav-prev { right: 14px; }
 .pd-gnav-next { left: 14px; }
-.pd-gcount { position: absolute; bottom: 14px; left: 14px; background: rgba(15,23,42,0.6); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; backdrop-filter: blur(4px); }
-.pd-badges { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; }
+.pd-gcount { position: absolute; bottom: 14px; left: 14px; z-index: 2; background: rgba(15,23,42,0.6); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; backdrop-filter: blur(4px); }
+.pd-badges { position: absolute; top: 14px; right: 14px; z-index: 2; display: flex; gap: 8px; }
 .pd-badge { color: #fff; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; box-shadow: 0 2px 8px rgba(15,23,42,0.2); }
 .pd-badge-featured { background: #f59e0b; }
+/* Mobile position indicator — a thin track with a segment that slides to the
+   current image. Hidden on desktop (arrows + counter are enough there). */
+.pd-progress { display: none; position: absolute; z-index: 2; left: 50%; bottom: 13px; transform: translateX(-50%); direction: ltr; width: 108px; height: 3px; border-radius: 999px; background: rgba(255,255,255,0.28); overflow: hidden; }
+.pd-progress > span { display: block; height: 100%; border-radius: 999px; background: #fff; transition: transform .25s ease; }
+/* Mobile: a full-screen-style gallery (client ask) — every image shown WHOLE on
+   a uniform SOLID dark background (no per-image blurred fill, so there's no
+   visible difference between images), with the controls collected into a bottom
+   bar: arrows at the corners, counter centered above a position indicator.
+   Placed AFTER the base rules above so it wins at equal specificity. */
+@media (max-width: 1023px) {
+  .pd-gallery { aspect-ratio: 4 / 5; background: #0B1120; }
+  .pd-gallery-bg { display: none; }                 /* solid dark instead of blur */
+  .pd-gnav { top: auto; bottom: 12px; transform: none; width: 38px; height: 38px; background: rgba(15,23,42,0.72); }
+  .pd-gcount { left: 50%; right: auto; bottom: 24px; transform: translateX(-50%); }
+  .pd-progress { display: block; }
+}
 
 .pd-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
 .pd-thumb { flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #111827; transition: border-color .15s; }
@@ -181,6 +189,7 @@ export default function PropertyDetail() {
   });
 
   const [imgIndex, setImgIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null); // mobile gallery swipe origin
 
   // ── Report listing ──
   const REPORT_REASONS = ["معلومات غير صحيحة", "إعلان مكرر", "العقار غير متاح / مباع", "سعر غير صحيح", "صور مضللة", "احتيال أو نصب", "أخرى"];
@@ -275,6 +284,18 @@ export default function PropertyDetail() {
     : [];
   const videoUrl = (property as unknown as { videoUrl?: string | null }).videoUrl ?? null;
 
+  // Touch swipe for the mobile gallery: swipe left → next, swipe right → prev.
+  function onGalleryTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  }
+  function onGalleryTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current == null || images.length < 2) return;
+    const dx = (e.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
+    if (dx < -40) setImgIndex((i) => (i + 1) % images.length);
+    else if (dx > 40) setImgIndex((i) => (i - 1 + images.length) % images.length);
+    touchStartX.current = null;
+  }
+
   const propertyUrl = typeof window !== "undefined" ? window.location.href : "";
   const statusColor = STATUS_COLORS[property.status] ?? "#64748B";
 
@@ -321,9 +342,13 @@ export default function PropertyDetail() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {/* Gallery */}
               <div>
-                <div className="pd-gallery">
+                <div className="pd-gallery" onTouchStart={onGalleryTouchStart} onTouchEnd={onGalleryTouchEnd}>
                   {images.length > 0 ? (
                     <>
+                      {/* Blurred, zoomed copy fills the fixed frame so every image
+                          shows WHOLE (`contain`) at the same height — no cropping,
+                          no dark bars, no jump between portrait/landscape images. */}
+                      <img src={images[imgIndex]} alt="" aria-hidden="true" className="pd-gallery-bg" />
                       <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image" />
                       {images.length > 1 && (
                         <>
@@ -336,6 +361,10 @@ export default function PropertyDetail() {
                             <ChevronLeft size={20} />
                           </button>
                           <div className="pd-gcount">{imgIndex + 1} / {images.length}</div>
+                          {/* Mobile position indicator (hidden on desktop via CSS) */}
+                          <div className="pd-progress" aria-hidden="true">
+                            <span style={{ width: `${100 / images.length}%`, transform: `translateX(${imgIndex * 100}%)` }} />
+                          </div>
                         </>
                       )}
                     </>
