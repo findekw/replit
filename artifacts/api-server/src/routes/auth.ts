@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, adminsTable, adminRolesTable, officeUsersTable, officesTable } from "@workspace/db";
+import { db, usersTable, adminsTable, adminRolesTable, officeUsersTable, officesTable, governoratesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { randomInt, randomBytes } from "node:crypto";
@@ -165,6 +165,10 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
   const providedSlug = String(body.slug ?? "").trim().toLowerCase();
   const licenseNumber = body.licenseNumber ? String(body.licenseNumber).trim().slice(0, 60) : null;
   const commercialReg = body.commercialReg ? String(body.commercialReg).trim().slice(0, 60) : null;
+  // Optional governorate (shown on the office page). null when not chosen.
+  const governorateId = body.governorateId != null && body.governorateId !== ""
+    ? Number(body.governorateId)
+    : null;
 
   const errors: string[] = [];
   if (name.length < 2) errors.push("الاسم يجب أن يكون حرفين على الأقل");
@@ -175,11 +179,19 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
     if (!isValidSlug(providedSlug)) errors.push("الرابط يجب أن يكون بأحرف إنجليزية صغيرة وأرقام وشرطات فقط (3-40 حرف)");
     else if (RESERVED_SLUGS.includes(providedSlug)) errors.push("هذا الرابط محجوز ولا يمكن استخدامه");
   }
+  if (governorateId != null && !Number.isFinite(governorateId)) errors.push("المحافظة غير صالحة");
   if (errors.length > 0) { res.status(400).json({ error: "بيانات غير صالحة", details: errors }); return; }
 
   try {
     const [existing] = await db.select({ id: officeUsersTable.id }).from(officeUsersTable).where(eq(officeUsersTable.email, email)).limit(1);
     if (existing) { res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" }); return; }
+
+    // If a governorate was chosen, make sure it exists before saving it.
+    let validGovernorateId: number | null = null;
+    if (governorateId != null) {
+      const [gov] = await db.select({ id: governoratesTable.id }).from(governoratesTable).where(eq(governoratesTable.id, governorateId)).limit(1);
+      if (gov) validGovernorateId = gov.id;
+    }
 
     function generateFallbackSlug(officeName: string): string {
       const ts = Date.now().toString().slice(-6);
@@ -200,6 +212,7 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
     const [newOffice] = await db.insert(officesTable).values({
       name, nameAr: name, slug, phone: phone ?? null, email,
       active: false, featured: false, verified: false,
+      ...(validGovernorateId != null ? { governorateId: validGovernorateId } : {}),
       ...(licenseNumber ? { licenseNumber } : {}),
       ...(commercialReg ? { commercialReg } : {}),
       ...(officeDesc ? { descriptionAr: officeDesc, description: officeDesc } : {}),

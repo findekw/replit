@@ -146,11 +146,13 @@ export default function Dashboard() {
   const [draftLicense, setDraftLicense] = useState("");
   const [draftCommercialReg, setDraftCommercialReg] = useState("");
   const [draftAddress, setDraftAddress] = useState("");
+  const [draftGovernorateId, setDraftGovernorateId] = useState("");
+  const [governorates, setGovernorates] = useState<{ id: number; nameAr: string }[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingProfile, setSavingProfile] = useState(false);
 
   /* snapshot for cancel */
-  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "", address: "" });
+  const [snapshot, setSnapshot] = useState({ nameAr: "", slug: "", phone: "", whatsapp: "", description: "", licenseNumber: "", commercialReg: "", address: "", governorateId: "" });
 
   const [pwOpen, setPwOpen] = useState(false);
   const [pwCurrent, setPwCurrent] = useState("");
@@ -193,7 +195,7 @@ export default function Dashboard() {
     if (!officeId) return;
     fetch(`${BASE}/api/offices/${officeId}`, { credentials: "include" })
       .then(r => r.json())
-      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null; licenseNumber?: string | null; commercialReg?: string | null; addressAr?: string | null }) => {
+      .then((data: { slug?: string; logo?: string; coverImage?: string | null; nameAr?: string; phone?: string; whatsapp?: string; slugEdits?: number; descriptionAr?: string | null; licenseNumber?: string | null; commercialReg?: string | null; addressAr?: string | null; governorateId?: number | null }) => {
         const name = data.nameAr ?? "";
         const slug = data.slug ?? "";
         const rawPhone = data.phone ?? "";
@@ -204,6 +206,7 @@ export default function Dashboard() {
         const lic = data.licenseNumber ?? "";
         const creg = data.commercialReg ?? "";
         const addr = data.addressAr ?? "";
+        const gov = data.governorateId != null ? String(data.governorateId) : "";
         const edits = data.slugEdits ?? 0;
         setOfficeNameAr(name);
         setOfficeSlug(slug || null);
@@ -218,10 +221,19 @@ export default function Dashboard() {
         setDraftLicense(lic);
         setDraftCommercialReg(creg);
         setDraftAddress(addr);
-        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg, address: addr });
+        setDraftGovernorateId(gov);
+        setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg, address: addr, governorateId: gov });
       })
       .catch(() => {});
   }, [officeId]);
+
+  /* Governorate options for the profile dropdown */
+  useEffect(() => {
+    fetch(`${BASE}/api/locations/governorates`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: { id: number; nameAr: string }[]) => setGovernorates(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   function copyPageLink() {
     if (!officeSlug) return;
@@ -311,6 +323,7 @@ export default function Dashboard() {
     setDraftLicense(snapshot.licenseNumber);
     setDraftCommercialReg(snapshot.commercialReg);
     setDraftAddress(snapshot.address);
+    setDraftGovernorateId(snapshot.governorateId);
     setErrors({});
     setEditMode(true);
   }
@@ -324,6 +337,7 @@ export default function Dashboard() {
     setDraftLicense(snapshot.licenseNumber);
     setDraftCommercialReg(snapshot.commercialReg);
     setDraftAddress(snapshot.address);
+    setDraftGovernorateId(snapshot.governorateId);
     setErrors({});
     setEditMode(false);
   }
@@ -374,6 +388,7 @@ export default function Dashboard() {
         licenseNumber: draftLicense.trim(),
         commercialReg: draftCommercialReg.trim(),
         addressAr: draftAddress.trim(),
+        governorateId: draftGovernorateId, // "" clears it on the server
       };
       if (draftSlug !== snapshot.slug) payload.slug = draftSlug;
 
@@ -392,7 +407,7 @@ export default function Dashboard() {
         return;
       }
       /* update local state */
-      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim(), licenseNumber: draftLicense.trim(), commercialReg: draftCommercialReg.trim(), address: draftAddress.trim() };
+      const newSnap = { nameAr: draftNameAr.trim(), slug: draftSlug, phone: draftPhone, whatsapp: draftWhatsapp, description: draftDescription.trim(), licenseNumber: draftLicense.trim(), commercialReg: draftCommercialReg.trim(), address: draftAddress.trim(), governorateId: draftGovernorateId };
       setSnapshot(newSnap);
       setOfficeNameAr(draftNameAr.trim());
       setOfficeSlug(draftSlug || null);
@@ -748,6 +763,33 @@ export default function Dashboard() {
                 }}>
                   {snapshot.description}
                 </p>
+              )
+            )}
+
+            {/* ── Governorate (optional) — shown on the public office page under the name ── */}
+            {editMode ? (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 7 }}>
+                  المحافظة <span style={{ color: "#9ca3af", fontWeight: 400 }}>(اختياري)</span>
+                </div>
+                <select
+                  value={draftGovernorateId}
+                  onChange={e => setDraftGovernorateId(e.target.value)}
+                  dir="rtl"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, background: "#fff", color: "#111827", outline: "none", fontFamily: "inherit", boxSizing: "border-box", cursor: "pointer" }}
+                  onFocus={e => (e.currentTarget.style.borderColor = "#3b82f6")}
+                  onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="">بدون محافظة</option>
+                  {governorates.map(g => <option key={g.id} value={String(g.id)}>{g.nameAr}</option>)}
+                </select>
+                <p style={{ fontSize: 11, color: "#9ca3af", margin: "6px 0 0" }}>تظهر في صفحتك العامة تحت اسم المكتب.</p>
+              </div>
+            ) : (
+              snapshot.governorateId && (
+                <div style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
+                  المحافظة: <span style={{ color: "#111827" }}>{governorates.find(g => String(g.id) === snapshot.governorateId)?.nameAr ?? ""}</span>
+                </div>
               )
             )}
 

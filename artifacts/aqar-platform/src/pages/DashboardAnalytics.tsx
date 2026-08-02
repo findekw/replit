@@ -1,10 +1,14 @@
+import { useState, useEffect } from "react";
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useOfficeAuth } from "@/lib/AuthContext";
-import { BarChart2, Building, TrendingUp, Eye, Phone } from "lucide-react";
+import { BarChart2, Building, TrendingUp, Eye, Phone, Plus } from "lucide-react";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { getApiBase } from "@/lib/apiBase";
+
+const BASE = getApiBase();
 
 const CARD_STYLE: React.CSSProperties = {
   background: "#fff", border: "1px solid #EEF1F5", borderRadius: 16,
@@ -25,12 +29,29 @@ export default function DashboardAnalytics() {
     },
   });
 
+  // Subscription detail — only needed for the "remaining listings" tile
+  // (plan limit − active listings), same source the main dashboard uses.
+  const [planMaxListings, setPlanMaxListings] = useState<number | null>(null);
+  useEffect(() => {
+    if (!officeId) return;
+    fetch(`${BASE}/api/subscription/status`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: Record<string, any> | null) => { if (data) setPlanMaxListings(data.planMaxListings ?? null); })
+      .catch(() => {});
+  }, [officeId]);
+
+  // How many more listings the office can still publish on its plan.
+  const listingsRemaining = stats && planMaxListings != null
+    ? Math.max(0, planMaxListings - stats.activeListings)
+    : null;
+
   // Simple, real numbers only — no simulated/monthly charts, no leads or
   // featured metrics (they don't apply to offices).
   const tiles = stats
     ? [
         { label: "إجمالي الإعلانات", value: stats.totalListings, icon: Building, fg: "#667EEA", bg: "#EEF2FE" },
         { label: "الإعلانات النشطة", value: stats.activeListings, icon: TrendingUp, fg: "#059669", bg: "#ECFDF5" },
+        ...(listingsRemaining !== null ? [{ label: "الإعلانات المتبقية", value: listingsRemaining, icon: Plus, fg: "#D97706", bg: "#FEF6E7" }] : []),
         { label: "إجمالي المشاهدات", value: stats.totalViews, icon: Eye, fg: "#667EEA", bg: "#EEF2FE" },
         { label: "نقرات واتساب", value: stats.whatsappClicks, icon: WhatsAppIcon, fg: "#059669", bg: "#ECFDF5" },
         { label: "نقرات الاتصال", value: stats.callClicks, icon: Phone, fg: "#667EEA", bg: "#EEF2FE" },

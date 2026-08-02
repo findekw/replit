@@ -302,6 +302,8 @@ router.get("/offices/:id", async (req, res): Promise<void> => {
     licenseNumber: officeBase.licenseNumber,
     commercialReg: officeBase.commercialReg,
     addressAr: officeBase.addressAr,
+    governorateId: officeBase.governorateId,
+    governorateName: officeBase.governorateName,
   });
 });
 
@@ -538,8 +540,8 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   if (myOfficeId === null) { res.status(401).json({ error: "غير مسجّل الدخول كمكتب" }); return; }
   if (myOfficeId !== officeId) { res.status(403).json({ error: "غير مصرح" }); return; }
 
-  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate, licenseNumber, commercialReg, addressAr } = req.body as {
-    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string; licenseNumber?: string; commercialReg?: string; addressAr?: string;
+  const { nameAr, slug, phone, whatsapp, officeDescription, landingTemplate, licenseNumber, commercialReg, addressAr, governorateId } = req.body as {
+    nameAr?: string; slug?: string; phone?: string; whatsapp?: string; officeDescription?: string; landingTemplate?: string; licenseNumber?: string; commercialReg?: string; addressAr?: string; governorateId?: number | string | null;
   };
 
   // Fetch current office to check slugEdits
@@ -579,6 +581,19 @@ router.put("/offices/:id/profile", async (req: Request, res: Response): Promise<
   if (licenseNumber !== undefined) updates.licenseNumber = licenseNumber.trim().slice(0, 60) || null;
   if (commercialReg !== undefined) updates.commercialReg = commercialReg.trim().slice(0, 60) || null;
   if (addressAr !== undefined) updates.addressAr = addressAr.trim().slice(0, 200) || null;
+  // Governorate (optional) — "" / null clears it; a valid id sets it.
+  if (governorateId !== undefined) {
+    if (governorateId === null || governorateId === "") {
+      updates.governorateId = null;
+    } else {
+      const gid = Number(governorateId);
+      const [gov] = Number.isFinite(gid)
+        ? await db.select({ id: governoratesTable.id }).from(governoratesTable).where(eq(governoratesTable.id, gid)).limit(1)
+        : [];
+      if (!gov) { res.status(400).json({ field: "governorateId", error: "المحافظة غير صالحة" }); return; }
+      updates.governorateId = gov.id;
+    }
+  }
 
   // Slug (username) is chosen once — at registration or the first time it's set —
   // then it is fixed and can no longer be changed by the office.

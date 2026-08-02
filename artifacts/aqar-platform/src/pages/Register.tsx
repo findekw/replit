@@ -194,6 +194,8 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [slug, setSlug] = useState("");
+  const [governorateId, setGovernorateId] = useState("");
+  const [governorates, setGovernorates] = useState<{ id: number; nameAr: string }[]>([]);
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [formState, setFormState] = useState<FormState>("idle");
@@ -210,6 +212,14 @@ export default function Register() {
     if (role === "office" && name) setSuggestions(suggestSlugs(name));
     else setSuggestions([]);
   }, [name, role]);
+
+  // Governorate options for the optional office-location dropdown.
+  useEffect(() => {
+    fetch(`${BASE}/api/locations/governorates`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: { id: number; nameAr: string }[]) => setGovernorates(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (role !== "office" || !slug) { setSlugStatus("idle"); return; }
@@ -265,6 +275,7 @@ export default function Register() {
       const result = await authApi.office.register({
         name: name.trim(), email: email.trim(), phone: fullPhone, password,
         ...(slug ? { slug } : {}),
+        ...(governorateId ? { governorateId: Number(governorateId) } : {}),
       });
       setVerificationEmail(result.email ?? email.trim());
       setOtp("");
@@ -483,6 +494,27 @@ export default function Register() {
             )}
             <FieldError msg={fieldErrors.name} />
           </div>
+
+          {/* Governorate — optional; shown under the office name on its page */}
+          {role === "office" && (
+            <div>
+              <Label htmlFor="governorate" className="mb-1 block">المحافظة <span className="text-muted-foreground font-normal">(اختياري)</span></Label>
+              <select
+                id="governorate"
+                value={governorateId}
+                onChange={(e) => setGovernorateId(e.target.value)}
+                disabled={formState === "loading"}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                data-testid="select-register-governorate"
+              >
+                <option value="">اختر المحافظة</option>
+                {governorates.map((g) => (
+                  <option key={g.id} value={String(g.id)}>{g.nameAr}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">تظهر في صفحة مكتبك تحت الاسم</p>
+            </div>
+          )}
 
 
           {/* Slug — office only */}
