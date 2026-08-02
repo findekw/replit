@@ -6,7 +6,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
 import PhoneField from "@/components/PhoneField";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, Clock } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, Clock, X } from "lucide-react";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { timeAgo } from "@/lib/timeAgo";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
@@ -95,6 +95,27 @@ const styles = `
 .pd-thumb.active { border-color: #667EEA; }
 .pd-video { margin-top: 14px; border-radius: 16px; overflow: hidden; background: #0F172A; border: 1px solid #EEF1F5; }
 .pd-video video { width: 100%; max-height: 460px; display: block; background: #0F172A; }
+
+/* Fullscreen image viewer (lightbox) */
+.pd-lb { position: fixed; inset: 0; z-index: 9999; background: rgba(3,7,18,0.96); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; animation: pd-lb-in .18s ease; }
+@keyframes pd-lb-in { from { opacity: 0; } to { opacity: 1; } }
+.pd-lb-close { position: absolute; top: 16px; inset-inline-end: 16px; z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; background: rgba(255,255,255,0.14); color: #fff; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.pd-lb-close:hover { background: rgba(255,255,255,0.28); }
+.pd-lb-stage { position: relative; flex: 1; width: 100%; max-width: 1100px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.pd-lb-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 8px; display: block; user-select: none; }
+.pd-lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; background: rgba(255,255,255,0.14); color: #fff; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.pd-lb-nav:hover { background: rgba(255,255,255,0.3); }
+.pd-lb-prev { inset-inline-end: 8px; }
+.pd-lb-next { inset-inline-start: 8px; }
+.pd-lb-count { color: #fff; font-size: 14px; font-weight: 600; margin-top: 12px; letter-spacing: .5px; }
+.pd-lb-thumbs { display: flex; gap: 8px; margin-top: 12px; max-width: 100%; overflow-x: auto; padding: 4px; }
+.pd-lb-thumb { flex: 0 0 auto; width: 64px; height: 48px; border-radius: 8px; overflow: hidden; border: 2px solid transparent; cursor: pointer; padding: 0; background: #111827; opacity: .55; transition: opacity .15s, border-color .15s; }
+.pd-lb-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd-lb-thumb.active { border-color: #fff; opacity: 1; }
+@media (max-width: 640px) {
+  .pd-lb-nav { width: 40px; height: 40px; }
+  .pd-lb-thumb { width: 54px; height: 40px; }
+}
 
 /* Header card */
 .pd-head { padding: 24px; }
@@ -189,7 +210,18 @@ export default function PropertyDetail() {
   });
 
   const [imgIndex, setImgIndex] = useState(0);
-  const touchStartX = useRef<number | null>(null); // mobile gallery swipe origin
+  const touchStartX = useRef<number | null>(null); // gallery swipe origin
+  const [lightboxOpen, setLightboxOpen] = useState(false); // fullscreen viewer
+
+  // While the fullscreen viewer is open, lock the page scroll and let Escape close it.
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightboxOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prevOverflow; window.removeEventListener("keydown", onKey); };
+  }, [lightboxOpen]);
 
   // ── Report listing ──
   const REPORT_REASONS = ["معلومات غير صحيحة", "إعلان مكرر", "العقار غير متاح / مباع", "سعر غير صحيح", "صور مضللة", "احتيال أو نصب", "أخرى"];
@@ -349,7 +381,8 @@ export default function PropertyDetail() {
                           shows WHOLE (`contain`) at the same height — no cropping,
                           no dark bars, no jump between portrait/landscape images. */}
                       <img src={images[imgIndex]} alt="" aria-hidden="true" className="pd-gallery-bg" />
-                      <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image" />
+                      <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image"
+                        style={{ cursor: "zoom-in" }} onClick={() => setLightboxOpen(true)} />
                       {images.length > 1 && (
                         <>
                           <button className="pd-gnav pd-gnav-prev" aria-label="السابق"
@@ -620,6 +653,47 @@ export default function PropertyDetail() {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen image viewer (lightbox) — opens on tapping a gallery photo */}
+      {lightboxOpen && images.length > 0 && (
+        <div className="pd-lb" onClick={() => setLightboxOpen(false)}>
+          <button className="pd-lb-close" aria-label="إغلاق" onClick={() => setLightboxOpen(false)}>
+            <X size={22} />
+          </button>
+          <div
+            className="pd-lb-stage"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={onGalleryTouchStart}
+            onTouchEnd={onGalleryTouchEnd}
+          >
+            <img src={images[imgIndex]} alt={property.titleAr} className="pd-lb-img" />
+            {images.length > 1 && (
+              <>
+                <button className="pd-lb-nav pd-lb-prev" aria-label="السابق"
+                  onClick={() => setImgIndex((i) => (i - 1 + images.length) % images.length)}>
+                  <ChevronRight size={26} />
+                </button>
+                <button className="pd-lb-nav pd-lb-next" aria-label="التالي"
+                  onClick={() => setImgIndex((i) => (i + 1) % images.length)}>
+                  <ChevronLeft size={26} />
+                </button>
+              </>
+            )}
+          </div>
+          {images.length > 1 && (
+            <div className="pd-lb-count" onClick={(e) => e.stopPropagation()}>{imgIndex + 1} / {images.length}</div>
+          )}
+          {images.length > 1 && (
+            <div className="pd-lb-thumbs" onClick={(e) => e.stopPropagation()}>
+              {images.map((src, i) => (
+                <button key={i} className={`pd-lb-thumb${i === imgIndex ? " active" : ""}`} onClick={() => setImgIndex(i)} aria-label={`صورة ${i + 1}`}>
+                  <img src={src} alt="" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </MainLayout>
