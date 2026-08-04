@@ -242,6 +242,7 @@ router.get("/admin/subscriptions", requireAdmin, async (_req: Request, res: Resp
         officeActive: officesTable.active,
         subscriptionPlan: officesTable.subscriptionPlan,
         subscriptionStatus: officesTable.subscriptionStatus,
+        planId: officesTable.planId,
         trialStartedAt: officesTable.trialStartedAt,
         trialEndsAt: officesTable.trialEndsAt,
         userEmail: officeUsersTable.email,
@@ -269,7 +270,7 @@ router.get("/admin/subscriptions", requireAdmin, async (_req: Request, res: Resp
 // POST /api/admin/offices/:id/set-subscription — admin changes subscription status
 router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const officeId = Number(req.params.id);
-  const { status } = req.body as { status?: string };
+  const { status, planId } = req.body as { status?: string; planId?: number | string | null };
   const allowed = ["trial", "active", "pending_payment", "expired", "inactive"];
 
   if (!officeId || !status || !allowed.includes(status)) {
@@ -284,6 +285,23 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
     }
     // Activating a paid subscription should also make the office visible.
     if (status === "active") updates.active = true;
+
+    // Optional plan assignment. When the admin picks a plan, link it (planId),
+    // record its name, and set the subscription end date from the plan's
+    // duration so the office dashboard shows the plan it's subscribed to.
+    if (planId != null && planId !== "") {
+      const pid = Number(planId);
+      const [plan] = Number.isFinite(pid)
+        ? await db.select().from(subscriptionPlansTable).where(eq(subscriptionPlansTable.id, pid)).limit(1)
+        : [];
+      if (!plan) { res.status(400).json({ error: "الباقة غير موجودة" }); return; }
+      updates.planId = plan.id;
+      updates.subscriptionPlan = plan.nameAr;
+      if (status === "active") {
+        updates.subscriptionEndsAt = new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000);
+      }
+    }
+
     await db.update(officesTable).set(updates).where(eq(officesTable.id, officeId));
     res.json({ message: "تم تحديث حالة الاشتراك بنجاح" });
   } catch {

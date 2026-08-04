@@ -109,10 +109,17 @@ interface OfficeSubscription {
   officeActive: boolean;
   subscriptionPlan: string | null;
   subscriptionStatus: string | null;
+  planId: number | null;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
   userEmail: string | null;
   trialDaysLeft: number | null;
+}
+
+interface AdminPlanOption {
+  id: number;
+  nameAr: string;
+  maxListings: number;
 }
 
 interface HeroSlide {
@@ -336,6 +343,7 @@ export default function Admin() {
   const [subs, setSubs]                   = useState<OfficeSubscription[]>([]);
   const [loadingSubs, setLoadingSubs]     = useState(false);
   const [subBusy, setSubBusy]             = useState<number | null>(null);
+  const [planOptions, setPlanOptions]     = useState<AdminPlanOption[]>([]);
 
   /* ── Hero banners state ── */
   const emptyBanner = { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaUrl: "", sortOrder: 0, active: true };
@@ -505,6 +513,11 @@ export default function Admin() {
     try {
       const data = await adminFetch<{ offices: OfficeSubscription[] }>("/api/admin/subscriptions");
       setSubs(data.offices ?? []);
+      // Plans list — used to let the admin assign a plan to an office.
+      try {
+        const p = await adminFetch<{ plans: AdminPlanOption[] }>("/api/admin/plans");
+        setPlanOptions(p.plans ?? []);
+      } catch { /* plans are optional for the table to render */ }
     } catch {
       toast({ title: "خطأ", description: "فشل تحميل الاشتراكات", variant: "destructive" });
     } finally {
@@ -809,14 +822,14 @@ export default function Admin() {
     }
   }
 
-  async function setSubscription(officeId: number, status: string, officeName: string) {
+  async function setSubscription(officeId: number, status: string, officeName: string, planId?: number) {
     setSubBusy(officeId);
     try {
       const res = await fetch(`${BASE}/api/admin/offices/${officeId}/set-subscription`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(planId != null ? { status, planId } : { status }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((data as { error?: string }).error ?? "فشل تحديث الاشتراك");
@@ -1548,8 +1561,29 @@ export default function Admin() {
                             {/* One compact select instead of three stacked buttons —
                                 the client manages this from his phone and the pile
                                 looked broken there. Digits kept Latin (14 not ١٤). */}
-                            <div className="flex items-center gap-2 justify-center">
+                            <div className="flex items-center gap-2 justify-center flex-wrap">
                               {busy && <Loader2 className="animate-spin" style={{ width: 15, height: 15, color: BLUE }} />}
+                              {/* Assign a paid plan (activates the office on that plan) */}
+                              <select
+                                disabled={busy}
+                                value={s.planId != null ? String(s.planId) : ""}
+                                data-testid={`sub-plan-${s.officeId}`}
+                                onChange={(e) => {
+                                  const pid = Number(e.target.value);
+                                  if (Number.isFinite(pid) && pid > 0) setSubscription(s.officeId, "active", s.officeName, pid);
+                                }}
+                                style={{
+                                  height: 38, borderRadius: 10, border: `1.5px solid ${BORDER}`, background: "#fff",
+                                  padding: "0 10px", fontSize: 13, fontWeight: 700, color: NAVY,
+                                  fontFamily: "'Cairo', sans-serif", cursor: busy ? "not-allowed" : "pointer", outline: "none",
+                                  maxWidth: 170,
+                                }}
+                              >
+                                <option value="" disabled>عيّن باقة…</option>
+                                {planOptions.map((p) => (
+                                  <option key={p.id} value={String(p.id)}>{p.nameAr} ({p.maxListings} إعلان)</option>
+                                ))}
+                              </select>
                               <select
                                 disabled={busy}
                                 value=""

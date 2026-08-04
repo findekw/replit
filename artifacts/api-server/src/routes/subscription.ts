@@ -73,11 +73,12 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     .where(and(eq(paymentsTable.officeId, officeId), eq(paymentsTable.status, "paid")));
   const paymentsCount = Number(pay?.cnt ?? 0);
 
-  // The office is on a PAID plan only if it's active, has a paid-subscription
-  // end date, or has actually paid before. Otherwise (trial / never paid) it's
-  // on the free plan — the linked planId is ignored so a trial never shows a
-  // paid plan's limits/price.
-  const onPaidPlan = status === "active" || office.subscriptionEndsAt != null || paymentsCount > 0;
+  // The office is on a PAID plan if it has an assigned plan (planId — set by a
+  // payment or by an admin), or is active, has a paid-subscription end date, or
+  // has paid before. A genuine trial with no assigned plan (planId null) still
+  // shows the free plan. This makes the dashboard reflect the plan the office is
+  // actually subscribed to instead of always defaulting to the free plan.
+  const onPaidPlan = office.planId != null || status === "active" || office.subscriptionEndsAt != null || paymentsCount > 0;
 
   let planNameAr: string | null = "الباقة المجانية";
   let planPriceFils: number | null = null;
