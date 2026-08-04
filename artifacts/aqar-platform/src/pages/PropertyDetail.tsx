@@ -175,7 +175,10 @@ const styles = `
 /* Mobile sticky contact bar */
 .pd-mobilebar { display: none; }
 @media (max-width: 1023px) {
-  .pd-mobilebar { display: flex; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: #fff; border-top: 1px solid #EEF1F5; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 20px rgba(15,23,42,0.08); will-change: transform; }
+  /* Sticky (not fixed): the bar floats at the viewport bottom while scrolling,
+     then rests in its natural place — just above the footer — when the page end
+     is reached. Native, smooth, and never overlaps the footer. */
+  .pd-mobilebar { display: flex; gap: 10px; position: sticky; bottom: 0; z-index: 50; background: #fff; border-top: 1px solid #EEF1F5; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 20px rgba(15,23,42,0.08); }
   /* On mobile the sticky bar is the single contact CTA — hide the sidebar's
      call/whatsapp buttons so contact isn't shown twice (top + bottom). */
   .pd-cta-stack .pd-cta { display: none; }
@@ -212,24 +215,6 @@ export default function PropertyDetail() {
   const [imgIndex, setImgIndex] = useState(0);
   const touchStartX = useRef<number | null>(null); // gallery swipe origin
   const [lightboxOpen, setLightboxOpen] = useState(false); // fullscreen viewer
-  const [barOffset, setBarOffset] = useState(0); // px to lift the mobile CTA bar so it rests above the footer
-
-  // Keep the sticky mobile contact bar docked just above the footer: while the
-  // footer is off-screen the bar stays fixed at the bottom; once the footer
-  // scrolls in, the bar rides up by exactly how much the footer intrudes, so it
-  // parks right on top of the footer (never overlapping it, never disappearing).
-  useEffect(() => {
-    const footer = document.querySelector("footer");
-    if (!footer) return;
-    const check = () => {
-      const overlap = window.innerHeight - footer.getBoundingClientRect().top;
-      setBarOffset(overlap > 0 ? overlap : 0);
-    };
-    check();
-    window.addEventListener("scroll", check, { passive: true });
-    window.addEventListener("resize", check);
-    return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
-  }, []);
 
   // While the fullscreen viewer is open, lock the page scroll and let Escape close it.
   useEffect(() => {
@@ -584,7 +569,7 @@ export default function PropertyDetail() {
 
       {/* Mobile sticky contact bar */}
       {property.office && (property.office.phone || property.office.whatsapp) && (
-        <div className="pd-mobilebar" dir="rtl" style={{ transform: `translateY(${-barOffset}px)` }}>
+        <div className="pd-mobilebar" dir="rtl">
           {property.office.whatsapp && (
             <button className="pd-cta pd-cta-wa" style={{ flex: 1 }} onClick={handleWhatsApp} aria-label="واتساب">
               <WhatsAppIcon size={18} /> واتساب

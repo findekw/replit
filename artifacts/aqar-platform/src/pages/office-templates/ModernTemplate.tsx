@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,21 +24,6 @@ export default function ModernTemplate(p: TemplateProps) {
   // scrolls in, the bar rides up by exactly how much the footer intrudes so it
   // parks on top of the footer (never overlapping, never disappearing). The
   // office page has two <footer>s (template badge + global) — target the last.
-  const [barOffset, setBarOffset] = useState(0);
-  useEffect(() => {
-    const footers = document.querySelectorAll("footer");
-    const footer = footers[footers.length - 1];
-    if (!footer) return;
-    const check = () => {
-      const overlap = window.innerHeight - footer.getBoundingClientRect().top;
-      setBarOffset(overlap > 0 ? overlap : 0);
-    };
-    check();
-    window.addEventListener("scroll", check, { passive: true });
-    window.addEventListener("resize", check);
-    return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
-  }, []);
-
   return (
     <div dir="rtl" className="tm-root">
       <style>{CSS}</style>
@@ -153,15 +137,12 @@ export default function ModernTemplate(p: TemplateProps) {
         <Link href="/" className="tm-footer-badge">مدعوم من <b>فايند</b></Link>
       </footer>
 
-      {/* Mobile sticky */}
+      {/* Mobile sticky — position:sticky docks it above the footer at page end */}
       {(hasWA || hasPhone) && (
-        <>
-          <div className="tm-sticky" style={{ transform: `translateY(${-barOffset}px)` }}>
-            {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><WhatsAppIcon size={20} /> واتساب</button>}
-            {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall} style={{ height: 48 }}><Phone size={20} /> اتصال</button>}
-          </div>
-          <div className="tm-sticky-spacer" />
-        </>
+        <div className="tm-sticky">
+          {hasWA && <button className="tm-btn tm-btn-wa" onClick={onWhatsApp} style={{ height: 48 }}><WhatsAppIcon size={20} /> واتساب</button>}
+          {hasPhone && <button className="tm-btn tm-btn-call" onClick={onCall} style={{ height: 48 }}><Phone size={20} /> اتصال</button>}
+        </div>
       )}
     </div>
   );
@@ -243,7 +224,8 @@ const CSS = `
 /* Floating contact bar — pinned to the bottom on every screen size (client
    wanted the mobile-style floating bar everywhere, not a top bar on desktop).
    Centered with a max button width so it doesn't stretch across wide screens. */
-.tm-sticky { position: fixed; bottom: 0; inset-inline: 0; z-index: 40; display: flex; justify-content: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); will-change: transform; }
+/* Sticky (not fixed): floats at the viewport bottom while scrolling, then rests
+   just above the footer at page end — native, smooth, never overlaps it. */
+.tm-sticky { position: sticky; bottom: 0; z-index: 40; display: flex; justify-content: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-top: 1px solid #EEF1F5; box-shadow: 0 -4px 20px rgba(15,23,42,0.08); }
 .tm-sticky .tm-btn { max-width: 320px; }
-.tm-sticky-spacer { height: 80px; }
 `;
