@@ -16,9 +16,22 @@ function isValidEmail(email: string) {
 // ── Role-based access ───────────────────────────────────────────────────────
 // The owner (admins.role_id NULL) can do everything, including managing the
 // admins and the roles themselves. Everyone else carries a role whose
-// permissions are the admin-panel sections. Enforced HERE, not just hidden in
-// the UI — a keyed URL must fail too.
-export const ADMIN_PERMISSIONS = ["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const;
+// permissions are "section:action" strings (e.g. "listings:edit") — the owner
+// picks per section what the employee may view/add/edit/delete. A bare section
+// name (legacy roles created before actions existed) still grants the whole
+// section. Enforced HERE, not just hidden in the UI — a keyed URL must fail too.
+export const ADMIN_SECTION_ACTIONS = {
+  offices:       ["view", "edit"],
+  listings:      ["view", "edit"],
+  reports:       ["view", "edit"],
+  subscriptions: ["view", "add", "edit", "delete"],
+  locations:     ["view", "add", "edit", "delete"],
+  catalog:       ["view", "add", "edit", "delete"],
+  tools:         ["view", "add", "edit", "delete"],
+} as const;
+
+export const ADMIN_PERMISSIONS: string[] = Object.entries(ADMIN_SECTION_ACTIONS)
+  .flatMap(([section, actions]) => actions.map((a) => `${section}:${a}`));
 
 const PERM_RULES: [RegExp, string][] = [
   [/^\/admin\/analytics/, "any"], // read-only overview: any signed-in admin
@@ -33,6 +46,17 @@ const PERM_RULES: [RegExp, string][] = [
   [/^\/admin\/(hero|demo-data|legal)/, "tools"],
   [/^\/admin\/settings/, "subscriptions"],
 ];
+
+// POSTs that act on an existing record are edits, not adds; clearing demo data
+// is a delete. Everything else follows the HTTP method.
+const EDIT_POST_RE = /\/(approve|reject|set-subscription|reset-password)$/;
+const METHOD_ACTION: Record<string, string> = { GET: "view", POST: "add", PUT: "edit", PATCH: "edit", DELETE: "delete" };
+
+function requiredAction(req: Request): string {
+  if (req.path === "/admin/demo-data/clear") return "delete";
+  if (req.method === "POST" && EDIT_POST_RE.test(req.path)) return "edit";
+  return METHOD_ACTION[req.method] ?? "edit";
+}
 
 router.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   if (!req.path.startsWith("/admin")) { next(); return; }
@@ -51,8 +75,14 @@ router.use(async (req: Request, res: Response, next: NextFunction): Promise<void
 
     const need = (PERM_RULES.find(([re]) => re.test(req.path)) ?? [null, "owner"])[1];
     if (need === "any") { next(); return; }
-    if (need === "owner" || !((row.permissions as string[] | null) ?? []).includes(need)) {
+    const perms = (row.permissions as string[] | null) ?? [];
+    if (need === "owner") {
       res.status(403).json({ error: "ليست لديك صلاحية لهذا القسم" });
+      return;
+    }
+    const action = requiredAction(req);
+    if (!perms.includes(need) && !perms.includes(`${need}:${action}`)) {
+      res.status(403).json({ error: action === "view" ? "ليست لديك صلاحية لهذا القسم" : "ليست لديك صلاحية لهذا الإجراء" });
       return;
     }
     next();
@@ -628,6 +658,7 @@ router.get("/admin/roles", requireAdmin, async (_req: Request, res: Response): P
     res.json({
       roles: roles.map((r: typeof adminRolesTable.$inferSelect) => ({ ...r, admins: byRole.get(r.id) ?? 0 })),
       allPermissions: ADMIN_PERMISSIONS,
+      sectionActions: ADMIN_SECTION_ACTIONS,
     });
   } catch {
     res.status(500).json({ error: "حدث خطأ في الخادم" });

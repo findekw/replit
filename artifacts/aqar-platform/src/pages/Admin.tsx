@@ -96,6 +96,25 @@ const PERM_LABELS: Record<string, string> = {
   tools: "الأدوات والبانرات",
 };
 
+// Action-level permissions: a role holds "section:action" strings and the
+// owner picks per section what the employee may do. Mirrors
+// ADMIN_SECTION_ACTIONS on the server, which is what actually enforces it.
+const ACTION_LABELS: Record<string, string> = { view: "عرض", add: "إضافة", edit: "تعديل", delete: "حذف" };
+const PERM_MATRIX: Record<string, string[]> = {
+  offices: ["view", "edit"],
+  listings: ["view", "edit"],
+  reports: ["view", "edit"],
+  subscriptions: ["view", "add", "edit", "delete"],
+  locations: ["view", "add", "edit", "delete"],
+  catalog: ["view", "add", "edit", "delete"],
+  tools: ["view", "add", "edit", "delete"],
+};
+
+// "offices" (legacy bare section) → all its actions; "offices:edit" → itself.
+function expandPerm(p: string): string[] {
+  return p.includes(":") ? [p] : (PERM_MATRIX[p] ?? []).map((a) => `${p}:${a}`);
+}
+
 interface AllOffice {
   officeId: number;
   officeName: string;
@@ -315,6 +334,21 @@ export default function Admin() {
   const [newRoleName, setNewRoleName] = useState("");
   const [newRolePerms, setNewRolePerms] = useState<string[]>([]);
   const [confirmRoleDel, setConfirmRoleDel] = useState<number | null>(null);
+  const [editRoleId, setEditRoleId] = useState<number | null>(null); // role loaded into the form for editing
+
+  // Toggle one "section:action" chip. Granting any action implies view (a tab
+  // you can't open is useless); revoking view drops the whole section.
+  function toggleRolePerm(section: string, action: string) {
+    const key = `${section}:${action}`;
+    setNewRolePerms((prev) => {
+      if (prev.includes(key)) {
+        return action === "view" ? prev.filter((p) => !p.startsWith(section + ":")) : prev.filter((p) => p !== key);
+      }
+      const next = [...prev, key];
+      if (action !== "view" && !next.includes(`${section}:view`)) next.push(`${section}:view`);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -327,7 +361,16 @@ export default function Admin() {
       .catch(() => setMyPerms(null));
   }, [user]);
 
-  const canSee = useCallback((perm: string) => myPerms === null || myPerms.includes(perm), [myPerms]);
+  // Tab is visible if the employee holds any action inside it; canDo answers
+  // the per-button question. Bare section names are legacy full-section grants.
+  const canSee = useCallback(
+    (section: string) => myPerms === null || myPerms.includes(section) || myPerms.some((p) => p.startsWith(section + ":")),
+    [myPerms],
+  );
+  const canDo = useCallback(
+    (section: string, action: string) => myPerms === null || myPerms.includes(section) || myPerms.includes(`${section}:${action}`),
+    [myPerms],
+  );
   const visibleTourSteps = TOUR_STEPS.filter((s) => canSee(s.tab));
 
   const loadRoles = useCallback(async () => {
@@ -561,11 +604,11 @@ export default function Admin() {
   // allowed one (the server would 403 its data anyway).
   useEffect(() => {
     if (myPerms === null) return;
-    if (!myPerms.includes(activeTab)) {
-      const first = (["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const).find((t) => myPerms.includes(t));
+    if (!canSee(activeTab)) {
+      const first = (["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const).find((t) => canSee(t));
       if (first) setActiveTab(first);
     }
-  }, [myPerms, activeTab]);
+  }, [myPerms, activeTab, canSee]);
 
   // Load subscriptions when that tab is opened
   useEffect(() => {
@@ -1097,26 +1140,30 @@ export default function Admin() {
                           <span className="adm-chip" style={{ background: "#FEF6E7", color: AMBER }}>قيد المراجعة</span>
                         </td>
                         <td data-full>
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              disabled={!!actionLoading}
-                              onClick={() => setConfirm({ type: "office", id: office.officeId, name: office.officeName, action: "approve" })}
-                              data-testid={`approve-office-${office.officeId}`}
-                              className="adm-btn adm-btn--approve"
-                            >
-                              <CheckCircle style={{ width: 16, height: 16 }} />
-                              قبول
-                            </button>
-                            <button
-                              disabled={!!actionLoading}
-                              onClick={() => setConfirm({ type: "office", id: office.officeId, name: office.officeName, action: "reject" })}
-                              data-testid={`reject-office-${office.officeId}`}
-                              className="adm-btn adm-btn--reject"
-                            >
-                              <XCircle style={{ width: 16, height: 16 }} />
-                              رفض
-                            </button>
-                          </div>
+                          {canDo("offices", "edit") ? (
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                disabled={!!actionLoading}
+                                onClick={() => setConfirm({ type: "office", id: office.officeId, name: office.officeName, action: "approve" })}
+                                data-testid={`approve-office-${office.officeId}`}
+                                className="adm-btn adm-btn--approve"
+                              >
+                                <CheckCircle style={{ width: 16, height: 16 }} />
+                                قبول
+                              </button>
+                              <button
+                                disabled={!!actionLoading}
+                                onClick={() => setConfirm({ type: "office", id: office.officeId, name: office.officeName, action: "reject" })}
+                                data-testid={`reject-office-${office.officeId}`}
+                                className="adm-btn adm-btn--reject"
+                              >
+                                <XCircle style={{ width: 16, height: 16 }} />
+                                رفض
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-center block" style={{ color: "#94a3b8" }}>عرض فقط</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1284,7 +1331,7 @@ export default function Admin() {
                           </button>
 
                           {/* Block / Unblock */}
-                          {listing.active ? (
+                          {!canDo("listings", "edit") ? null : listing.active ? (
                             <button
                               disabled={!!actionLoading}
                               onClick={() => setConfirm({ type: "listing", id: listing.id, name: listing.titleAr, action: "reject" })}
@@ -1407,18 +1454,20 @@ export default function Admin() {
                             <p className="text-sm mt-2 p-2.5 rounded-lg" style={{ background: "#F8FAFC", color: "#334155" }}>{r.note}</p>
                           )}
                         </div>
-                        <div className="flex flex-col gap-1.5 flex-shrink-0">
-                          {r.status !== "تمت المراجعة" && (
-                            <Button size="sm" variant="outline" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "تمت المراجعة")} className="gap-1.5 text-xs">
-                              <CheckCircle className="h-3.5 w-3.5" /> تمت المراجعة
-                            </Button>
-                          )}
-                          {r.status !== "مغلق" && (
-                            <Button size="sm" variant="ghost" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "مغلق")} className="gap-1.5 text-xs" style={{ color: BODY }}>
-                              <XCircle className="h-3.5 w-3.5" /> إغلاق
-                            </Button>
-                          )}
-                        </div>
+                        {canDo("reports", "edit") && (
+                          <div className="flex flex-col gap-1.5 flex-shrink-0">
+                            {r.status !== "تمت المراجعة" && (
+                              <Button size="sm" variant="outline" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "تمت المراجعة")} className="gap-1.5 text-xs">
+                                <CheckCircle className="h-3.5 w-3.5" /> تمت المراجعة
+                              </Button>
+                            )}
+                            {r.status !== "مغلق" && (
+                              <Button size="sm" variant="ghost" disabled={reportBusy === r.id} onClick={() => updateReportStatus(r.id, "مغلق")} className="gap-1.5 text-xs" style={{ color: BODY }}>
+                                <XCircle className="h-3.5 w-3.5" /> إغلاق
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1442,6 +1491,7 @@ export default function Admin() {
                 </div>
                 <p className="text-sm mt-1" style={{ color: BODY }}>تُطبَّق على كل تسجيل جديد وكل تجربة تمنحها من الجدول بالأسفل.</p>
               </div>
+              {canDo("subscriptions", "edit") && (
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -1475,9 +1525,10 @@ export default function Admin() {
                   حفظ
                 </button>
               </div>
+              )}
             </div>
           </div>
-          <AdminPlans />
+          <AdminPlans canAdd={canDo("subscriptions", "add")} canEdit={canDo("subscriptions", "edit")} canDelete={canDo("subscriptions", "delete")} />
           <div className="adm-card overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
               <div>
@@ -1561,6 +1612,9 @@ export default function Admin() {
                             {/* One compact select instead of three stacked buttons —
                                 the client manages this from his phone and the pile
                                 looked broken there. Digits kept Latin (14 not ١٤). */}
+                            {!canDo("subscriptions", "edit") ? (
+                              <span className="text-xs text-center block" style={{ color: "#94a3b8" }}>عرض فقط</span>
+                            ) : (
                             <div className="flex items-center gap-2 justify-center flex-wrap">
                               {busy && <Loader2 className="animate-spin" style={{ width: 15, height: 15, color: BLUE }} />}
                               {/* Assign a paid plan (activates the office on that plan) */}
@@ -1605,6 +1659,7 @@ export default function Admin() {
                                 <option value="expired" disabled={s.subscriptionStatus === "expired"}>إيقاف</option>
                               </select>
                             </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1631,6 +1686,7 @@ export default function Admin() {
             </div>
 
             {/* Add governorate */}
+            {canDo("locations", "add") && (
             <div className="flex gap-2 mb-5 flex-wrap">
               <input
                 className="adm-input"
@@ -1652,6 +1708,7 @@ export default function Admin() {
                 إضافة محافظة
               </button>
             </div>
+            )}
 
             {govs.length === 0 && !locBusy ? (
               <p className="text-sm text-center py-10" style={{ color: BODY }}>لا توجد محافظات بعد.</p>
@@ -1680,25 +1737,31 @@ export default function Admin() {
                           <span className="adm-chip" style={{ background: "#F1F5F9", color: BODY }}>{g.areas.length} منطقة</span>
                           {!g.active && <span className="adm-chip" style={{ background: "#FEECEC", color: RED }}>معطّلة</span>}
                           <div className="flex gap-1.5 mr-auto flex-wrap">
-                            <button className="adm-btn" onClick={() => { setEditing({ kind: "gov", id: g.id }); setEditName(g.nameAr); }}>
-                              <Edit2 className="h-3.5 w-3.5" />
-                              تعديل
-                            </button>
-                            <button
-                              className="adm-btn"
-                              disabled={locBusy}
-                              onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "PUT", { active: !g.active }, g.active ? "تم تعطيل المحافظة" : "تم تفعيل المحافظة")}
-                            >
-                              {g.active ? "تعطيل" : "تفعيل"}
-                            </button>
-                            <button
-                              className="adm-btn adm-btn--reject"
-                              disabled={locBusy}
-                              onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "DELETE", undefined, "تم حذف المحافظة")}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              حذف
-                            </button>
+                            {canDo("locations", "edit") && (
+                              <>
+                                <button className="adm-btn" onClick={() => { setEditing({ kind: "gov", id: g.id }); setEditName(g.nameAr); }}>
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                  تعديل
+                                </button>
+                                <button
+                                  className="adm-btn"
+                                  disabled={locBusy}
+                                  onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "PUT", { active: !g.active }, g.active ? "تم تعطيل المحافظة" : "تم تفعيل المحافظة")}
+                                >
+                                  {g.active ? "تعطيل" : "تفعيل"}
+                                </button>
+                              </>
+                            )}
+                            {canDo("locations", "delete") && (
+                              <button
+                                className="adm-btn adm-btn--reject"
+                                disabled={locBusy}
+                                onClick={() => locMutate(`/api/admin/governorates/${g.id}`, "DELETE", undefined, "تم حذف المحافظة")}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                حذف
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
@@ -1727,31 +1790,37 @@ export default function Admin() {
                           >
                             <span style={{ fontWeight: 700, textDecoration: a.active ? "none" : "line-through" }}>{a.nameAr}</span>
                             {a.listings > 0 && <span style={{ color: BODY }}>({a.listings})</span>}
-                            <button title="تعديل" onClick={() => { setEditing({ kind: "area", id: a.id }); setEditName(a.nameAr); }} style={{ color: BODY }}>
-                              <Edit2 className="h-3 w-3" />
-                            </button>
-                            <button
-                              title={a.active ? "تعطيل" : "تفعيل"}
-                              disabled={locBusy}
-                              onClick={() => locMutate(`/api/admin/areas/${a.id}`, "PUT", { active: !a.active }, a.active ? "تم تعطيل المنطقة" : "تم تفعيل المنطقة")}
-                              style={{ color: a.active ? AMBER : GREEN }}
-                            >
-                              {a.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                            </button>
-                            <button
-                              title={a.listings > 0 ? "بها إعلانات — عطّلها بدل الحذف" : "حذف"}
-                              disabled={locBusy}
-                              onClick={() => locMutate(`/api/admin/areas/${a.id}`, "DELETE", undefined, "تم حذف المنطقة")}
-                              style={{ color: RED, opacity: a.listings > 0 ? 0.35 : 1 }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                            {canDo("locations", "edit") && (
+                              <>
+                                <button title="تعديل" onClick={() => { setEditing({ kind: "area", id: a.id }); setEditName(a.nameAr); }} style={{ color: BODY }}>
+                                  <Edit2 className="h-3 w-3" />
+                                </button>
+                                <button
+                                  title={a.active ? "تعطيل" : "تفعيل"}
+                                  disabled={locBusy}
+                                  onClick={() => locMutate(`/api/admin/areas/${a.id}`, "PUT", { active: !a.active }, a.active ? "تم تعطيل المنطقة" : "تم تفعيل المنطقة")}
+                                  style={{ color: a.active ? AMBER : GREEN }}
+                                >
+                                  {a.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                                </button>
+                              </>
+                            )}
+                            {canDo("locations", "delete") && (
+                              <button
+                                title={a.listings > 0 ? "بها إعلانات — عطّلها بدل الحذف" : "حذف"}
+                                disabled={locBusy}
+                                onClick={() => locMutate(`/api/admin/areas/${a.id}`, "DELETE", undefined, "تم حذف المنطقة")}
+                                style={{ color: RED, opacity: a.listings > 0 ? 0.35 : 1 }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
                           </span>
                         ),
                       )}
 
                       {/* Add area */}
-                      {newAreaFor === g.id ? (
+                      {!canDo("locations", "add") ? null : newAreaFor === g.id ? (
                         <div className="flex gap-1.5 items-center">
                           <input
                             className="adm-input"
@@ -1810,6 +1879,7 @@ export default function Admin() {
                   </div>
 
                   {/* Add */}
+                  {canDo("catalog", "add") && (
                   <div className="flex gap-2 mb-4 flex-wrap">
                     <input
                       className="adm-input"
@@ -1831,6 +1901,7 @@ export default function Admin() {
                       إضافة
                     </button>
                   </div>
+                  )}
 
                   {items.length === 0 && !catBusy ? (
                     <p className="text-sm py-6 text-center" style={{ color: BODY }}>لا توجد خيارات بعد.</p>
@@ -1857,25 +1928,31 @@ export default function Admin() {
                           >
                             <span style={{ fontWeight: 700, textDecoration: o.active ? "none" : "line-through" }}>{o.nameAr}</span>
                             {o.listings > 0 && <span style={{ color: BODY }}>({o.listings})</span>}
-                            <button title="تعديل" onClick={() => { setEditingCat(o.id); setEditCatName(o.nameAr); }} style={{ color: BODY }}>
-                              <Edit2 className="h-3 w-3" />
-                            </button>
-                            <button
-                              title={o.active ? "تعطيل" : "تفعيل"}
-                              disabled={catBusy}
-                              onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "PUT", { active: !o.active }, o.active ? "تم التعطيل" : "تم التفعيل")}
-                              style={{ color: o.active ? AMBER : GREEN }}
-                            >
-                              {o.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                            </button>
-                            <button
-                              title={o.listings > 0 ? "مستخدم في إعلانات — عطّله بدل الحذف" : "حذف"}
-                              disabled={catBusy}
-                              onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "DELETE", undefined, "تم الحذف")}
-                              style={{ color: RED, opacity: o.listings > 0 ? 0.35 : 1 }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                            {canDo("catalog", "edit") && (
+                              <>
+                                <button title="تعديل" onClick={() => { setEditingCat(o.id); setEditCatName(o.nameAr); }} style={{ color: BODY }}>
+                                  <Edit2 className="h-3 w-3" />
+                                </button>
+                                <button
+                                  title={o.active ? "تعطيل" : "تفعيل"}
+                                  disabled={catBusy}
+                                  onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "PUT", { active: !o.active }, o.active ? "تم التعطيل" : "تم التفعيل")}
+                                  style={{ color: o.active ? AMBER : GREEN }}
+                                >
+                                  {o.active ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                                </button>
+                              </>
+                            )}
+                            {canDo("catalog", "delete") && (
+                              <button
+                                title={o.listings > 0 ? "مستخدم في إعلانات — عطّله بدل الحذف" : "حذف"}
+                                disabled={catBusy}
+                                onClick={() => catMutate(`/api/admin/catalog/${o.id}`, "DELETE", undefined, "تم الحذف")}
+                                style={{ color: RED, opacity: o.listings > 0 ? 0.35 : 1 }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
                           </span>
                         ),
                       )}
@@ -1891,7 +1968,8 @@ export default function Admin() {
         {activeTab === "tools" && (
           <div className="grid gap-5 lg:grid-cols-2">
 
-            {/* 3 — Reset office password */}
+            {/* 3 — Reset office password (server-side this is offices:edit) */}
+            {canDo("offices", "edit") && (
             <div className="adm-card" style={{ padding: "22px 24px" }}>
               <div className="flex items-center gap-2 mb-2">
                 <KeyRound className="h-4.5 w-4.5" style={{ color: BLUE }} />
@@ -1931,6 +2009,7 @@ export default function Admin() {
                 ملاحظة: شارِك كلمة المرور الجديدة مع المكتب يدوياً — لم يتم ربط البريد الإلكتروني بعد.
               </p>
             </div>
+            )}
 
             {/* 2a — Roles & permissions (owner only) */}
             {myPerms === null && (
@@ -1940,62 +2019,90 @@ export default function Admin() {
                   <h3 className="text-base font-bold" style={{ color: NAVY }}>الأدوار والصلاحيات</h3>
                 </div>
                 <p className="text-sm mb-4" style={{ color: BODY }}>
-                  أنشئ دوراً (مثل «موظف إعلانات») واختر الأقسام المسموحة له، ثم أسنده للموظف بالأسفل. الموظف لا يرى — ولا يستطيع استخدام — إلا أقسام دوره.
+                  أنشئ دوراً (مثل «موظف إعلانات») وحدّد لكل قسم ما يستطيع الموظف فعله: عرض، إضافة، تعديل أو حذف — ثم أسنده للموظف بالأسفل. الموظف لا يرى — ولا يستطيع استخدام — إلا ما سمحت له به.
                 </p>
 
                 {/* Existing roles */}
                 {roles.length > 0 && (
                   <div className="flex flex-col gap-2 mb-4">
                     {roles.map((r) => (
-                      <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap" style={{ background: "#F8FAFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+                      <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap" style={{ background: editRoleId === r.id ? "#EEF2FF" : "#F8FAFC", border: `1px solid ${editRoleId === r.id ? BLUE : BORDER}`, borderRadius: 12 }}>
                         <div className="min-w-0">
                           <div className="font-bold text-sm" style={{ color: NAVY }}>
                             {r.nameAr}
                             <span className="adm-chip mr-2" style={{ background: "#EEF2FF", color: BLUE }}>{r.admins} موظف</span>
                           </div>
                           <div className="flex gap-1.5 flex-wrap mt-1.5">
-                            {r.permissions.map((p) => (
-                              <span key={p} style={{ fontSize: 11, fontWeight: 700, color: "#475569", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "2px 9px" }}>
-                                {PERM_LABELS[p] ?? p}
-                              </span>
-                            ))}
+                            {Object.keys(PERM_MATRIX)
+                              .filter((s) => r.permissions.some((p) => p === s || p.startsWith(s + ":")))
+                              .map((s) => {
+                                const acts = r.permissions.includes(s)
+                                  ? PERM_MATRIX[s]
+                                  : PERM_MATRIX[s].filter((a) => r.permissions.includes(`${s}:${a}`));
+                                return (
+                                  <span key={s} style={{ fontSize: 11, fontWeight: 700, color: "#475569", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 999, padding: "2px 9px" }}>
+                                    {PERM_LABELS[s] ?? s}: {acts.map((a) => ACTION_LABELS[a] ?? a).join("، ")}
+                                  </span>
+                                );
+                              })}
                           </div>
                         </div>
-                        <button
-                          disabled={rolesBusy}
-                          onClick={async () => {
-                            if (confirmRoleDel !== r.id) {
-                              setConfirmRoleDel(r.id);
-                              setTimeout(() => setConfirmRoleDel((c) => (c === r.id ? null : c)), 4000);
-                              return;
-                            }
-                            setConfirmRoleDel(null); setRolesBusy(true);
-                            try {
-                              const res = await fetch(`${BASE}/api/admin/roles/${r.id}`, { method: "DELETE", credentials: "include" });
-                              const d = await res.json().catch(() => ({}));
-                              if (!res.ok) { toast({ title: "لم يتم الحذف", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
-                              toast({ title: "تم حذف الدور" });
-                              await loadRoles();
-                            } finally { setRolesBusy(false); }
-                          }}
-                          className="adm-btn"
-                          style={{
-                            height: 34, padding: "0 12px",
-                            background: confirmRoleDel === r.id ? "#DC2626" : "#FEF2F2",
-                            color: confirmRoleDel === r.id ? "#fff" : "#DC2626",
-                            border: "1px solid #FECACA",
-                          }}
-                        >
-                          <Trash2 style={{ width: 14, height: 14 }} />
-                          {confirmRoleDel === r.id ? "تأكيد؟" : "حذف"}
-                        </button>
+                        <div className="flex gap-1.5">
+                          <button
+                            disabled={rolesBusy}
+                            onClick={() => {
+                              if (editRoleId === r.id) { setEditRoleId(null); setNewRoleName(""); setNewRolePerms([]); return; }
+                              setEditRoleId(r.id);
+                              setNewRoleName(r.nameAr);
+                              setNewRolePerms(r.permissions.flatMap(expandPerm));
+                            }}
+                            className="adm-btn"
+                            style={{ height: 34, padding: "0 12px", background: "#EEF2FF", color: BLUE, border: "1px solid #C7D2FE" }}
+                          >
+                            <Edit2 style={{ width: 14, height: 14 }} />
+                            {editRoleId === r.id ? "إغلاق" : "تعديل"}
+                          </button>
+                          <button
+                            disabled={rolesBusy}
+                            onClick={async () => {
+                              if (confirmRoleDel !== r.id) {
+                                setConfirmRoleDel(r.id);
+                                setTimeout(() => setConfirmRoleDel((c) => (c === r.id ? null : c)), 4000);
+                                return;
+                              }
+                              setConfirmRoleDel(null); setRolesBusy(true);
+                              try {
+                                const res = await fetch(`${BASE}/api/admin/roles/${r.id}`, { method: "DELETE", credentials: "include" });
+                                const d = await res.json().catch(() => ({}));
+                                if (!res.ok) { toast({ title: "لم يتم الحذف", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                                toast({ title: "تم حذف الدور" });
+                                await loadRoles();
+                              } finally { setRolesBusy(false); }
+                            }}
+                            className="adm-btn"
+                            style={{
+                              height: 34, padding: "0 12px",
+                              background: confirmRoleDel === r.id ? "#DC2626" : "#FEF2F2",
+                              color: confirmRoleDel === r.id ? "#fff" : "#DC2626",
+                              border: "1px solid #FECACA",
+                            }}
+                          >
+                            <Trash2 style={{ width: 14, height: 14 }} />
+                            {confirmRoleDel === r.id ? "تأكيد؟" : "حذف"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* New role */}
+                {/* New role / edit role — one form, a section×action grid */}
                 <div className="pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+                  {editRoleId !== null && (
+                    <p className="text-sm font-bold mb-2" style={{ color: BLUE }}>
+                      تعديل الدور «{roles.find((r) => r.id === editRoleId)?.nameAr}»
+                    </p>
+                  )}
                   <input
                     className="adm-input mb-3"
                     style={{ maxWidth: 300 }}
@@ -2003,50 +2110,78 @@ export default function Admin() {
                     value={newRoleName}
                     onChange={(e) => setNewRoleName(e.target.value)}
                   />
-                  <div className="flex gap-2 flex-wrap mb-3">
-                    {Object.entries(PERM_LABELS).map(([key, label]) => {
-                      const on = newRolePerms.includes(key);
+                  <div className="flex flex-col gap-2 mb-3">
+                    {Object.entries(PERM_MATRIX).map(([section, actions]) => {
+                      const sectionOn = newRolePerms.some((p) => p.startsWith(section + ":"));
                       return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => setNewRolePerms((p) => (on ? p.filter((x) => x !== key) : [...p, key]))}
-                          style={{
-                            padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
-                            fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
-                            borderColor: on ? BLUE : BORDER,
-                            background: on ? "#EEF2FF" : "#fff",
-                            color: on ? BLUE : BODY,
-                          }}
+                        <div
+                          key={section}
+                          className="flex items-center gap-3 flex-wrap px-3 py-2"
+                          style={{ border: `1px solid ${sectionOn ? "#C7D2FE" : BORDER}`, borderRadius: 10, background: sectionOn ? "#F5F7FF" : "#fff" }}
                         >
-                          {on ? "✓ " : ""}{label}
-                        </button>
+                          <span className="text-sm font-bold" style={{ color: sectionOn ? BLUE : NAVY, minWidth: 140 }}>
+                            {PERM_LABELS[section]}
+                          </span>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {actions.map((action) => {
+                              const on = newRolePerms.includes(`${section}:${action}`);
+                              return (
+                                <button
+                                  key={action}
+                                  type="button"
+                                  onClick={() => toggleRolePerm(section, action)}
+                                  style={{
+                                    padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                                    fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
+                                    borderColor: on ? BLUE : BORDER,
+                                    background: on ? "#EEF2FF" : "#fff",
+                                    color: on ? BLUE : BODY,
+                                  }}
+                                >
+                                  {on ? "✓ " : ""}{ACTION_LABELS[action]}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
-                  <button
-                    disabled={rolesBusy || !newRoleName.trim() || newRolePerms.length === 0}
-                    className="adm-btn adm-btn--blue"
-                    style={{ opacity: rolesBusy || !newRoleName.trim() || newRolePerms.length === 0 ? 0.5 : 1 }}
-                    onClick={async () => {
-                      setRolesBusy(true);
-                      try {
-                        const res = await fetch(`${BASE}/api/admin/roles`, {
-                          method: "POST", credentials: "include",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ nameAr: newRoleName.trim(), permissions: newRolePerms }),
-                        });
-                        const d = await res.json().catch(() => ({}));
-                        if (!res.ok) { toast({ title: "لم يتم الإنشاء", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
-                        toast({ title: "تم إنشاء الدور" });
-                        setNewRoleName(""); setNewRolePerms([]);
-                        await loadRoles();
-                      } finally { setRolesBusy(false); }
-                    }}
-                  >
-                    <Plus style={{ width: 15, height: 15 }} />
-                    إنشاء الدور
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      disabled={rolesBusy || !newRoleName.trim() || newRolePerms.length === 0}
+                      className="adm-btn adm-btn--blue"
+                      style={{ opacity: rolesBusy || !newRoleName.trim() || newRolePerms.length === 0 ? 0.5 : 1 }}
+                      onClick={async () => {
+                        setRolesBusy(true);
+                        try {
+                          const res = await fetch(editRoleId !== null ? `${BASE}/api/admin/roles/${editRoleId}` : `${BASE}/api/admin/roles`, {
+                            method: editRoleId !== null ? "PUT" : "POST", credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ nameAr: newRoleName.trim(), permissions: newRolePerms }),
+                          });
+                          const d = await res.json().catch(() => ({}));
+                          if (!res.ok) { toast({ title: editRoleId !== null ? "لم يتم الحفظ" : "لم يتم الإنشاء", description: d?.error ?? "حدث خطأ", variant: "destructive" }); return; }
+                          toast({ title: editRoleId !== null ? "تم حفظ الدور" : "تم إنشاء الدور" });
+                          setNewRoleName(""); setNewRolePerms([]); setEditRoleId(null);
+                          await loadRoles();
+                        } finally { setRolesBusy(false); }
+                      }}
+                    >
+                      {editRoleId !== null ? <CheckCircle style={{ width: 15, height: 15 }} /> : <Plus style={{ width: 15, height: 15 }} />}
+                      {editRoleId !== null ? "حفظ التعديلات" : "إنشاء الدور"}
+                    </button>
+                    {editRoleId !== null && (
+                      <button
+                        className="adm-btn"
+                        style={{ background: "#fff", color: BODY, border: `1px solid ${BORDER}` }}
+                        onClick={() => { setEditRoleId(null); setNewRoleName(""); setNewRolePerms([]); }}
+                      >
+                        <X style={{ width: 15, height: 15 }} />
+                        إلغاء
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -2271,6 +2406,7 @@ export default function Admin() {
             )}
 
             {/* 3b — Legal pages editor (full width) */}
+            {canDo("tools", "edit") && (
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4.5 w-4.5" style={{ color: BLUE }} />
@@ -2365,6 +2501,7 @@ export default function Admin() {
                 </div>
               )}
             </div>
+            )}
 
             {/* 4 — Homepage hero banners (full width) */}
             <div className="adm-card lg:col-span-2" style={{ padding: "22px 24px" }}>
@@ -2419,24 +2556,28 @@ export default function Admin() {
                           >
                             {slide.active ? "نشط" : "غير نشط"}
                           </span>
-                          <button
-                            disabled={busy}
-                            onClick={() => toggleHeroSlide(slide)}
-                            className="adm-btn"
-                            style={{ height: 34, padding: "0 12px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, opacity: busy ? 0.6 : 1 }}
-                          >
-                            {slide.active ? "إخفاء" : "تفعيل"}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() => deleteHeroSlide(slide)}
-                            className="adm-btn adm-btn--reject"
-                            style={{ height: 34, padding: "0 12px", opacity: busy ? 0.6 : 1 }}
-                            data-testid={`delete-hero-${slide.id}`}
-                          >
-                            <Trash2 style={{ width: 15, height: 15 }} />
-                            حذف
-                          </button>
+                          {canDo("tools", "edit") && (
+                            <button
+                              disabled={busy}
+                              onClick={() => toggleHeroSlide(slide)}
+                              className="adm-btn"
+                              style={{ height: 34, padding: "0 12px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, opacity: busy ? 0.6 : 1 }}
+                            >
+                              {slide.active ? "إخفاء" : "تفعيل"}
+                            </button>
+                          )}
+                          {canDo("tools", "delete") && (
+                            <button
+                              disabled={busy}
+                              onClick={() => deleteHeroSlide(slide)}
+                              className="adm-btn adm-btn--reject"
+                              style={{ height: 34, padding: "0 12px", opacity: busy ? 0.6 : 1 }}
+                              data-testid={`delete-hero-${slide.id}`}
+                            >
+                              <Trash2 style={{ width: 15, height: 15 }} />
+                              حذف
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
@@ -2445,6 +2586,7 @@ export default function Admin() {
               )}
 
               {/* Add new banner form */}
+              {canDo("tools", "add") && (
               <form onSubmit={addHeroSlide} className="mt-4 pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Plus className="h-4 w-4" style={{ color: BLUE }} />
@@ -2555,6 +2697,7 @@ export default function Admin() {
                   إضافة البانر
                 </button>
               </form>
+              )}
             </div>
 
           </div>

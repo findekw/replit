@@ -29,7 +29,9 @@ type Draft = {
 
 const EMPTY: Draft = { nameAr: "", priceKwd: "", durationDays: "30", maxListings: "10", featuredListings: "0", features: "", active: true };
 
-export default function AdminPlans() {
+// Action-level permissions decided by the parent (owner = all true). The
+// server enforces the same rules; these just hide dead buttons.
+export default function AdminPlans({ canAdd = true, canEdit = true, canDelete = true }: { canAdd?: boolean; canEdit?: boolean; canDelete?: boolean }) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -115,9 +117,11 @@ export default function AdminPlans() {
           <Package className="h-4.5 w-4.5" style={{ color: "#667EEA" }} />
           <h3 className="text-base font-bold" style={{ color: "#1A2238" }}>باقات الاشتراك</h3>
         </div>
-        <button onClick={openNew} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,#667EEA,#4B66E0)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
-          <Plus className="h-4 w-4" /> إضافة باقة
-        </button>
+        {canAdd && (
+          <button onClick={openNew} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,#667EEA,#4B66E0)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
+            <Plus className="h-4 w-4" /> إضافة باقة
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -140,9 +144,12 @@ export default function AdminPlans() {
               </div>
               <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 8 }}>حتى {p.maxListings} إعلان · {p.featuredListings} مميز</div>
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                {canEdit && (
                 <button onClick={() => openEdit(p)} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, border: "1px solid #E2E8F0", background: "#fff", borderRadius: 9, padding: "7px 0", fontSize: 12.5, fontWeight: 700, color: "#334155", cursor: "pointer", fontFamily: "'Cairo',sans-serif" }}>
                   <Pencil className="h-3.5 w-3.5" /> تعديل
                 </button>
+                )}
+                {canDelete && (
                 <button
                   onClick={() => remove(p)}
                   style={{
@@ -156,6 +163,7 @@ export default function AdminPlans() {
                   <Trash2 className="h-3.5 w-3.5" />
                   {confirmingId === p.id && "تأكيد الحذف؟"}
                 </button>
+                )}
               </div>
             </div>
           ))}
