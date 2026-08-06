@@ -276,15 +276,19 @@ body::-webkit-scrollbar,
   overflow: hidden;
   background: #111827;
 }
-/* Uniform frame, no cropping: the photo is shown WHOLE (`contain`) centered in
-   the box, and a blurred, zoomed copy of the same photo fills the leftover space
-   behind it instead of black bars. This keeps every card the same size while
-   never cutting off edge content (office promo graphics with logos/phone/text). */
+/* Default: every photo fills the frame (cover) for a clean, uniform grid. */
 .property-img {
   position: absolute; inset: 0; z-index: 1;
-  width: 100%; height: 100%; object-fit: contain;
+  width: 100%; height: 100%; object-fit: cover;
 }
-.property-img-bg {
+/* The blurred backdrop is only used for poster images (below) — hidden here. */
+.property-img-bg { display: none; }
+/* Poster image (a portrait graphic with logo/phone/icons): show it WHOLE
+   (contain) so nothing is cropped, with a blurred zoomed copy filling the
+   leftover space instead of black bars. */
+.property-media--poster .property-img { object-fit: contain; }
+.property-media--poster .property-img-bg {
+  display: block;
   position: absolute; inset: 0; z-index: 0;
   width: 100%; height: 100%; object-fit: cover;
   filter: blur(16px) brightness(0.7);

@@ -44,6 +44,14 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
   })();
   const [imgIndex, setImgIndex] = useState(0);
   const hasCarousel = gallery.length > 1;
+  // Photos fill the frame (cover, uniform look). A portrait "poster" image (a
+  // graphic with a logo/phone/icons baked in) is shown WHOLE instead, so its
+  // content isn't cropped — detected from the loaded image's aspect ratio.
+  const [posterFit, setPosterFit] = useState(false);
+  const onImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const im = e.currentTarget;
+    setPosterFit(im.naturalHeight > im.naturalWidth * 1.1);
+  };
 
   function step(e: React.MouseEvent, dir: 1 | -1) {
     e.preventDefault();
@@ -95,14 +103,14 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
     <Link href={`/properties/${property.id}`} className="block">
       <article className={`property-card${layout === "list" ? " property-card--list" : ""}`}>
         {/* Media */}
-        <div className="property-media">
+        <div className={`property-media${posterFit ? " property-media--poster" : ""}`}>
           {gallery.length ? (
             <>
-              {/* Blurred, zoomed copy fills the uniform frame so images with
-                  edge content (logos, phone numbers) show whole via `contain`
-                  below — no cropping — instead of black letterbox bars. */}
+              {/* For a poster image, a blurred zoomed copy fills the frame behind
+                  the whole (contain) image so there are no black letterbox bars.
+                  Hidden for normal photos (which use cover). */}
               <img className="property-img-bg" src={gallery[imgIndex]} alt="" aria-hidden="true" loading="lazy" />
-              <img className="property-img" src={gallery[imgIndex]} alt={property.titleAr} loading="lazy" />
+              <img className="property-img" src={gallery[imgIndex]} alt={property.titleAr} loading="lazy" onLoad={onImgLoad} />
             </>
           ) : (
             <div className="property-img-fallback">
