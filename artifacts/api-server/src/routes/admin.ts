@@ -308,17 +308,29 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
     return;
   }
   try {
+    const now = new Date();
     const updates: Record<string, unknown> = { subscriptionStatus: status };
     if (status === "trial") {
-      updates.trialStartedAt = new Date();
-      updates.trialEndsAt = new Date(Date.now() + (await getTrialDays()) * 24 * 60 * 60 * 1000);
+      updates.trialStartedAt = now;
+      updates.trialEndsAt = new Date(now.getTime() + (await getTrialDays()) * 24 * 60 * 60 * 1000);
+      // A free trial means NO paid plan — clear it so the dashboard shows the
+      // free plan (was staying on the old paid plan and hiding the trial).
+      updates.planId = null;
+      updates.subscriptionPlan = "basic";
+      updates.subscriptionStartedAt = null;
+      updates.subscriptionEndsAt = null;
     }
     // Activating a paid subscription should also make the office visible.
     if (status === "active") updates.active = true;
+    // Ending a subscription early (manually) records the ACTUAL end date (now)
+    // while keeping the real start date, so the dashboard dates stay consistent.
+    if (status === "expired" || status === "inactive") {
+      updates.subscriptionEndsAt = now;
+    }
 
     // Optional plan assignment. When the admin picks a plan, link it (planId),
-    // record its name, and set the subscription end date from the plan's
-    // duration so the office dashboard shows the plan it's subscribed to.
+    // record its name, and set the subscription start + end dates from the
+    // plan's duration so the office dashboard shows the plan it's subscribed to.
     if (planId != null && planId !== "") {
       const pid = Number(planId);
       const [plan] = Number.isFinite(pid)
@@ -328,7 +340,8 @@ router.post("/admin/offices/:id/set-subscription", requireAdmin, async (req: Req
       updates.planId = plan.id;
       updates.subscriptionPlan = plan.nameAr;
       if (status === "active") {
-        updates.subscriptionEndsAt = new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000);
+        updates.subscriptionStartedAt = now;
+        updates.subscriptionEndsAt = new Date(now.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
       }
     }
 

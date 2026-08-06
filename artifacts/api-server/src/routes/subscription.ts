@@ -22,6 +22,7 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
       subscriptionStatus: officesTable.subscriptionStatus,
       trialStartedAt: officesTable.trialStartedAt,
       trialEndsAt: officesTable.trialEndsAt,
+      subscriptionStartedAt: officesTable.subscriptionStartedAt,
       subscriptionEndsAt: officesTable.subscriptionEndsAt,
       planId: officesTable.planId,
     })
@@ -103,12 +104,46 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     }
   }
 
+  // One authoritative period so the banner and the card can never disagree.
+  // A PAID plan has its OWN period of `planDurationDays` (e.g. 30) that is
+  // SEPARATE from the free trial — the 14 trial days are never subtracted from
+  // it. Its end is the real subscriptionEndsAt when set, otherwise the plan's
+  // duration counted from the office's start date. A FREE trial uses the trial
+  // window. Start/end/days-left all come from this single period.
+  const DAY_MS = 1000 * 60 * 60 * 24;
+  let periodStartedAt: Date | null = null;
+  let periodEndsAt: Date | null = null;
+  if (onPaidPlan) {
+    // A paid plan uses its OWN recorded start/end. The start is the day the
+    // office actually subscribed to THIS plan (independent of the free trial);
+    // the end is the real end (set to the actual day on an early manual expiry).
+    // Legacy rows without a recorded start fall back to end − duration.
+    periodEndsAt = office.subscriptionEndsAt ?? null;
+    periodStartedAt = office.subscriptionStartedAt
+      ?? (office.subscriptionEndsAt && planDurationDays != null ? new Date(office.subscriptionEndsAt.getTime() - planDurationDays * DAY_MS) : null);
+  } else {
+    periodStartedAt = office.trialStartedAt ?? null;
+    periodEndsAt = office.trialEndsAt ?? null;
+  }
+  // An expired / inactive subscription has no time left, whatever the stored end
+  // date says (an admin can end it early). Otherwise count down to the period end.
+  const isEnded = status === "expired" || status === "inactive";
+  const daysLeft = isEnded
+    ? 0
+    : (periodEndsAt ? Math.max(0, Math.ceil((periodEndsAt.getTime() - now.getTime()) / DAY_MS)) : null);
+  // An office on a paid plan counts as at least one subscription even if the
+  // admin granted it without a recorded payment.
+  const subscriptionsCount = onPaidPlan ? Math.max(1, paymentsCount) : paymentsCount;
+
   res.json({
     subscriptionPlan: office.subscriptionPlan,
     subscriptionStatus: status,
     trialStartedAt: office.trialStartedAt?.toISOString() ?? null,
     trialEndsAt: office.trialEndsAt?.toISOString() ?? null,
     subscriptionEndsAt: office.subscriptionEndsAt?.toISOString() ?? null,
+    periodStartedAt: periodStartedAt?.toISOString() ?? null,
+    periodEndsAt: periodEndsAt?.toISOString() ?? null,
+    daysLeft,
     trialDaysLeft,
     canPublish: status === "trial" || status === "active",
     // Enriched fields for the dashboard subscription card
@@ -119,6 +154,7 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     planMaxListings,
     listingsUsed: Number(used ?? 0),
     paymentsCount,
+    subscriptionsCount,
     paymentsTotalFils: Number(pay?.total ?? 0),
   });
 });

@@ -1617,13 +1617,15 @@ export default function Admin() {
                             ) : (
                             <div className="flex items-center gap-2 justify-center flex-wrap">
                               {busy && <Loader2 className="animate-spin" style={{ width: 15, height: 15, color: BLUE }} />}
-                              {/* Assign a paid plan (activates the office on that plan) */}
+                              {/* Assign a plan: the free trial (clears any paid plan) or a paid plan (activates it) */}
                               <select
                                 disabled={busy}
-                                value={s.planId != null ? String(s.planId) : ""}
+                                value={s.planId != null ? String(s.planId) : (s.subscriptionStatus === "trial" ? "free" : "")}
                                 data-testid={`sub-plan-${s.officeId}`}
                                 onChange={(e) => {
-                                  const pid = Number(e.target.value);
+                                  const v = e.target.value;
+                                  if (v === "free") { setSubscription(s.officeId, "trial", s.officeName); return; }
+                                  const pid = Number(v);
                                   if (Number.isFinite(pid) && pid > 0) setSubscription(s.officeId, "active", s.officeName, pid);
                                 }}
                                 style={{
@@ -1634,6 +1636,7 @@ export default function Admin() {
                                 }}
                               >
                                 <option value="" disabled>عيّن باقة…</option>
+                                <option value="free">تجربة مجانية (14 يوم)</option>
                                 {planOptions.map((p) => (
                                   <option key={p.id} value={String(p.id)}>{p.nameAr} ({p.maxListings} إعلان)</option>
                                 ))}
@@ -1644,7 +1647,7 @@ export default function Admin() {
                                 data-testid={`sub-action-${s.officeId}`}
                                 onChange={(e) => {
                                   const v = e.target.value;
-                                  if (v === "active" || v === "trial" || v === "expired") setSubscription(s.officeId, v, s.officeName);
+                                  if (v === "active" || v === "expired") setSubscription(s.officeId, v, s.officeName);
                                 }}
                                 style={{
                                   height: 38, borderRadius: 10, border: `1.5px solid ${BORDER}`, background: "#fff",
@@ -1655,7 +1658,6 @@ export default function Admin() {
                               >
                                 <option value="" disabled>تغيير الحالة...</option>
                                 <option value="active" disabled={s.subscriptionStatus === "active"}>تفعيل الاشتراك</option>
-                                <option value="trial">تجربة مجانية 14 يوم</option>
                                 <option value="expired" disabled={s.subscriptionStatus === "expired"}>إيقاف</option>
                               </select>
                             </div>

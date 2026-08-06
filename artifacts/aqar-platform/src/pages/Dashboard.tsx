@@ -458,27 +458,36 @@ export default function Dashboard() {
 
   function renderSubscriptionBanner() {
     if (subLoading || !subStatus) return null;
-    if (subStatus === "active") return null;
-    if (subStatus === "trial") {
-      const urgent = trialDaysLeft !== null && trialDaysLeft <= 2;
+    // The FREE trial banner always shows (a running trial reminder). A PAID plan's
+    // banner shows ONLY in its last 5 days — a "renew" nudge. Text + button reflect
+    // the actual plan, and the days come from the plan's own period.
+    if (subStatus === "trial" || subStatus === "active") {
+      const d = subDetail ?? {};
+      const onPlan = d.isFreePlan === false;
+      const planLabel = (d.planNameAr as string | undefined) ?? "";
+      const left = (d.daysLeft as number | null | undefined) ?? null;
+      if (left === null) return null;
+      if (onPlan && left > 5) return null; // paid: only near the end; free: always
+      const urgent = left <= 2;
+      const daysTxt = `${left} ${left === 1 ? "يوم" : "أيام"}`;
       return (
         <div className={`mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border ${urgent ? "bg-orange-50 border-orange-200" : "bg-indigo-50 border-indigo-200"}`}>
           <div className="flex items-start gap-3">
             <Clock className={`h-5 w-5 mt-0.5 flex-shrink-0 ${urgent ? "text-orange-500" : "text-indigo-500"}`} />
             <div>
               <p className="font-semibold" style={{ fontSize: 15, color: urgent ? "#9a3412" : "#1e40af" }}>
-                {trialDaysLeft !== null && trialDaysLeft > 0
-                  ? `لديك تجربة مجانية متبقي عليها ${trialDaysLeft} ${trialDaysLeft === 1 ? "يوم" : "أيام"}`
-                  : "انتهت مدة تجربتك المجانية"}
+                {left > 0
+                  ? (onPlan
+                      ? `متبقّي ${daysTxt} على باقتك${planLabel ? ` ${planLabel}` : ""}`
+                      : `متبقّي ${daysTxt} على تجربتك المجانية`)
+                  : (onPlan ? "انتهت مدة باقتك" : "انتهت مدة تجربتك المجانية")}
               </p>
-              {urgent && trialDaysLeft !== null && trialDaysLeft > 0 && (
-                <p className="mt-0.5" style={{ fontSize: 13, color: "#c2410c" }}>اشترك الآن لتواصل استخدام جميع المميزات</p>
-              )}
+              <p className="mt-0.5" style={{ fontSize: 13, color: urgent ? "#c2410c" : "#4338ca" }}>{onPlan ? "جدّد باقتك للحفاظ على مميزاتك" : "اشترك الآن لتواصل استخدام جميع المميزات"}</p>
             </div>
           </div>
           <Link href="/dashboard/subscribe">
             <Button size="sm" className={`gap-2 flex-shrink-0 ${urgent ? "bg-orange-500 hover:bg-orange-600" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}>
-              <Crown className="h-3.5 w-3.5" />اشترك الآن
+              <Crown className="h-3.5 w-3.5" />{onPlan ? "جدّد الاشتراك" : "اشترك الآن"}
             </Button>
           </Link>
         </div>
@@ -503,12 +512,17 @@ export default function Dashboard() {
       );
     }
     if (subStatus === "expired" || subStatus === "inactive") {
+      const onPlan = (subDetail ?? {}).isFreePlan === false;
+      const planLabel = ((subDetail ?? {}).planNameAr as string | undefined) ?? "";
+      const title = subStatus === "inactive"
+        ? "حسابك غير نشط"
+        : (onPlan ? `انتهت باقتك${planLabel ? ` ${planLabel}` : ""}` : "انتهت تجربتك المجانية");
       return (
         <div className="mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-red-50 border border-red-200">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-500" />
             <div>
-              <p className="font-semibold text-sm text-red-800">{subStatus === "expired" ? "انتهت تجربتك المجانية" : "حسابك غير نشط"}</p>
+              <p className="font-semibold text-sm text-red-800">{title}</p>
               <p className="text-xs text-red-600 mt-0.5">اشترك الآن لتفعيل إعلاناتك وإضافة إعلانات جديدة</p>
             </div>
           </div>
@@ -1259,13 +1273,19 @@ export default function Dashboard() {
           const isActive = subStatus === "active";
           const isTrial = subStatus === "trial";
           const isFree = d.isFreePlan ?? isTrial;
-          const endsIso: string | null = (isActive ? d.subscriptionEndsAt : d.trialEndsAt) ?? d.trialEndsAt ?? d.subscriptionEndsAt ?? null;
-          const startIso: string | null = trialStartedAt;
+          // Single source of truth from the server: the plan's OWN period (a paid
+          // plan's duration, separate from the free trial) — start, end, and days
+          // left all come from it, so the dates, the countdown and the banner agree.
+          const startIso: string | null = (d.periodStartedAt as string | null | undefined) ?? trialStartedAt;
+          const endsIso: string | null = (d.periodEndsAt as string | null | undefined) ?? null;
           const DAY = 86400000;
-          let daysLeft: number | null = isTrial ? trialDaysLeft : null;
-          if (endsIso && daysLeft === null) daysLeft = Math.max(0, Math.ceil((new Date(endsIso).getTime() - Date.now()) / DAY));
+          const daysLeft: number | null = (d.daysLeft as number | null | undefined) ?? null;
+          // Total = the plan's own duration (e.g. 30 for a paid plan, the trial
+          // length for free). Elapsed derives from daysLeft so the bar matches it.
           const totalDays: number | null = d.planDurationDays ?? (startIso && endsIso ? Math.max(1, Math.round((new Date(endsIso).getTime() - new Date(startIso).getTime()) / DAY)) : null);
-          const elapsed: number | null = startIso ? Math.max(0, Math.round((Date.now() - new Date(startIso).getTime()) / DAY)) : null;
+          const elapsed: number | null = (totalDays !== null && daysLeft !== null)
+            ? Math.max(0, Math.min(totalDays, totalDays - daysLeft))
+            : (startIso ? Math.max(0, Math.round((Date.now() - new Date(startIso).getTime()) / DAY)) : null);
           const durPct = totalDays && elapsed !== null ? Math.min(100, Math.max(2, Math.round((elapsed / totalDays) * 100))) : null;
           const maxL: number | null = d.planMaxListings ?? null;
           const usedL: number = d.listingsUsed ?? 0;
@@ -1276,8 +1296,11 @@ export default function Dashboard() {
           const priceLabel = d.planPriceFils != null && d.planDurationDays != null ? `${kwd(d.planPriceFils)} د.ك / ${d.planDurationDays} يوم` : null;
           const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString("ar-KW-u-nu-latn", { year: "numeric", month: "long", day: "numeric" }) : "—";
           const nearExpiry = (daysLeft !== null && daysLeft <= 2) || (listingsLeft !== null && listingsLeft <= 5);
-          const showSubscribe = !isActive && subStatus !== "pending_payment";
-          const showRenew = isActive && nearExpiry;
+          const isEnded = subStatus === "expired" || subStatus === "inactive";
+          // Free plan, or an ended paid plan → "subscribe" (they need to (re)start).
+          // A still-running paid plan → "renew", but only in its last 5 days.
+          const showSubscribe = (isFree || isEnded) && subStatus !== "pending_payment";
+          const showRenew = !isFree && !isEnded && daysLeft !== null && daysLeft <= 5;
           const statusMeta: Record<string, { text: string; cls: string }> = {
             active: { text: "نشط", cls: "bg-green-100 text-green-800" },
             trial: { text: "تجريبي", cls: "bg-indigo-100 text-indigo-800" },
@@ -1319,14 +1342,14 @@ export default function Dashboard() {
                 {showSubscribe && (
                   <Link href="/dashboard/subscribe">
                     <Button size="sm" className="gap-2 bg-[#667EEA] hover:bg-indigo-700 text-white">
-                      <Crown className="h-3.5 w-3.5" />{isFree ? "ترقية الآن" : "اشترك الآن"}
+                      <Crown className="h-3.5 w-3.5" />اشترك الآن
                     </Button>
                   </Link>
                 )}
                 {showRenew && (
                   <Link href="/dashboard/subscribe">
                     <Button size="sm" className="gap-2 bg-[#667EEA] hover:bg-indigo-700 text-white">
-                      <Crown className="h-3.5 w-3.5" />تجديد الباقة
+                      <Crown className="h-3.5 w-3.5" />جدّد الاشتراك
                     </Button>
                   </Link>
                 )}
@@ -1362,7 +1385,7 @@ export default function Dashboard() {
               {/* Payments — only on real (paid) plans */}
               {!isFree && (
                 <div className="grid grid-cols-2 gap-3">
-                  <Tile label="عدد الاشتراكات" value={String(d.paymentsCount ?? 0)} />
+                  <Tile label="عدد الاشتراكات" value={String(d.subscriptionsCount ?? d.paymentsCount ?? 0)} />
                   <Tile label="إجمالي المدفوع" value={`${kwd(d.paymentsTotalFils ?? 0)} د.ك`} />
                 </div>
               )}

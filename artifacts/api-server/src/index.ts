@@ -1,7 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { db, adminsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 const rawPort = process.env["PORT"];
@@ -16,6 +16,14 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// Idempotent, additive schema guards. The self-hosted deploy has no separate
+// migration step, so we bring the DB up to date on boot (before serving) with
+// safe "ADD COLUMN IF NOT EXISTS" statements — a no-op once applied.
+async function ensureSchema() {
+  await db.execute(sql`ALTER TABLE offices ADD COLUMN IF NOT EXISTS subscription_started_at timestamptz`);
+  logger.info("Schema ensured");
 }
 
 // Seed / sync the default platform administrator in the dedicated admins table.
@@ -47,17 +55,29 @@ async function ensureAdmin() {
   }
 }
 
-app.listen(port, async (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
-
+async function bootstrap() {
+  // Apply pending additive schema changes BEFORE accepting requests, so no
+  // request can hit a column the DB doesn't have yet on a fresh deploy.
   try {
-    await ensureAdmin();
+    await ensureSchema();
   } catch (e) {
-    logger.error({ err: e }, "Failed to ensure admin");
+    logger.error({ err: e }, "Failed to ensure schema");
   }
-});
+
+  app.listen(port, async (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+
+    logger.info({ port }, "Server listening");
+
+    try {
+      await ensureAdmin();
+    } catch (e) {
+      logger.error({ err: e }, "Failed to ensure admin");
+    }
+  });
+}
+
+bootstrap();

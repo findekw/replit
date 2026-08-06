@@ -53,6 +53,10 @@ export const officesTable = pgTable("offices", {
   subscriptionStatus: text("subscription_status").notNull().default("trial"),
   trialStartedAt: timestamp("trial_started_at", { withTimezone: true }),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  // When the current PAID subscription began (set on activation). Kept separate
+  // from subscriptionEndsAt so an early manual expiry can record the real end
+  // date without losing the real start date.
+  subscriptionStartedAt: timestamp("subscription_started_at", { withTimezone: true }),
   subscriptionEndsAt: timestamp("subscription_ends_at", { withTimezone: true }),
   slugEdits: integer("slug_edits").notNull().default(0),
   landingTemplate: text("landing_template").notNull().default("classic"),
