@@ -60,8 +60,10 @@ const styles = `
    object-fit contain — no cropping. A blurred, zoomed copy of the same photo
    fills the leftover space behind it instead of dark bars, which is what used to
    make portrait uploads look tiny. Uniform height + full image + no bars. */
-.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16 / 10; }
-.pd-gallery-img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: contain; display: block; }
+/* aspect-ratio is set inline per image (imgAspect) so the frame fits each photo;
+   max-height keeps a very tall portrait from dominating the page. */
+.pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16 / 10; max-height: 78vh; }
+.pd-gallery-img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd-gallery-bg  { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(18px) brightness(0.7); transform: scale(1.15); }
 .pd-gallery-ph { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
 .pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
@@ -214,6 +216,17 @@ export default function PropertyDetail() {
 
   const [imgIndex, setImgIndex] = useState(0);
   const touchStartX = useRef<number | null>(null); // gallery swipe origin
+  // The gallery frame adapts to the current image's shape (clamped) so every
+  // image fills it — no letterbox gaps and nothing cropped. Landscape → wide
+  // frame, portrait → tall frame.
+  const [imgAspect, setImgAspect] = useState(1.6);
+  const onGalleryImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const im = e.currentTarget;
+    if (im.naturalWidth && im.naturalHeight) {
+      const r = im.naturalWidth / im.naturalHeight;
+      setImgAspect(Math.min(1.9, Math.max(0.72, r)));
+    }
+  };
   const [lightboxOpen, setLightboxOpen] = useState(false); // fullscreen viewer
 
   // While the fullscreen viewer is open, lock the page scroll and let Escape close it.
@@ -377,14 +390,12 @@ export default function PropertyDetail() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {/* Gallery */}
               <div>
-                <div className="pd-gallery" onTouchStart={onGalleryTouchStart} onTouchEnd={onGalleryTouchEnd}>
+                <div className="pd-gallery" style={{ aspectRatio: String(imgAspect) }} onTouchStart={onGalleryTouchStart} onTouchEnd={onGalleryTouchEnd}>
                   {images.length > 0 ? (
                     <>
-                      {/* Blurred, zoomed copy fills the fixed frame so every image
-                          shows WHOLE (`contain`) at the same height — no cropping,
-                          no dark bars, no jump between portrait/landscape images. */}
-                      <img src={images[imgIndex]} alt="" aria-hidden="true" className="pd-gallery-bg" />
-                      <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image"
+                      {/* The frame matches the image's shape (see imgAspect), so the
+                          image fills it exactly — no letterbox gaps, nothing cropped. */}
+                      <img src={images[imgIndex]} alt={property.titleAr} className="pd-gallery-img" data-testid="property-image" onLoad={onGalleryImgLoad}
                         style={{ cursor: "zoom-in" }} onClick={() => setLightboxOpen(true)} />
                       {images.length > 1 && (
                         <>
