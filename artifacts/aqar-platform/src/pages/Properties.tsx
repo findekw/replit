@@ -7,6 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { LayoutGrid, List, SlidersHorizontal, X, ChevronDown, Check, Search } from "lucide-react";
 import { LocationCombobox } from "@/components/LocationCombobox";
+import { getApiBase } from "@/lib/apiBase";
+
+const API_BASE = getApiBase();
+
+// "مفروش" / "غير مفروش" are mutually exclusive (a listing is one or the other),
+// same as the add-listing form — picking one clears the other in the filter.
+const FURNISH_AMENITIES = ["مفروش", "غير مفروش"];
 
 const PROPERTY_TYPES = [
   "بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب",
@@ -178,6 +185,17 @@ export default function Properties() {
   const [minArea, setMinArea] = useState("");
   const [maxArea, setMaxArea] = useState("");
   const [bedrooms, setBedrooms] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [amenityOptions, setAmenityOptions] = useState<string[]>([]);
+
+  // Amenity options (same list the listing form uses) — lets searchers filter by
+  // specific features (إطلالة بحرية، مواقف سيارات، …) that must match the listing.
+  useEffect(() => {
+    fetch(`${API_BASE}/api/catalog?kind=amenity`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { options?: string[] } | null) => { if (d?.options?.length) setAmenityOptions(d.options); })
+      .catch(() => {});
+  }, []);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tempStatus, setTempStatus] = useState("");
@@ -189,6 +207,7 @@ export default function Properties() {
   const [tempMinArea, setTempMinArea] = useState("");
   const [tempMaxArea, setTempMaxArea] = useState("");
   const [tempBedrooms, setTempBedrooms] = useState("");
+  const [tempAmenities, setTempAmenities] = useState<string[]>([]);
 
   /* ─── Single-field bottom sheet (same pattern as homepage) ─── */
   const [sheetOpen, setSheetOpen] = useState<"type" | "gov" | "area" | null>(null);
@@ -212,6 +231,7 @@ export default function Properties() {
   if (minArea) params.minArea = parseInt(minArea);
   if (maxArea) params.maxArea = parseInt(maxArea);
   if (bedrooms) params.bedrooms = parseInt(bedrooms);
+  if (amenities.length) params.amenities = amenities.join(",");
 
   const { data, isLoading, isFetching } = useListProperties(params as Record<string, string>);
   const { data: governorates } = useListGovernorates();
@@ -346,6 +366,7 @@ export default function Properties() {
     setTempMinArea(minArea);
     setTempMaxArea(maxArea);
     setTempBedrooms(bedrooms);
+    setTempAmenities(amenities);
     setMobileOpen(true);
   }
 
@@ -355,6 +376,7 @@ export default function Properties() {
     setMinArea(tempMinArea);
     setMaxArea(tempMaxArea);
     setBedrooms(tempBedrooms);
+    setAmenities(tempAmenities);
     setPage(1);
     setMobileOpen(false);
   }
@@ -365,7 +387,16 @@ export default function Properties() {
     setTempMinArea("");
     setTempMaxArea("");
     setTempBedrooms("");
+    setTempAmenities([]);
   }
+
+  // Toggle one amenity in a selection array (used by both desktop and mobile).
+  // Selecting مفروش/غير مفروش clears the other so only one can be active.
+  const toggleAmenity = (list: string[], val: string) => {
+    if (list.includes(val)) return list.filter((a) => a !== val);
+    const base = FURNISH_AMENITIES.includes(val) ? list.filter((a) => !FURNISH_AMENITIES.includes(a)) : list;
+    return [...base, val];
+  };
 
   const govLabel = (govorates: typeof governorates, id: string) =>
     govId ? (govorates ?? []).find((g) => String(g.id) === id)?.nameAr.replace("محافظة ", "") : null;
@@ -395,6 +426,7 @@ export default function Properties() {
     (minPrice || maxPrice) ? { key: "price", label: priceChipLabel(), clear: () => { setMinPrice(""); setMaxPrice(""); applyFilters(); } } : null,
     (minArea || maxArea) ? { key: "areaSize", label: areaChipLabel(), clear: () => { setMinArea(""); setMaxArea(""); applyFilters(); } } : null,
     bedrooms ? { key: "bedrooms", label: `${bedrooms === "5" ? "5+" : bedrooms} غرف`, clear: () => { setBedrooms(""); applyFilters(); } } : null,
+    ...amenities.map((a) => ({ key: `amenity-${a}`, label: a, clear: () => { setAmenities((p) => p.filter((v) => v !== a)); applyFilters(); } })),
   ].filter(Boolean) as { key: string; label: string | null | undefined; clear: () => void }[];
 
   const govItems = [
@@ -495,6 +527,38 @@ export default function Properties() {
           unit="م²"
         />
       </div>
+
+      {/* المميزات — matches the listing's features (إطلالة بحرية، مواقف سيارات، …) */}
+      {amenityOptions.length > 0 && (
+        <div>
+          <span style={LABEL_STYLE}>المميزات</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {amenityOptions.map((opt) => {
+              const sel = (isMobile ? tempAmenities : amenities).includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    if (isMobile) setTempAmenities((p) => toggleAmenity(p, opt));
+                    else { setAmenities((p) => toggleAmenity(p, opt)); applyFilters(); }
+                  }}
+                  style={{
+                    padding: "8px 14px", borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+                    fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
+                    borderColor: sel ? "#667EEA" : "#E2E8F0",
+                    background: sel ? "#EEF2FF" : "#fff",
+                    color: sel ? "#4338CA" : "#475569",
+                    transition: "all .12s",
+                  }}
+                >
+                  {sel ? "✓ " : ""}{opt}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 
@@ -795,7 +859,7 @@ export default function Properties() {
               <button
                 onClick={() => {
                   setStatus(""); setTypes([]); setGovId(""); setAreaIds([]);
-                  setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms("");
+                  setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms(""); setAmenities([]);
                   applyFilters();
                 }}
                 style={{

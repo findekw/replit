@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, propertiesTable, propertyImagesTable, officesTable, governoratesTable, areasTable } from "@workspace/db";
-import { eq, and, desc, asc, sql, count, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count, gte, lte, inArray, arrayContains } from "drizzle-orm";
 import { requireOfficeId, getOfficeId } from "../lib/authHelpers";
 import { getSessionId } from "../lib/session";
 import {
@@ -157,6 +157,9 @@ router.get("/properties", async (req, res): Promise<void> => {
   // read raw from the query to bypass the single-value generated schema.
   const types = String(req.query["type"] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
   const areaIds = String(req.query["areaId"] ?? "").split(",").map((a) => Number(a.trim())).filter((n) => Number.isFinite(n) && n > 0);
+  // amenities: match listings whose amenities array contains ALL the selected
+  // features (e.g. "إطلالة بحرية", "مواقف سيارات"). Same values the listing form saves.
+  const amenities = String(req.query["amenities"] ?? "").split(",").map((a) => a.trim()).filter(Boolean);
 
   const page = Number(rawPage ?? 1);
   const limit = Number(rawLimit ?? 12);
@@ -180,6 +183,7 @@ router.get("/properties", async (req, res): Promise<void> => {
   if (bedrooms != null) conditions.push(eq(propertiesTable.bedrooms, Number(bedrooms)));
   if (bathrooms != null) conditions.push(eq(propertiesTable.bathrooms, Number(bathrooms)));
   if (furnished != null) conditions.push(eq(propertiesTable.furnished, furnished));
+  if (amenities.length) conditions.push(arrayContains(propertiesTable.amenities, amenities));
   if (featured === "true") conditions.push(eq(propertiesTable.featured, true));
   if (officeId != null) conditions.push(eq(propertiesTable.officeId, Number(officeId)));
   if (keyword != null && keyword.trim()) {
