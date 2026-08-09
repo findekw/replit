@@ -870,9 +870,6 @@ export default function DashboardAddListing() {
           <div className="bg-card border rounded-2xl p-6 space-y-4">
             <div className="border-b pb-3">
               <h2 className="font-semibold text-lg text-foreground">بيانات التواصل</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                ظهرت تلقائياً من رقم مكتبك — تقدر تعدّلها لهذا الإعلان.
-              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

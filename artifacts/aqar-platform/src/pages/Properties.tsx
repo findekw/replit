@@ -201,7 +201,7 @@ export default function Properties() {
   const [tempStatus, setTempStatus] = useState("");
   const [tempType, setTempType] = useState("");
   const [tempGovId, setTempGovId] = useState("");
-  const [tempAreaId, setTempAreaId] = useState("");
+  const [tempAreaIds, setTempAreaIds] = useState<string[]>([]);
   const [tempMinPrice, setTempMinPrice] = useState("");
   const [tempMaxPrice, setTempMaxPrice] = useState("");
   const [tempMinArea, setTempMinArea] = useState("");
@@ -360,7 +360,14 @@ export default function Properties() {
 
   function applyFilters() { setPage(1); }
 
+  // The mobile "فلاتر أخرى" sheet is a full copy of the desktop sidebar, so it
+  // edits a temp copy of EVERY filter (status/type/gov/area + the ranges) and
+  // commits them together on "عرض النتائج".
   function openMobileFilter() {
+    setTempStatus(status);
+    setTempType(types[0] ?? "");
+    setTempGovId(govId);
+    setTempAreaIds(areaIds);
     setTempMinPrice(minPrice);
     setTempMaxPrice(maxPrice);
     setTempMinArea(minArea);
@@ -371,6 +378,10 @@ export default function Properties() {
   }
 
   function applyMobileFilter() {
+    setStatus(tempStatus);
+    setTypes(tempType ? [tempType] : []);
+    setGovId(tempGovId);
+    setAreaIds(tempAreaIds);
     setMinPrice(tempMinPrice);
     setMaxPrice(tempMaxPrice);
     setMinArea(tempMinArea);
@@ -382,6 +393,10 @@ export default function Properties() {
   }
 
   function resetMobileFilter() {
+    setTempStatus("");
+    setTempType("");
+    setTempGovId("");
+    setTempAreaIds([]);
     setTempMinPrice("");
     setTempMaxPrice("");
     setTempMinArea("");
@@ -475,7 +490,7 @@ export default function Properties() {
       <div>
         <span style={LABEL_STYLE}>المحافظة</span>
         {isMobile
-          ? <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaId(""); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
+          ? <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaIds([]); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
           : <LocationCombobox items={govItems} value={govId} onChange={(v) => { setGovId(v); setAreaIds([]); applyFilters(); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />}
       </div>
 
@@ -488,7 +503,7 @@ export default function Properties() {
           </span>
         </span>
         {isMobile
-          ? <LocationCombobox items={(mobileAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaId} onChange={setTempAreaId} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" />
+          ? <LocationCombobox items={(mobileAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaIds} onChange={setTempAreaIds} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" multiple />
           : <LocationCombobox items={(areas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={areaIds} onChange={(v) => { setAreaIds(v); applyFilters(); }} placeholder={govId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!govId} showSearch listMaxHeight="280px" multiple />}
       </div>
 
@@ -808,14 +823,14 @@ export default function Properties() {
                 >
                   <SlidersHorizontal size={15} />
                   فلاتر أخرى
-                  {(minPrice || maxPrice || minArea || maxArea || bedrooms) && (
+                  {(minPrice || maxPrice || minArea || maxArea || bedrooms || amenities.length > 0) && (
                     <span style={{
                       minWidth: "18px", height: "18px", borderRadius: "9px",
                       background: "#667EEA", color: "#fff",
                       fontSize: "11px", fontWeight: 700,
                       display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
                     }}>
-                      {[minPrice || maxPrice, minArea || maxArea, bedrooms].filter(Boolean).length}
+                      {[minPrice || maxPrice, minArea || maxArea, bedrooms, amenities.length > 0].filter(Boolean).length}
                     </span>
                   )}
                 </button>
@@ -1165,7 +1180,7 @@ export default function Properties() {
               </button>
             </div>
 
-            {/* Sheet content — only extra filters (bedrooms, price, area size) */}
+            {/* Sheet content — full copy of the desktop sidebar filters */}
             <div
               style={{
                 overflowY: "auto", flex: 1,
@@ -1173,26 +1188,7 @@ export default function Properties() {
                 display: "flex", flexDirection: "column", gap: "24px",
               }}
             >
-              <div>
-                <span style={LABEL_STYLE}>عدد الغرف</span>
-                <BedroomsChips value={tempBedrooms} onChange={setTempBedrooms} />
-              </div>
-              <div>
-                <span style={LABEL_STYLE}>السعر (د.ك)</span>
-                <RangeInputs
-                  minVal={tempMinPrice} maxVal={tempMaxPrice}
-                  onMinChange={setTempMinPrice} onMaxChange={setTempMaxPrice}
-                  minPlaceholder="الحد الأدنى" maxPlaceholder="الحد الأقصى" unit="د.ك"
-                />
-              </div>
-              <div>
-                <span style={LABEL_STYLE}>المساحة (م²)</span>
-                <RangeInputs
-                  minVal={tempMinArea} maxVal={tempMaxArea}
-                  onMinChange={setTempMinArea} onMaxChange={setTempMaxArea}
-                  minPlaceholder="الحد الأدنى" maxPlaceholder="الحد الأقصى" unit="م²"
-                />
-              </div>
+              <SidebarFilters isMobile={true} />
             </div>
 
             {/* Sheet actions */}
