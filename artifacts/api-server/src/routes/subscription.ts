@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, officesTable, subscriptionPlansTable, paymentsTable, propertiesTable } from "@workspace/db";
-import { eq, and, count, sum } from "drizzle-orm";
+import { eq, and, count, sum, desc } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { requireOffice, getOfficeId } from "../lib/authHelpers";
 import { getTrialDays, getSetting } from "../lib/settings";
@@ -157,6 +157,52 @@ router.get("/subscription/status", requireOffice, async (req: Request, res: Resp
     subscriptionsCount,
     paymentsTotalFils: Number(pay?.total ?? 0),
   });
+});
+
+// GET /api/subscription/payments — this office's payment/invoice history.
+// Returns every recorded payment attempt (newest first) with the plan name, so
+// the billing page can show a receipts/invoices table. Pending/failed rows are
+// included too — they document attempts, not just successful charges.
+router.get("/subscription/payments", requireOffice, async (req: Request, res: Response): Promise<void> => {
+  const officeId = await getOfficeId(req);
+
+  if (!officeId) {
+    res.status(404).json({ error: "لا يوجد مكتب مرتبط بهذا الحساب" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      id: paymentsTable.id,
+      orderRef: paymentsTable.orderRef,
+      amountFils: paymentsTable.amountFils,
+      currency: paymentsTable.currency,
+      status: paymentsTable.status,
+      createdAt: paymentsTable.createdAt,
+      paidAt: paymentsTable.paidAt,
+      planId: paymentsTable.planId,
+      planNameAr: subscriptionPlansTable.nameAr,
+      planDurationDays: subscriptionPlansTable.durationDays,
+    })
+    .from(paymentsTable)
+    .leftJoin(subscriptionPlansTable, eq(paymentsTable.planId, subscriptionPlansTable.id))
+    .where(eq(paymentsTable.officeId, officeId))
+    .orderBy(desc(paymentsTable.createdAt));
+
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      orderRef: r.orderRef,
+      amountFils: r.amountFils,
+      currency: r.currency,
+      status: r.status,
+      createdAt: r.createdAt?.toISOString() ?? null,
+      paidAt: r.paidAt?.toISOString() ?? null,
+      planId: r.planId,
+      planNameAr: r.planNameAr,
+      planDurationDays: r.planDurationDays,
+    })),
+  );
 });
 
 // POST /api/subscription/request — office requests to subscribe

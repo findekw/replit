@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users } from "lucide-react";
+import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: "إعلاناتي", href: "/dashboard/listings", icon: Building },
   { label: "عملائي", href: "/dashboard/leads", icon: Users },
   { label: "الإحصائيات", href: "/dashboard/analytics", icon: BarChart2 },
+  { label: "حساب المكتب", href: "/dashboard/billing", icon: Wallet },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -16,6 +17,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/listings": "إعلاناتي",
   "/dashboard/leads": "عملائي",
   "/dashboard/analytics": "الإحصائيات",
+  "/dashboard/billing": "حساب المكتب",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
