@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListGovernorates, useListAreas } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { KwPhoneInput, toLocal8, KW_PHONE_RE } from "@/components/KwPhoneInput";
 import {
   Loader2, CheckCircle, AlertCircle, ArrowRight,
   Star, ImagePlus, Upload, X
@@ -48,6 +49,8 @@ export default function DashboardEditListing() {
   const [governorateId, setGovernorateId] = useState("");
   const [areaId, setAreaId] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -71,6 +74,7 @@ export default function DashboardEditListing() {
           price?: number; area?: number | null; bedrooms?: number | null;
           bathrooms?: number | null; governorateId?: number | null; areaId?: number | null;
           descriptionAr?: string | null; images?: DbImage[];
+          whatsapp?: string | null; phone?: string | null;
         };
         setTitleAr(p.titleAr ?? p.title ?? "");
         setStatus(p.status ?? "");
@@ -82,6 +86,8 @@ export default function DashboardEditListing() {
         setGovernorateId(p.governorateId ? String(p.governorateId) : "");
         setAreaId(p.areaId ? String(p.areaId) : "");
         setDescriptionAr(p.descriptionAr ?? "");
+        setWhatsapp(toLocal8(p.whatsapp));
+        setPhone(toLocal8(p.phone));
         setImages(p.images ?? []);
       })
       .catch(() => setNotFound(true))
@@ -97,6 +103,8 @@ export default function DashboardEditListing() {
     if (!price || Number(price) <= 0) clientErrors.push("يرجى إدخال سعر صحيح");
     if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
     if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
+    if (!KW_PHONE_RE.test(whatsapp)) clientErrors.push("يرجى إدخال رقم واتساب صحيح (8 أرقام يبدأ بـ 9 أو 6 أو 5 أو 4)");
+    if (phone && !KW_PHONE_RE.test(phone)) clientErrors.push("رقم الموبايل غير صحيح");
 
     if (clientErrors.length > 0) { setErrors(clientErrors); return; }
     setErrors([]);
@@ -117,6 +125,8 @@ export default function DashboardEditListing() {
           governorateId: governorateId ? Number(governorateId) : null,
           areaId: areaId ? Number(areaId) : null,
           descriptionAr: descriptionAr.trim() || null,
+          whatsapp,
+          phone: phone || undefined,
         }),
       });
 
@@ -380,6 +390,38 @@ export default function DashboardEditListing() {
                 rows={4}
                 disabled={submitting}
               />
+            </div>
+          </div>
+
+          {/* ─── Contact Section ─── */}
+          <div className="bg-card border rounded-2xl p-6 space-y-4">
+            <div className="border-b pb-3">
+              <h2 className="font-semibold text-lg text-foreground">بيانات التواصل</h2>
+              <p className="text-sm text-muted-foreground mt-1">أرقام التواصل الخاصة بهذا الإعلان.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="edit-whatsapp">واتساب <span className="text-destructive">*</span></Label>
+                <KwPhoneInput
+                  id="edit-whatsapp"
+                  value={whatsapp}
+                  onChange={setWhatsapp}
+                  disabled={submitting}
+                  invalid={errors.length > 0 && !KW_PHONE_RE.test(whatsapp)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-phone">
+                  الموبايل <span className="text-muted-foreground font-normal">(اختياري)</span>
+                </Label>
+                <KwPhoneInput
+                  id="edit-phone"
+                  value={phone}
+                  onChange={setPhone}
+                  disabled={submitting}
+                  invalid={errors.length > 0 && !!phone && !KW_PHONE_RE.test(phone)}
+                />
+              </div>
             </div>
           </div>
 

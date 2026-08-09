@@ -21,6 +21,12 @@ export const propertiesTable = pgTable("properties", {
   furnished: text("furnished"), // مفروش | غير مفروش | شبه مفروش
   amenities: text("amenities").array().notNull().default([]),
   videoUrl: text("video_url"),
+  // Per-listing contact numbers. WhatsApp is required at listing time; the
+  // mobile is optional. Both default to the office's registration number on the
+  // form but can be overridden per listing. Legacy rows are null and fall back
+  // to the office's own phone/whatsapp when displayed.
+  whatsapp: text("whatsapp"),
+  phone: text("phone"),
   featured: boolean("featured").notNull().default(false),
   active: boolean("active").notNull().default(true),
   approvalStatus: text("approval_status").notNull().default("pending"),

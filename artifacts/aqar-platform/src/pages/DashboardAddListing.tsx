@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useListGovernorates, useListAreas } from "@workspace/api-client-react";
+import { useListGovernorates, useListAreas, useGetOffice } from "@workspace/api-client-react";
 import { useOfficeAuth } from "@/lib/AuthContext";
+import { KwPhoneInput, toLocal8, KW_PHONE_RE } from "@/components/KwPhoneInput";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, CheckCircle, AlertCircle, ArrowRight,
@@ -78,8 +79,11 @@ interface UploadedVideo {
 
 export default function DashboardAddListing() {
   const [, navigate] = useLocation();
-  const { officeUser: user } = useOfficeAuth();
+  const { officeUser: user, officeId } = useOfficeAuth();
   const { toast } = useToast();
+
+  // Office record — its number pre-fills the listing's contact fields.
+  const { data: office } = useGetOffice(officeId ?? 0, { query: { enabled: (officeId ?? 0) > 0 } } as any);
 
   // Step 1 state: form fields
   const [step, setStep] = useState<1 | 2>(1);
@@ -112,6 +116,20 @@ export default function DashboardAddListing() {
   const [areaId, setAreaId] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
 
+  // Per-listing contact. Pre-filled from the office number once it loads, but
+  // only while still untouched — so we never overwrite what the user typed.
+  const [whatsapp, setWhatsapp] = useState("");
+  const [phone, setPhone] = useState("");
+  const contactTouched = useRef(false);
+  useEffect(() => {
+    if (contactTouched.current || !office) return;
+    const o = office as any;
+    const wa = toLocal8(o.whatsapp ?? o.phone);
+    const ph = toLocal8(o.phone ?? o.whatsapp);
+    if (wa) setWhatsapp(wa);
+    if (ph) setPhone(ph);
+  }, [office]);
+
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -141,6 +159,8 @@ export default function DashboardAddListing() {
     if (!governorateId) clientErrors.push("يرجى اختيار المحافظة");
     if (!areaId) clientErrors.push("يرجى اختيار المنطقة");
     if (descriptionAr.trim().length < 10) clientErrors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
+    if (!KW_PHONE_RE.test(whatsapp)) clientErrors.push("يرجى إدخال رقم واتساب صحيح (8 أرقام يبدأ بـ 9 أو 6 أو 5 أو 4)");
+    if (phone && !KW_PHONE_RE.test(phone)) clientErrors.push("رقم الموبايل غير صحيح");
 
     if (clientErrors.length > 0) { setErrors(clientErrors); return; }
 
@@ -162,6 +182,8 @@ export default function DashboardAddListing() {
           bedrooms: bedrooms ? Number(bedrooms) : undefined,
           bathrooms: bathrooms ? Number(bathrooms) : undefined,
           amenities,
+          whatsapp,
+          phone: phone || undefined,
           governorateId: governorateId ? Number(governorateId) : undefined,
           areaId: areaId ? Number(areaId) : undefined,
           descriptionAr: descriptionAr.trim(),
@@ -841,6 +863,41 @@ export default function DashboardAddListing() {
                 disabled={submitting}
                 data-testid="input-listing-description"
               />
+            </div>
+          </div>
+
+          {/* Section: Contact */}
+          <div className="bg-card border rounded-2xl p-6 space-y-4">
+            <div className="border-b pb-3">
+              <h2 className="font-semibold text-lg text-foreground">بيانات التواصل</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                ظهرت تلقائياً من رقم مكتبك — تقدر تعدّلها لهذا الإعلان.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="listing-whatsapp">واتساب <span className="text-destructive">*</span></Label>
+                <KwPhoneInput
+                  id="listing-whatsapp"
+                  value={whatsapp}
+                  onChange={(v) => { contactTouched.current = true; setWhatsapp(v); }}
+                  disabled={submitting}
+                  invalid={errors.length > 0 && !KW_PHONE_RE.test(whatsapp)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="listing-phone">
+                  الموبايل <span className="text-muted-foreground font-normal">(اختياري)</span>
+                </Label>
+                <KwPhoneInput
+                  id="listing-phone"
+                  value={phone}
+                  onChange={(v) => { contactTouched.current = true; setPhone(v); }}
+                  disabled={submitting}
+                  invalid={errors.length > 0 && !!phone && !KW_PHONE_RE.test(phone)}
+                />
+              </div>
             </div>
           </div>
 

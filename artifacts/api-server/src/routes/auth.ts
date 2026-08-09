@@ -210,7 +210,9 @@ router.post("/auth/office/register", async (req: Request, res: Response): Promis
     const officeDesc = rawDesc ? String(rawDesc).trim().slice(0, 250) : null;
 
     const [newOffice] = await db.insert(officesTable).values({
-      name, nameAr: name, slug, phone: phone ?? null, email,
+      // The single registration number seeds BOTH the office phone and WhatsApp
+      // (WhatsApp is the required contact); the office can edit either later.
+      name, nameAr: name, slug, phone: phone ?? null, whatsapp: phone ?? null, email,
       active: false, featured: false, verified: false,
       ...(validGovernorateId != null ? { governorateId: validGovernorateId } : {}),
       ...(licenseNumber ? { licenseNumber } : {}),

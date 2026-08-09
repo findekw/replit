@@ -52,6 +52,14 @@ function normalizeImageUrl(url: string | null | undefined): string | null {
   return url;
 }
 
+// Normalize a Kuwait number to its 8-digit local form for storage (offices and
+// listings both store bare local numbers; toIntlPhone adds 965 for links).
+function normalizeKwPhone(raw: unknown): string {
+  let d = String(raw ?? "").replace(/\D/g, "");
+  if (d.startsWith("965") && d.length > 8) d = d.slice(3);
+  return d.slice(0, 8);
+}
+
 function buildPropertyObject(
   property: typeof propertiesTable.$inferSelect,
   extras: {
@@ -119,16 +127,21 @@ async function getAllImages(propertyIds: number[]): Promise<Record<number, strin
 // call/WhatsApp shortcuts. Keyed off the raw rows by property id.
 function withCardExtras(
   parsed: Array<Record<string, unknown> & { id: number }>,
-  raw: Array<{ property: { id: number }; officePhone?: string | null; officeWhatsapp?: string | null }>,
+  raw: Array<{ property: { id: number; whatsapp?: string | null; phone?: string | null }; officePhone?: string | null; officeWhatsapp?: string | null }>,
   galleryMap: Record<number, string[]>,
 ) {
   const byId = new Map(raw.map((r) => [r.property.id, r]));
-  return parsed.map((p) => ({
-    ...p,
-    images: galleryMap[p.id] ?? [],
-    officePhone: byId.get(p.id)?.officePhone ?? null,
-    officeWhatsapp: byId.get(p.id)?.officeWhatsapp ?? null,
-  }));
+  return parsed.map((p) => {
+    const r = byId.get(p.id);
+    return {
+      ...p,
+      images: galleryMap[p.id] ?? [],
+      // Prefer the listing's own contact numbers; fall back to the office's for
+      // legacy listings created before per-listing numbers existed.
+      officePhone: r?.property?.phone ?? r?.officePhone ?? null,
+      officeWhatsapp: r?.property?.whatsapp ?? r?.officeWhatsapp ?? null,
+    };
+  });
 }
 
 router.get("/properties", async (req, res): Promise<void> => {
@@ -435,6 +448,10 @@ router.get("/properties/:id", async (req, res): Promise<void> => {
   res.json({
     ...parsedProperty,
     videoUrl: row.property.videoUrl ?? null,
+    // Per-listing contact numbers, falling back to the office's own numbers for
+    // legacy listings that predate this field.
+    whatsapp: row.property.whatsapp ?? officeObj?.whatsapp ?? null,
+    phone: row.property.phone ?? officeObj?.phone ?? null,
   });
 });
 
@@ -513,9 +530,14 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   const governorateId = body.governorateId ? Number(body.governorateId) : null;
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
+  // Per-listing contact: WhatsApp is required, mobile is optional. The form
+  // pre-fills both from the office number but the office can override them.
+  const whatsapp = normalizeKwPhone(body.whatsapp);
+  const phone = normalizeKwPhone(body.phone) || null;
 
   const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
   const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية", "طلب"];
+  const KW_PHONE_RE = /^[9654]\d{7}$/;
 
   const errors: string[] = [];
   if (titleAr.length < 5) errors.push("العنوان يجب أن يكون 5 أحرف على الأقل");
@@ -525,6 +547,8 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
   if (!governorateId) errors.push("يرجى اختيار المحافظة");
   if (!areaId) errors.push("يرجى اختيار المنطقة");
   if (!descriptionAr || descriptionAr.length < 10) errors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
+  if (!KW_PHONE_RE.test(whatsapp)) errors.push("رقم واتساب مطلوب (8 أرقام يبدأ بـ 9 أو 6 أو 5 أو 4)");
+  if (phone && !KW_PHONE_RE.test(phone)) errors.push("رقم الموبايل غير صالح");
 
   if (errors.length > 0) {
     res.status(400).json({ error: "بيانات غير صالحة", details: errors });
@@ -561,6 +585,8 @@ router.post("/properties", async (req: Request, res: Response): Promise<void> =>
         bathrooms,
         furnished,
         amenities,
+        whatsapp,
+        phone,
         governorateId,
         areaId,
         officeId,
@@ -638,9 +664,12 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   const governorateId = body.governorateId ? Number(body.governorateId) : null;
   const areaId = body.areaId ? Number(body.areaId) : null;
   const descriptionAr = body.descriptionAr ? String(body.descriptionAr).trim() : null;
+  const whatsapp = normalizeKwPhone(body.whatsapp);
+  const phone = normalizeKwPhone(body.phone) || null;
 
   const VALID_STATUSES = ["للإيجار", "للبيع", "للبدل"];
   const VALID_TYPES = ["بيت", "شقة", "قسيمة", "ارض", "دور", "محل", "مكتب", "مخزن", "مستودع", "شاليه", "استراحة", "مزرعة", "عمارة", "مجمع", "قسيمة صناعية", "قسيمة حرفية", "طلب"];
+  const KW_PHONE_RE = /^[9654]\d{7}$/;
 
   const errors: string[] = [];
   if (titleAr.length < 5) errors.push("العنوان يجب أن يكون 5 أحرف على الأقل");
@@ -650,6 +679,8 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   if (!governorateId) errors.push("يرجى اختيار المحافظة");
   if (!areaId) errors.push("يرجى اختيار المنطقة");
   if (!descriptionAr || descriptionAr.length < 10) errors.push("وصف الإعلان يجب أن يكون 10 أحرف على الأقل");
+  if (!KW_PHONE_RE.test(whatsapp)) errors.push("رقم واتساب مطلوب (8 أرقام يبدأ بـ 9 أو 6 أو 5 أو 4)");
+  if (phone && !KW_PHONE_RE.test(phone)) errors.push("رقم الموبايل غير صالح");
 
   if (errors.length > 0) { res.status(400).json({ error: "بيانات غير صالحة", details: errors }); return; }
 
@@ -659,7 +690,7 @@ router.put("/properties/:id", async (req: Request, res: Response): Promise<void>
   try {
     const [updated] = await db.update(propertiesTable).set({
       titleAr, title: titleAr, descriptionAr, description: descriptionAr,
-      status, type, price, areaSize, bedrooms, bathrooms, furnished, amenities, governorateId, areaId,
+      status, type, price, areaSize, bedrooms, bathrooms, furnished, amenities, whatsapp, phone, governorateId, areaId,
       updatedAt: new Date(),
     }).where(eq(propertiesTable.id, propId)).returning();
 

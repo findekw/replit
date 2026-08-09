@@ -347,13 +347,18 @@ export default function PropertyDetail() {
   const propertyUrl = typeof window !== "undefined" ? window.location.href : "";
   const statusColor = STATUS_COLORS[property.status] ?? "#64748B";
 
+  // Contact numbers prefer the listing's own (set per ad), falling back to the
+  // office's numbers for legacy listings created before per-listing contact.
+  const contactWhatsapp: string | null = (property as any).whatsapp ?? property.office?.whatsapp ?? null;
+  const contactPhone: string | null = (property as any).phone ?? property.office?.phone ?? null;
+
   const handleWhatsApp = () => {
     trackInteraction(property.officeId!, property.id, "whatsapp", "property_page");
-    window.open(buildWhatsAppUrl(property.office!.whatsapp!, property.titleAr, propertyUrl), "_blank");
+    window.open(buildWhatsAppUrl(contactWhatsapp!, property.titleAr, propertyUrl), "_blank");
   };
   const handleCall = () => {
     trackInteraction(property.officeId!, property.id, "call", "property_page");
-    window.open(`tel:+${toIntlPhone(property.office!.phone)}`, "_blank");
+    window.open(`tel:+${toIntlPhone(contactPhone)}`, "_blank");
   };
 
   return (
@@ -545,12 +550,12 @@ export default function PropertyDetail() {
                   </a>
 
                   <div className="pd-cta-stack">
-                    {property.office.whatsapp && (
+                    {contactWhatsapp && (
                       <button className="pd-cta pd-cta-wa" data-testid="button-whatsapp" onClick={handleWhatsApp}>
                         <WhatsAppIcon size={18} /> واتساب
                       </button>
                     )}
-                    {property.office.phone && (
+                    {contactPhone && (
                       <button className="pd-cta pd-cta-call" data-testid="button-call" onClick={handleCall}>
                         <Phone size={18} /> اتصال
                       </button>
@@ -579,14 +584,14 @@ export default function PropertyDetail() {
       </div>
 
       {/* Mobile sticky contact bar */}
-      {property.office && (property.office.phone || property.office.whatsapp) && (
+      {(contactPhone || contactWhatsapp) && (
         <div className="pd-mobilebar" dir="rtl">
-          {property.office.whatsapp && (
+          {contactWhatsapp && (
             <button className="pd-cta pd-cta-wa" style={{ flex: 1 }} onClick={handleWhatsApp} aria-label="واتساب">
               <WhatsAppIcon size={18} /> واتساب
             </button>
           )}
-          {property.office.phone && (
+          {contactPhone && (
             <button className="pd-cta pd-cta-call" style={{ flex: 1 }} onClick={handleCall} aria-label="اتصال">
               <Phone size={18} /> اتصال
             </button>

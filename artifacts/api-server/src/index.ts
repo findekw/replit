@@ -23,6 +23,13 @@ if (Number.isNaN(port) || port <= 0) {
 // safe "ADD COLUMN IF NOT EXISTS" statements — a no-op once applied.
 async function ensureSchema() {
   await db.execute(sql`ALTER TABLE offices ADD COLUMN IF NOT EXISTS subscription_started_at timestamptz`);
+  // Per-listing contact numbers (WhatsApp required, mobile optional at the form).
+  await db.execute(sql`ALTER TABLE properties ADD COLUMN IF NOT EXISTS whatsapp text`);
+  await db.execute(sql`ALTER TABLE properties ADD COLUMN IF NOT EXISTS phone text`);
+  // Backfill legacy listings from their office's numbers so existing ads keep
+  // showing contact buttons after the switch to per-listing numbers.
+  await db.execute(sql`UPDATE properties p SET whatsapp = o.whatsapp FROM offices o WHERE p.office_id = o.id AND p.whatsapp IS NULL AND o.whatsapp IS NOT NULL`);
+  await db.execute(sql`UPDATE properties p SET phone = o.phone FROM offices o WHERE p.office_id = o.id AND p.phone IS NULL AND o.phone IS NOT NULL`);
   logger.info("Schema ensured");
 }
 
