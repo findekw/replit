@@ -1052,13 +1052,13 @@ export default function Dashboard() {
                 ) : (
                   <div style={{
                     display: "flex", direction: "ltr",
-                    border: "1px solid #d1d5db", borderRadius: 8, overflow: "hidden",
-                    background: "#fff",
+                    border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden",
+                    background: "#f3f4f6",
                   }}>
                     <div style={{
                       display: "flex", alignItems: "center", gap: 6,
                       padding: "0 12px",
-                      background: "#f3f4f6",
+                      background: "#e5e7eb",
                       borderRight: "1px solid #d1d5db",
                       whiteSpace: "nowrap", userSelect: "none", flexShrink: 0,
                     }}>
@@ -1069,7 +1069,7 @@ export default function Dashboard() {
                       padding: "9px 12px",
                       fontSize: 14,
                       fontWeight: snapshot.phone ? 600 : 400,
-                      color: snapshot.phone ? "#111827" : "#9ca3af",
+                      color: snapshot.phone ? "#4b5563" : "#9ca3af",
                       fontStyle: snapshot.phone ? "normal" : "italic",
                       letterSpacing: snapshot.phone ? "0.03em" : "normal",
                     }}>
@@ -1097,13 +1097,13 @@ export default function Dashboard() {
                 ) : (
                   <div style={{
                     display: "flex", direction: "ltr",
-                    border: "1px solid #d1d5db", borderRadius: 8, overflow: "hidden",
-                    background: "#fff",
+                    border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden",
+                    background: "#f3f4f6",
                   }}>
                     <div style={{
                       display: "flex", alignItems: "center", gap: 6,
                       padding: "0 12px",
-                      background: "#f3f4f6",
+                      background: "#e5e7eb",
                       borderRight: "1px solid #d1d5db",
                       whiteSpace: "nowrap", userSelect: "none", flexShrink: 0,
                     }}>
@@ -1114,7 +1114,7 @@ export default function Dashboard() {
                       padding: "9px 12px",
                       fontSize: 14,
                       fontWeight: snapshot.whatsapp ? 600 : 400,
-                      color: snapshot.whatsapp ? "#111827" : "#9ca3af",
+                      color: snapshot.whatsapp ? "#4b5563" : "#9ca3af",
                       fontStyle: snapshot.whatsapp ? "normal" : "italic",
                       letterSpacing: snapshot.whatsapp ? "0.03em" : "normal",
                     }}>
