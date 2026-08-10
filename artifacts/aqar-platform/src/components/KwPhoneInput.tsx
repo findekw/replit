@@ -19,7 +19,7 @@ export function KwPhoneInput({
   value,
   onChange,
   disabled,
-  placeholder = "99887766",
+  placeholder = "12345678",
   invalid,
 }: {
   id?: string;
