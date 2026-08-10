@@ -23,8 +23,9 @@ const TYPES_BY_STATUS: Record<string, string[]> = {
   "للبدل":   ["بيت", "قسيمة", "ارض", "شقة", "طلب"],
 };
 
-// Bare-land types: no rooms/bathrooms — only the area applies.
-const LAND_TYPES = new Set(["ارض", "قسيمة", "قسيمة صناعية", "قسيمة حرفية"]);
+// Types with no rooms/bathrooms — only the area applies. Plots (قسيمة and its
+// industrial/craft variants) DO allow rooms; only bare land and a request don't.
+const NO_ROOMS_TYPES = new Set(["ارض", "طلب"]);
 // Bedrooms are picked from a fixed set (1–5, then "+5" stored as 6).
 const BEDROOM_OPTIONS: { label: string; value: string }[] = [
   { label: "1", value: "1" }, { label: "2", value: "2" }, { label: "3", value: "3" },
@@ -96,7 +97,7 @@ export default function DashboardAddListing() {
   const [areaSize, setAreaSize] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
-  const isLand = LAND_TYPES.has(type);
+  const noRooms = NO_ROOMS_TYPES.has(type);
   const [amenities, setAmenities] = useState<string[]>([]);
 
   // Admin-editable amenity list; falls back to the built-in defaults on failure.
@@ -712,7 +713,7 @@ export default function DashboardAddListing() {
                 <LocationCombobox
                   items={(TYPES_BY_STATUS[status] ?? []).map((t) => ({ value: t, label: t }))}
                   value={type}
-                  onChange={(v) => { setType(v); if (LAND_TYPES.has(v)) { setBedrooms(""); setBathrooms(""); } }}
+                  onChange={(v) => { setType(v); if (NO_ROOMS_TYPES.has(v)) { setBedrooms(""); setBathrooms(""); } }}
                   placeholder={status ? "اختر نوع العقار" : "اختر نوع العرض أولاً"}
                   searchPlaceholder="ابحث عن نوع..."
                   emptyText="لا يوجد نوع بهذا الاسم"
@@ -783,7 +784,7 @@ export default function DashboardAddListing() {
                   disabled={submitting} data-testid="input-listing-area" />
               </div>
               <div>
-                <Label className="mb-1 block">عدد الغرف {!isLand && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
+                <Label className="mb-1 block">عدد الغرف {!noRooms && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
                 {/* Fixed range 1–5 then "+5"; disabled for bare-land types. */}
                 <LocationCombobox
                   items={BEDROOM_OPTIONS}
@@ -793,11 +794,11 @@ export default function DashboardAddListing() {
                   showSearch={false}
                   listMaxHeight="none"
                   emptyText="—"
-                  disabled={isLand || submitting}
+                  disabled={noRooms || submitting}
                 />
               </div>
               <div>
-                <Label className="mb-1 block">عدد الحمامات {!isLand && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
+                <Label className="mb-1 block">عدد الحمامات {!noRooms && <span style={{ color: "#64748b", fontWeight: 500 }}>(اختياري)</span>}</Label>
                 <LocationCombobox
                   items={BATHROOM_OPTIONS}
                   value={bathrooms}
@@ -806,12 +807,12 @@ export default function DashboardAddListing() {
                   showSearch={false}
                   listMaxHeight="none"
                   emptyText="—"
-                  disabled={isLand || submitting}
+                  disabled={noRooms || submitting}
                 />
               </div>
             </div>
-            {isLand && (
-              <p className="text-xs" style={{ color: "#64748b" }}>نوع «أرض» — عدد الغرف والحمامات غير متاح، المساحة فقط.</p>
+            {noRooms && (
+              <p className="text-xs" style={{ color: "#64748b" }}>نوع «{type}» — عدد الغرف والحمامات غير متاح، المساحة فقط.</p>
             )}
 
             <div>
