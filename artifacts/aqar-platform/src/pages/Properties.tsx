@@ -310,6 +310,9 @@ export default function Properties() {
       setTypes(value && !types.includes(value) ? [value] : []);
       setPage(1);
       closeSheet();
+      // Guided flow: picking a type opens the governorate picker next, the same
+      // way picking a governorate opens the area picker.
+      if (value) setTimeout(() => openSheet("gov"), 220);
     } else if (sheetOpen === "gov") {
       setGovId(value);
       setAreaIds([]);
