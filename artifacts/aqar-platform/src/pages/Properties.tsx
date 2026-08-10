@@ -36,21 +36,21 @@ function parseParams(search: string) {
 }
 
 const LABEL_STYLE: React.CSSProperties = {
-  fontSize: "13px",
+  fontSize: "12.5px",
   fontWeight: 600,
   color: "#0f172a",
-  marginBottom: "10px",
+  marginBottom: "6px",
   display: "block",
 };
 
 const INPUT_STYLE: React.CSSProperties = {
   width: "100%",
-  height: "40px",
-  borderRadius: "10px",
+  height: "36px",
+  borderRadius: "9px",
   border: "1.5px solid #94A3B8",
   background: "#F5F7FA",
-  padding: "0 10px",
-  fontSize: "14px",
+  padding: "0 9px",
+  fontSize: "13px",
   color: "#0f172a",
   outline: "none",
   boxSizing: "border-box",
@@ -95,7 +95,7 @@ function StatusChips({ value, onChange }: { value: string; onChange: (v: string)
 function BedroomsChips({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const labels: Record<string, string> = { "": "الكل", "5": "5+" };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "6px" }}>
       {BEDROOM_OPTIONS.map((b) => {
         const active = value === b;
         return (
@@ -103,7 +103,7 @@ function BedroomsChips({ value, onChange }: { value: string; onChange: (v: strin
             key={b}
             onClick={() => onChange(b)}
             style={{
-              height: "36px",
+              height: "34px",
               borderRadius: "10px",
               border: active ? "2px solid #667EEA" : "1.5px solid #E2E8F0",
               background: active ? "#667EEA" : "#F8FAFC",
@@ -136,7 +136,7 @@ function RangeInputs({
   unit: string;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
       <div style={{ position: "relative" }}>
         <input
           type="number"
@@ -146,7 +146,7 @@ function RangeInputs({
           style={INPUT_STYLE}
           min={0}
         />
-        <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#94a3b8", pointerEvents: "none" }}>
+        <span style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#94a3b8", pointerEvents: "none" }}>
           {unit}
         </span>
       </div>
@@ -159,7 +159,7 @@ function RangeInputs({
           style={INPUT_STYLE}
           min={0}
         />
-        <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "#94a3b8", pointerEvents: "none" }}>
+        <span style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#94a3b8", pointerEvents: "none" }}>
           {unit}
         </span>
       </div>
@@ -537,8 +537,8 @@ export default function Properties() {
           maxVal={tempMaxPrice}
           onMinChange={setTempMinPrice}
           onMaxChange={setTempMaxPrice}
-          minPlaceholder="الحد الأدنى"
-          maxPlaceholder="الحد الأقصى"
+          minPlaceholder="من"
+          maxPlaceholder="إلى"
           unit="د.ك"
         />
       </div>
@@ -551,8 +551,8 @@ export default function Properties() {
           maxVal={tempMaxArea}
           onMinChange={setTempMinArea}
           onMaxChange={setTempMaxArea}
-          minPlaceholder="الحد الأدنى"
-          maxPlaceholder="الحد الأقصى"
+          minPlaceholder="من"
+          maxPlaceholder="إلى"
           unit="م²"
         />
       </div>
@@ -562,7 +562,7 @@ export default function Properties() {
       {amenityOptions.length > 0 && (
         <div>
           <span style={LABEL_STYLE}>المميزات</span>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6 }}>
             {amenityOptions.map((opt) => {
               const sel = tempAmenities.includes(opt);
               return (
@@ -571,7 +571,7 @@ export default function Properties() {
                   type="button"
                   onClick={() => setTempAmenities((p) => toggleAmenity(p, opt))}
                   style={{
-                    minHeight: 40, padding: "8px 10px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    minHeight: 34, padding: "6px 8px", borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
                     fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
                     borderColor: sel ? "#667EEA" : "#E2E8F0",
                     background: sel ? "#EEF2FF" : "#fff",
@@ -835,7 +835,7 @@ export default function Properties() {
                   }}
                 >
                   <SlidersHorizontal size={15} />
-                  فلاتر أخرى
+                  بحث متقدم
                   {(minPrice || maxPrice || minArea || maxArea || bedrooms || amenities.length > 0) && (
                     <span style={{
                       minWidth: "18px", height: "18px", borderRadius: "9px",
@@ -919,7 +919,7 @@ export default function Properties() {
                 padding: "22px 20px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "22px",
+                gap: "16px",
               }}
             >
               <div style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
@@ -1225,7 +1225,7 @@ export default function Properties() {
               style={{
                 overflowY: "auto", flex: 1,
                 padding: "20px",
-                display: "flex", flexDirection: "column", gap: "24px",
+                display: "flex", flexDirection: "column", gap: "14px",
               }}
             >
               {SidebarFilters()}
