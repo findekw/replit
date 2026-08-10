@@ -239,7 +239,9 @@ export default function Properties() {
     { governorateId: govId ? Number(govId) : undefined } as any,
     { query: { enabled: !!govId } }
   );
-  const { data: mobileAreas } = useListAreas(
+  // Areas for the draft (temp) governorate — powers the area picker in both the
+  // desktop sidebar and the mobile sheet (both edit the draft filters now).
+  const { data: filterAreas } = useListAreas(
     { governorateId: tempGovId ? Number(tempGovId) : undefined } as any,
     { query: { enabled: !!tempGovId } }
   );
@@ -360,24 +362,13 @@ export default function Properties() {
 
   function applyFilters() { setPage(1); }
 
-  // The mobile "فلاتر أخرى" sheet is a full copy of the desktop sidebar, so it
-  // edits a temp copy of EVERY filter (status/type/gov/area + the ranges) and
-  // commits them together on "عرض النتائج".
-  function openMobileFilter() {
-    setTempStatus(status);
-    setTempType(types[0] ?? "");
-    setTempGovId(govId);
-    setTempAreaIds(areaIds);
-    setTempMinPrice(minPrice);
-    setTempMaxPrice(maxPrice);
-    setTempMinArea(minArea);
-    setTempMaxArea(maxArea);
-    setTempBedrooms(bedrooms);
-    setTempAmenities(amenities);
-    setMobileOpen(true);
-  }
+  // Both the desktop sidebar and the mobile "فلاتر أخرى" sheet edit a DRAFT copy
+  // (the temp* state) of every filter; nothing runs a search until the user
+  // presses "بحث" / "عرض النتائج". This is what stops the price field from
+  // searching on the first keystroke.
 
-  function applyMobileFilter() {
+  // Draft → live (commit): copy the draft into the filters that drive the query.
+  function commitFilters() {
     setStatus(tempStatus);
     setTypes(tempType ? [tempType] : []);
     setGovId(tempGovId);
@@ -389,6 +380,43 @@ export default function Properties() {
     setBedrooms(tempBedrooms);
     setAmenities(tempAmenities);
     setPage(1);
+  }
+
+  // Live → draft: seed the draft from the applied filters (on mount + on open).
+  function syncTempFromLive() {
+    setTempStatus(status);
+    setTempType(types[0] ?? "");
+    setTempGovId(govId);
+    setTempAreaIds(areaIds);
+    setTempMinPrice(minPrice);
+    setTempMaxPrice(maxPrice);
+    setTempMinArea(minArea);
+    setTempMaxArea(maxArea);
+    setTempBedrooms(bedrooms);
+    setTempAmenities(amenities);
+  }
+
+  // Clear everything — draft AND live — and re-run (used by "إعادة تعيين" and
+  // the "مسح الكل" chip).
+  function clearAllFilters() {
+    setStatus(""); setTypes([]); setGovId(""); setAreaIds([]);
+    setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms(""); setAmenities([]);
+    setTempStatus(""); setTempType(""); setTempGovId(""); setTempAreaIds([]);
+    setTempMinPrice(""); setTempMaxPrice(""); setTempMinArea(""); setTempMaxArea(""); setTempBedrooms(""); setTempAmenities([]);
+    setPage(1);
+  }
+
+  // Seed the draft from the URL-derived live filters once, on first render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { syncTempFromLive(); }, []);
+
+  function openMobileFilter() {
+    syncTempFromLive();
+    setMobileOpen(true);
+  }
+
+  function applyMobileFilter() {
+    commitFilters();
     setMobileOpen(false);
   }
 
@@ -433,15 +461,17 @@ export default function Properties() {
     return null;
   };
 
+  // Removing a chip clears the filter in BOTH the live and the draft state, so
+  // the sidebar/sheet immediately reflects the removal (they now edit the draft).
   const activeChips = [
-    status ? { key: "status", label: status, clear: () => { setStatus(""); applyFilters(); } } : null,
-    ...types.map((t) => ({ key: `type-${t}`, label: t, clear: () => { setTypes((p) => p.filter((v) => v !== t)); applyFilters(); } })),
-    govId ? { key: "gov", label: govLabel(governorates, govId), clear: () => { setGovId(""); setAreaIds([]); applyFilters(); } } : null,
-    ...areaIds.map((aid) => ({ key: `area-${aid}`, label: areaLabel(areas, aid), clear: () => { setAreaIds((p) => p.filter((v) => v !== aid)); applyFilters(); } })),
-    (minPrice || maxPrice) ? { key: "price", label: priceChipLabel(), clear: () => { setMinPrice(""); setMaxPrice(""); applyFilters(); } } : null,
-    (minArea || maxArea) ? { key: "areaSize", label: areaChipLabel(), clear: () => { setMinArea(""); setMaxArea(""); applyFilters(); } } : null,
-    bedrooms ? { key: "bedrooms", label: `${bedrooms === "5" ? "5+" : bedrooms} غرف`, clear: () => { setBedrooms(""); applyFilters(); } } : null,
-    ...amenities.map((a) => ({ key: `amenity-${a}`, label: a, clear: () => { setAmenities((p) => p.filter((v) => v !== a)); applyFilters(); } })),
+    status ? { key: "status", label: status, clear: () => { setStatus(""); setTempStatus(""); applyFilters(); } } : null,
+    ...types.map((t) => ({ key: `type-${t}`, label: t, clear: () => { setTypes((p) => p.filter((v) => v !== t)); setTempType(""); applyFilters(); } })),
+    govId ? { key: "gov", label: govLabel(governorates, govId), clear: () => { setGovId(""); setAreaIds([]); setTempGovId(""); setTempAreaIds([]); applyFilters(); } } : null,
+    ...areaIds.map((aid) => ({ key: `area-${aid}`, label: areaLabel(areas, aid), clear: () => { setAreaIds((p) => p.filter((v) => v !== aid)); setTempAreaIds((p) => p.filter((v) => v !== aid)); applyFilters(); } })),
+    (minPrice || maxPrice) ? { key: "price", label: priceChipLabel(), clear: () => { setMinPrice(""); setMaxPrice(""); setTempMinPrice(""); setTempMaxPrice(""); applyFilters(); } } : null,
+    (minArea || maxArea) ? { key: "areaSize", label: areaChipLabel(), clear: () => { setMinArea(""); setMaxArea(""); setTempMinArea(""); setTempMaxArea(""); applyFilters(); } } : null,
+    bedrooms ? { key: "bedrooms", label: `${bedrooms === "5" ? "5+" : bedrooms} غرف`, clear: () => { setBedrooms(""); setTempBedrooms(""); applyFilters(); } } : null,
+    ...amenities.map((a) => ({ key: `amenity-${a}`, label: a, clear: () => { setAmenities((p) => p.filter((v) => v !== a)); setTempAmenities((p) => p.filter((v) => v !== a)); applyFilters(); } })),
   ].filter(Boolean) as { key: string; label: string | null | undefined; clear: () => void }[];
 
   const govItems = [
@@ -452,46 +482,34 @@ export default function Properties() {
     })),
   ];
 
-  const typeItems = [
-    { value: "", label: "جميع الأنواع" },
-    ...(status === "للبدل" ? BDAL_TYPES : PROPERTY_TYPES).map((t) => ({ value: t, label: t })),
-  ];
-
   const tempTypeItems = [
     { value: "", label: "جميع الأنواع" },
     ...(tempStatus === "للبدل" ? BDAL_TYPES : PROPERTY_TYPES).map((t) => ({ value: t, label: t })),
   ];
 
-  const SidebarFilters = ({ isMobile = false }: { isMobile?: boolean }) => (
+  // The filter panel (shared by the desktop sidebar and the mobile sheet) edits
+  // only the DRAFT (temp) state — a "بحث" / "عرض النتائج" button commits it.
+  const SidebarFilters = () => (
     <>
       {/* حالة العقار */}
       <div>
         <span style={LABEL_STYLE}>حالة العقار</span>
-        {isMobile
-          ? <StatusChips value={tempStatus} onChange={(v) => {
-              if (v === "للبدل" && tempType && !BDAL_TYPES.includes(tempType)) setTempType("");
-              setTempStatus(v);
-            }} />
-          : <StatusChips value={status} onChange={(v) => {
-              if (v === "للبدل") setTypes((p) => p.filter((t) => BDAL_TYPES.includes(t)));
-              setStatus(v); applyFilters();
-            }} />}
+        <StatusChips value={tempStatus} onChange={(v) => {
+          if (v === "للبدل" && tempType && !BDAL_TYPES.includes(tempType)) setTempType("");
+          setTempStatus(v);
+        }} />
       </div>
 
       {/* نوع العقار */}
       <div>
         <span style={LABEL_STYLE}>نوع العقار</span>
-        {isMobile
-          ? <LocationCombobox items={tempTypeItems} value={tempType} onChange={setTempType} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
-          : <LocationCombobox items={typeItems} value={types[0] ?? ""} onChange={(v: string) => { setTypes(v ? [v] : []); applyFilters(); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="400px" emptyText="لا يوجد نوع" />}
+        <LocationCombobox items={tempTypeItems} value={tempType} onChange={setTempType} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
       </div>
 
       {/* المحافظة */}
       <div>
         <span style={LABEL_STYLE}>المحافظة</span>
-        {isMobile
-          ? <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaIds([]); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
-          : <LocationCombobox items={govItems} value={govId} onChange={(v) => { setGovId(v); setAreaIds([]); applyFilters(); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />}
+        <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaIds([]); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
       </div>
 
       {/* المنطقة — the one multi-select filter (client decision) */}
@@ -502,27 +520,23 @@ export default function Properties() {
             يمكنك اختيار أكثر من منطقة
           </span>
         </span>
-        {isMobile
-          ? <LocationCombobox items={(mobileAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaIds} onChange={setTempAreaIds} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" multiple />
-          : <LocationCombobox items={(areas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={areaIds} onChange={(v) => { setAreaIds(v); applyFilters(); }} placeholder={govId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!govId} showSearch listMaxHeight="280px" multiple />}
+        <LocationCombobox items={(filterAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaIds} onChange={setTempAreaIds} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" multiple />
       </div>
 
       {/* عدد الغرف */}
       <div>
         <span style={LABEL_STYLE}>عدد الغرف</span>
-        {isMobile
-          ? <BedroomsChips value={tempBedrooms} onChange={setTempBedrooms} />
-          : <BedroomsChips value={bedrooms} onChange={(v) => { setBedrooms(v); applyFilters(); }} />}
+        <BedroomsChips value={tempBedrooms} onChange={setTempBedrooms} />
       </div>
 
       {/* السعر */}
       <div>
         <span style={LABEL_STYLE}>السعر (د.ك)</span>
         <RangeInputs
-          minVal={isMobile ? tempMinPrice : minPrice}
-          maxVal={isMobile ? tempMaxPrice : maxPrice}
-          onMinChange={isMobile ? setTempMinPrice : (v) => { setMinPrice(v); applyFilters(); }}
-          onMaxChange={isMobile ? setTempMaxPrice : (v) => { setMaxPrice(v); applyFilters(); }}
+          minVal={tempMinPrice}
+          maxVal={tempMaxPrice}
+          onMinChange={setTempMinPrice}
+          onMaxChange={setTempMaxPrice}
           minPlaceholder="الحد الأدنى"
           maxPlaceholder="الحد الأقصى"
           unit="د.ك"
@@ -533,41 +547,40 @@ export default function Properties() {
       <div>
         <span style={LABEL_STYLE}>المساحة (م²)</span>
         <RangeInputs
-          minVal={isMobile ? tempMinArea : minArea}
-          maxVal={isMobile ? tempMaxArea : maxArea}
-          onMinChange={isMobile ? setTempMinArea : (v) => { setMinArea(v); applyFilters(); }}
-          onMaxChange={isMobile ? setTempMaxArea : (v) => { setMaxArea(v); applyFilters(); }}
+          minVal={tempMinArea}
+          maxVal={tempMaxArea}
+          onMinChange={setTempMinArea}
+          onMaxChange={setTempMaxArea}
           minPlaceholder="الحد الأدنى"
           maxPlaceholder="الحد الأقصى"
           unit="م²"
         />
       </div>
 
-      {/* المميزات — matches the listing's features (إطلالة بحرية، مواقف سيارات، …) */}
+      {/* المميزات — a fixed 2-column grid (like the listing form) so the chips
+          never reflow/shift position when one is selected. */}
       {amenityOptions.length > 0 && (
         <div>
           <span style={LABEL_STYLE}>المميزات</span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
             {amenityOptions.map((opt) => {
-              const sel = (isMobile ? tempAmenities : amenities).includes(opt);
+              const sel = tempAmenities.includes(opt);
               return (
                 <button
                   key={opt}
                   type="button"
-                  onClick={() => {
-                    if (isMobile) setTempAmenities((p) => toggleAmenity(p, opt));
-                    else { setAmenities((p) => toggleAmenity(p, opt)); applyFilters(); }
-                  }}
+                  onClick={() => setTempAmenities((p) => toggleAmenity(p, opt))}
                   style={{
-                    padding: "8px 14px", borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+                    minHeight: 40, padding: "8px 10px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
                     fontFamily: "'Cairo',sans-serif", border: "1.5px solid",
                     borderColor: sel ? "#667EEA" : "#E2E8F0",
                     background: sel ? "#EEF2FF" : "#fff",
                     color: sel ? "#4338CA" : "#475569",
-                    transition: "all .12s",
+                    transition: "border-color .12s, background .12s, color .12s",
+                    textAlign: "center", lineHeight: 1.3,
                   }}
                 >
-                  {sel ? "✓ " : ""}{opt}
+                  {opt}
                 </button>
               );
             })}
@@ -914,7 +927,34 @@ export default function Properties() {
                   تصفية النتائج
                 </h2>
               </div>
-              <SidebarFilters isMobile={false} />
+              {SidebarFilters()}
+
+              {/* Search / reset — nothing runs until "بحث" is pressed */}
+              <div style={{ display: "flex", gap: "10px", position: "sticky", bottom: 0, background: "#fff", paddingTop: "6px" }}>
+                <button
+                  onClick={clearAllFilters}
+                  style={{
+                    flex: 1, height: "46px", borderRadius: "12px",
+                    border: "1.5px solid #e2e8f0", background: "#F5F7FA",
+                    color: "#64748b", fontWeight: 600, fontSize: "14.5px",
+                    cursor: "pointer", outline: "none", fontFamily: "'Cairo',sans-serif",
+                  }}
+                >
+                  إعادة تعيين
+                </button>
+                <button
+                  onClick={commitFilters}
+                  style={{
+                    flex: 2, height: "46px", borderRadius: "12px",
+                    border: "none", background: "#667EEA",
+                    color: "#ffffff", fontWeight: 700, fontSize: "14.5px",
+                    cursor: "pointer", outline: "none", fontFamily: "'Cairo',sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  }}
+                >
+                  <Search size={17} /> بحث
+                </button>
+              </div>
             </div>
           </aside>
 
@@ -1188,7 +1228,7 @@ export default function Properties() {
                 display: "flex", flexDirection: "column", gap: "24px",
               }}
             >
-              <SidebarFilters isMobile={true} />
+              {SidebarFilters()}
             </div>
 
             {/* Sheet actions */}
