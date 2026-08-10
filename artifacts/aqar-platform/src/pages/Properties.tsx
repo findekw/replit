@@ -47,8 +47,8 @@ const INPUT_STYLE: React.CSSProperties = {
   width: "100%",
   height: "36px",
   borderRadius: "9px",
-  border: "1.5px solid #94A3B8",
-  background: "#F5F7FA",
+  border: "1.5px solid #E2E8F0",
+  background: "#F8FAFC",
   padding: "0 9px",
   fontSize: "13px",
   color: "#0f172a",
@@ -917,8 +917,9 @@ export default function Properties() {
                 maxHeight: "80vh",
                 overflowY: "auto",
                 background: "#ffffff",
-                border: "1.5px solid #94A3B8",
+                border: "1px solid #EEF1F5",
                 borderRadius: "18px",
+                boxShadow: "0 6px 24px rgba(15,23,42,0.06)",
                 padding: "22px 20px",
                 display: "flex",
                 flexDirection: "column",
@@ -932,8 +933,18 @@ export default function Properties() {
               </div>
               {SidebarFilters()}
 
-              {/* Search / reset — nothing runs until "بحث" is pressed */}
-              <div style={{ display: "flex", gap: "10px", position: "sticky", bottom: 0, background: "#fff", paddingTop: "6px" }}>
+              {/* Search / reset — a solid footer bar (like the mobile sheet) so
+                  the filter content never shows through behind the buttons. The
+                  negative margins bleed it to the card's edges. */}
+              <div style={{
+                display: "flex", gap: "10px",
+                position: "sticky", bottom: 0,
+                background: "#ffffff",
+                borderTop: "1px solid #EEF1F5",
+                margin: "0 -20px -22px",
+                padding: "14px 20px",
+                borderRadius: "0 0 18px 18px",
+              }}>
                 <button
                   onClick={clearAllFilters}
                   style={{
