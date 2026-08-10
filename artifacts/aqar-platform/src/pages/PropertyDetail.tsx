@@ -6,7 +6,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { LogoImg } from "@/components/LogoImg";
 import PhoneField from "@/components/PhoneField";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Bed, Bath, Square, Phone, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, Clock, X } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, Check, Share2, Flag, ChevronLeft, ChevronRight, Building2, Home, Clock, X, ImageOff } from "lucide-react";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { timeAgo } from "@/lib/timeAgo";
 import { getGetPropertyQueryKey } from "@workspace/api-client-react";
@@ -65,7 +65,9 @@ const styles = `
 .pd-gallery { position: relative; border-radius: 18px; overflow: hidden; background: #111827; aspect-ratio: 16 / 10; max-height: 78vh; }
 .pd-gallery-img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd-gallery-bg  { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(18px) brightness(0.7); transform: scale(1.15); }
-.pd-gallery-ph { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #111827 0%, #2d3c5e 100%); }
+.pd-gallery-ph { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%); }
+.pd-gallery-ph-badge { width: 60px; height: 60px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; color: #94A3B8; box-shadow: 0 4px 14px rgba(15,23,42,0.08); }
+.pd-gallery-ph span { font-size: 14px; font-weight: 600; color: #94A3B8; }
 .pd-gnav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(15,23,42,0.55); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .pd-gnav:hover { background: rgba(15,23,42,0.8); }
 .pd-gnav-prev { right: 14px; }
@@ -395,7 +397,7 @@ export default function PropertyDetail() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {/* Gallery */}
               <div>
-                <div className="pd-gallery" style={{ aspectRatio: String(imgAspect) }} onTouchStart={onGalleryTouchStart} onTouchEnd={onGalleryTouchEnd}>
+                <div className="pd-gallery" style={{ aspectRatio: images.length ? String(imgAspect) : "16 / 7" }} onTouchStart={onGalleryTouchStart} onTouchEnd={onGalleryTouchEnd}>
                   {images.length > 0 ? (
                     <>
                       {/* The frame matches the image's shape (see imgAspect), so the
@@ -422,7 +424,8 @@ export default function PropertyDetail() {
                     </>
                   ) : (
                     <div className="pd-gallery-ph">
-                      <Building2 size={64} color="rgba(255,255,255,0.35)" />
+                      <div className="pd-gallery-ph-badge"><ImageOff size={26} strokeWidth={1.75} /></div>
+                      <span>لا توجد صورة لهذا الإعلان</span>
                     </div>
                   )}
                   <div className="pd-badges">
