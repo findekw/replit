@@ -208,6 +208,10 @@ export default function Properties() {
   const [tempMaxArea, setTempMaxArea] = useState("");
   const [tempBedrooms, setTempBedrooms] = useState("");
   const [tempAmenities, setTempAmenities] = useState<string[]>([]);
+  // Bumped to auto-open the next picker (type → governorate → area), like the
+  // homepage form.
+  const [govOpenSignal, setGovOpenSignal] = useState(0);
+  const [areaOpenSignal, setAreaOpenSignal] = useState(0);
 
   /* ─── Single-field bottom sheet (same pattern as homepage) ─── */
   const [sheetOpen, setSheetOpen] = useState<"type" | "gov" | "area" | null>(null);
@@ -506,13 +510,13 @@ export default function Properties() {
       {/* نوع العقار */}
       <div>
         <span style={LABEL_STYLE}>نوع العقار</span>
-        <LocationCombobox items={tempTypeItems} value={tempType} onChange={setTempType} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
+        <LocationCombobox items={tempTypeItems} value={tempType} onChange={(v: string) => { setTempType(v); if (v) setGovOpenSignal((n) => n + 1); }} placeholder="جميع الأنواع" showSearch={false} listMaxHeight="320px" emptyText="لا يوجد نوع" />
       </div>
 
       {/* المحافظة */}
       <div>
         <span style={LABEL_STYLE}>المحافظة</span>
-        <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaIds([]); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" />
+        <LocationCombobox items={govItems} value={tempGovId} onChange={(v) => { setTempGovId(v); setTempAreaIds([]); if (v) setAreaOpenSignal((n) => n + 1); }} placeholder="كل المحافظات" showSearch={false} listMaxHeight="none" emptyText="لا توجد محافظة" openSignal={govOpenSignal} />
       </div>
 
       {/* المنطقة — the one multi-select filter (client decision) */}
@@ -523,7 +527,7 @@ export default function Properties() {
             يمكنك اختيار أكثر من منطقة
           </span>
         </span>
-        <LocationCombobox items={(filterAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaIds} onChange={setTempAreaIds} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" multiple />
+        <LocationCombobox items={(filterAreas ?? []).map((a) => ({ value: String(a.id), label: a.nameAr }))} value={tempAreaIds} onChange={setTempAreaIds} placeholder={tempGovId ? "كل المناطق" : "اختر المحافظة أولاً"} searchPlaceholder="ابحث عن منطقة..." emptyText="لا توجد مناطق" disabled={!tempGovId} showSearch listMaxHeight="280px" multiple openSignal={areaOpenSignal} />
       </div>
 
       {/* عدد الغرف */}

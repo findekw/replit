@@ -21,6 +21,9 @@ interface LocationComboboxProps {
   triggerClassName?: string;
   /** When true, value is a string[] and selecting toggles items (panel stays open). */
   multiple?: boolean;
+  /** Bumping this number (e.g. after picking the previous field) opens the panel
+   *  programmatically — used to chain type → governorate → area. */
+  openSignal?: number;
 }
 
 export function LocationCombobox({
@@ -36,10 +39,20 @@ export function LocationCombobox({
   className,
   triggerClassName,
   multiple = false,
+  openSignal,
 }: LocationComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Open the panel when the parent bumps openSignal (chained pickers). Guarded
+  // so the initial value (0/undefined) doesn't auto-open on mount.
+  const firstSignal = useRef(true);
+  useEffect(() => {
+    if (firstSignal.current) { firstSignal.current = false; return; }
+    if (!disabled) { setOpen(true); setQuery(""); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal]);
 
   const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
   const selectedLabels = items.filter((i) => selectedValues.includes(i.value)).map((i) => i.label);
