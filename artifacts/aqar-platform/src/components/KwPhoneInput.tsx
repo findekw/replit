@@ -73,6 +73,7 @@ export function KwPhoneInput({
           padding: "10px 12px",
           fontSize: 14,
           background: "transparent",
+          color: "#111827",
           textAlign: "left",
           direction: "ltr",
           letterSpacing: "0.03em",
