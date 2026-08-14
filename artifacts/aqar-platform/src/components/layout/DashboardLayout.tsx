@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users, Wallet } from "lucide-react";
+import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, Users, Wallet, LifeBuoy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
@@ -115,6 +115,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .dsh-navlink .dsh-ico { width:19px; height:19px; flex-shrink:0; }
         .dsh-bottom { margin-top:auto; padding:14px 12px; border-top:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column; gap:3px; }
+        /* Support — shown ONLY inside the office dashboard (registered offices);
+           support@finde.co is never exposed on public pages (info@ is the public one). */
+        .dsh-support {
+          display:flex; align-items:center; gap:11px; margin:0 2px 8px; padding:11px 13px;
+          border-radius:14px; text-decoration:none; position:relative; overflow:hidden;
+          background:linear-gradient(145deg,rgba(63,91,216,0.18),rgba(255,255,255,0.04));
+          border:1px solid rgba(255,255,255,0.1); box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+          transition:border-color .18s, transform .15s;
+        }
+        .dsh-support:hover { border-color:rgba(102,126,234,0.55); transform:translateY(-1px); }
+        .dsh-support-ico {
+          width:36px; height:36px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+          background:linear-gradient(135deg,#667EEA,#5B73E0); color:#fff; box-shadow:0 6px 16px rgba(63,91,216,0.42);
+        }
+        .dsh-support-txt { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+        .dsh-support-txt b { font-size:13.5px; font-weight:700; color:#fff; }
+        .dsh-support-txt span { font-size:11.5px; color:#94A6C8; direction:ltr; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .dsh-botlink {
           display:flex; align-items:center; gap:13px; width:100%; padding:11px 14px; border-radius:13px;
           font-size:14px; font-weight:600; color:#B6C3DC; text-decoration:none; background:none; border:none; cursor:pointer;
@@ -201,6 +218,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Bottom */}
         <div className="dsh-bottom">
+          {/* Support — offices only. support@finde.co stays inside the dashboard. */}
+          <a href="mailto:support@finde.co" className="dsh-support" data-testid="office-support">
+            <span className="dsh-support-ico"><LifeBuoy className="h-[19px] w-[19px]" /></span>
+            <span className="dsh-support-txt">
+              <b>الدعم الفني للمكاتب</b>
+              <span>support@finde.co</span>
+            </span>
+          </a>
           <Link href="/" className="dsh-botlink">
             <Home className="dsh-ico" />
             العودة للموقع
