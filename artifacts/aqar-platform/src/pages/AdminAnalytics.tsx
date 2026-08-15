@@ -15,6 +15,7 @@ import {
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 import { getApiBase } from "@/lib/apiBase";
+import { daysText } from "@/lib/arabicDays";
 const BASE = getApiBase();
 const NAVY = "#111827";
 const BLUE = "#667EEA";
@@ -208,7 +209,7 @@ export default function AdminAnalytics() {
       out.push({ type: "warn", icon: TrendingDown, title: `${o.officeName} — منخفض الأداء`, body: `${o.adsCount} إعلان بتفاعل ${o.engagementScore} نقطة فقط. أرسل له نصائح لتحسين نشاطه.` })
     );
     expiringSoon.forEach(o =>
-      out.push({ type: "warn", icon: Clock, title: `${o.officeName} — التجربة تنتهي قريباً`, body: `متبقي ${o.trialDaysLeft} يوم فقط على انتهاء الفترة التجريبية.` })
+      out.push({ type: "warn", icon: Clock, title: `${o.officeName} — التجربة تنتهي قريباً`, body: `متبقي ${daysText(o.trialDaysLeft)} فقط على انتهاء الفترة التجريبية.` })
     );
     tiered.inactive.filter(o => o.adsCount > 0 && o.subscriptionStatus !== "active").slice(0, 2).forEach(o =>
       out.push({ type: "info", icon: Activity, title: `${o.officeName} — يمكن استعادته`, body: `كان لديه ${o.adsCount} إعلان. تواصل معه لإعادة تفعيل اشتراكه.` })
@@ -299,7 +300,7 @@ export default function AdminAnalytics() {
                   <AlertRow
                     type="warn" icon={Clock}
                     title={`${expiringSoon.length} اشتراك ينتهي خلال 7 أيام`}
-                    body={expiringSoon.map(o => `${o.officeName} (${o.trialDaysLeft} يوم)`).join(" · ")}
+                    body={expiringSoon.map(o => `${o.officeName} (${daysText(o.trialDaysLeft)})`).join(" · ")}
                     action="راجع الاشتراكات"
                     onAction={() => setTab("subs")}
                   />
@@ -618,7 +619,7 @@ export default function AdminAnalytics() {
               {
                 title: "تنتهي قريباً (خلال 7 أيام)", color: "#d97706", bg: "#fffbeb", border: "#fde68a",
                 list: expiringSoon,
-                badge: (o: any) => <span style={{ color: "#d97706", fontWeight: 700, fontSize: 12 }}>متبقي {o.trialDaysLeft} يوم</span>,
+                badge: (o: any) => <span style={{ color: "#d97706", fontWeight: 700, fontSize: 12 }}>متبقي {daysText(o.trialDaysLeft)}</span>,
               },
               {
                 title: "عالية الأداء — مرشحة للدعم والأولوية", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0",

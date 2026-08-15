@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
+import { daysText } from "@/lib/arabicDays";
 const BASE = getApiBase();
 
 /* ── Finde design system tokens ── */
@@ -1602,7 +1603,7 @@ export default function Admin() {
                           <td data-label="التجربة المجانية">
                             {s.subscriptionStatus === "trial" && s.trialDaysLeft != null ? (
                               <span style={{ fontWeight: 700, fontSize: 13, color: s.trialDaysLeft <= 2 ? AMBER : NAVY }}>
-                                {s.trialDaysLeft} يوم متبقٍ
+                                متبقّي {daysText(s.trialDaysLeft)}
                               </span>
                             ) : (
                               <span style={{ color: "#94a3b8" }}>—</span>

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Building, Clock, Crown, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { daysText } from "@/lib/arabicDays";
 
 /**
  * Shared subscription status card — the single source of truth for how an
@@ -113,7 +114,7 @@ export default function SubscriptionCard({
         <Tile label="تاريخ الانتهاء" value={fmtDate(endsIso)} />
         <Tile
           label="المدة المتبقية"
-          value={daysLeft !== null ? (daysLeft === 0 ? "منتهية" : `${daysLeft} ${daysLeft === 1 ? "يوم" : "أيام"}`) : "—"}
+          value={daysLeft !== null ? (daysLeft === 0 ? "منتهية" : daysText(daysLeft)) : "—"}
           color={daysLeft !== null && daysLeft <= 2 ? "#ea580c" : undefined}
         />
       </div>
@@ -153,7 +154,7 @@ export default function SubscriptionCard({
           <span>
             {listingsLeft !== null && listingsLeft <= 5 && !(daysLeft !== null && daysLeft <= 2)
               ? `باقي ${listingsLeft} إعلانات على حد باقتك — جدّد الآن لرفع الحد.`
-              : `${isTrial ? "تجربتك المجانية" : "اشتراكك"} ${daysLeft && daysLeft > 0 ? `تنتهي بعد ${daysLeft} ${daysLeft === 1 ? "يوم" : "أيام"}` : "انتهت"} — ${isTrial ? "اشترك" : "جدّد"} للحفاظ على ظهور إعلاناتك.`}
+              : `${isTrial ? "تجربتك المجانية" : "اشتراكك"} ${daysLeft && daysLeft > 0 ? `تنتهي بعد ${daysText(daysLeft)}` : "انتهت"} — ${isTrial ? "اشترك" : "جدّد"} للحفاظ على ظهور إعلاناتك.`}
           </span>
         </div>
       )}

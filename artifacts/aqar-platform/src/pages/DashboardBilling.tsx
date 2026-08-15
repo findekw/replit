@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { getApiBase } from "@/lib/apiBase";
+import { daysText } from "@/lib/arabicDays";
 
 const BASE = getApiBase();
 
@@ -68,7 +69,7 @@ function WelcomeHero({ subStatus, subDetail }: { subStatus: string; subDetail: R
   const planName: string | null = d.planNameAr ?? null;
   const daysLeft: number | null = (d.daysLeft as number | null | undefined) ?? null;
   const maxL: number | null = d.planMaxListings ?? null;
-  const daysTxt = daysLeft !== null ? `${daysLeft} ${daysLeft === 1 ? "يوم" : "أيام"}` : null;
+  const daysTxt = daysLeft !== null ? daysText(daysLeft) : null;
 
   type Hero = {
     grad: string; fg: string; sub: string; chipBg: string; chipFg: string;

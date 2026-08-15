@@ -15,6 +15,7 @@ import {
 import { useOfficeAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_DOMAIN } from "@/lib/utils";
+import { daysText } from "@/lib/arabicDays";
 
 import { getApiBase } from "@/lib/apiBase";
 const BASE = getApiBase();
@@ -480,7 +481,7 @@ export default function Dashboard() {
       if (left === null) return null;
       if (onPlan && left > 5) return null; // paid: only near the end; free: always
       const urgent = left <= 2;
-      const daysTxt = `${left} ${left === 1 ? "يوم" : "أيام"}`;
+      const daysTxt = daysText(left);
       return (
         <div className={`mb-5 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border ${urgent ? "bg-orange-50 border-orange-200" : "bg-indigo-50 border-indigo-200"}`}>
           <div className="flex items-start gap-3">
