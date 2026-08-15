@@ -350,7 +350,7 @@ export default function DashboardBilling() {
             )}
 
             <div className="flex flex-wrap gap-3" style={{ marginTop: 16 }}>
-              <Link href="/dashboard">
+              <Link href="/dashboard?edit=1">
                 <Button variant="outline" className="gap-2">
                   <Building2 className="h-4 w-4" /> تعديل بيانات المكتب
                 </Button>

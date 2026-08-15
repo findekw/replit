@@ -224,6 +224,16 @@ export default function Dashboard() {
         setDraftAddress(addr);
         setDraftGovernorateId(gov);
         setSnapshot({ nameAr: name, slug, phone, whatsapp: wa, description: desc, licenseNumber: lic, commercialReg: creg, address: addr, governorateId: gov });
+
+        // Deep-link from "تعديل بيانات المكتب" (billing page): open straight into edit mode.
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("edit") === "1") {
+          setEditMode(true);
+          // Strip the param so a refresh/cancel behaves like a normal visit.
+          window.history.replaceState(null, "", window.location.pathname);
+          requestAnimationFrame(() => {
+            document.getElementById("office-profile-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        }
       })
       .catch(() => {});
   }, [officeId]);
@@ -601,7 +611,7 @@ export default function Dashboard() {
         </div>
 
         {/* ─── Office Profile Card ─── */}
-        <div style={{
+        <div id="office-profile-card" style={{
           background: "#fff", border: "1px solid #EAEEF5",
           borderRadius: 20, marginBottom: 24,
           boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
