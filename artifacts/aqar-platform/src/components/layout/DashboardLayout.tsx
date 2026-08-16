@@ -18,6 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/leads": "عملائي",
   "/dashboard/analytics": "الإحصائيات",
   "/dashboard/billing": "حساب المكتب",
+  "/dashboard/support": "الدعم الفني",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -218,14 +219,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Bottom */}
         <div className="dsh-bottom">
-          {/* Support — offices only. support@finde.co stays inside the dashboard. */}
-          <a href="mailto:support@finde.co" className="dsh-support" data-testid="office-support">
+          {/* Support — offices only. Opens the structured support page (form +
+             direct email); support@finde.co stays inside the dashboard. */}
+          <Link href="/dashboard/support" className="dsh-support" data-testid="office-support">
             <span className="dsh-support-ico"><LifeBuoy className="h-[19px] w-[19px]" /></span>
             <span className="dsh-support-txt">
               <b>الدعم الفني للمكاتب</b>
-              <span>support@finde.co</span>
+              <span style={{ direction: "rtl", textAlign: "right" }}>استفسار · اقتراح · مساعدة</span>
             </span>
-          </a>
+          </Link>
           <Link href="/" className="dsh-botlink">
             <Home className="dsh-ico" />
             العودة للموقع

@@ -30,6 +30,20 @@ async function ensureSchema() {
   // showing contact buttons after the switch to per-listing numbers.
   await db.execute(sql`UPDATE properties p SET whatsapp = o.whatsapp FROM offices o WHERE p.office_id = o.id AND p.whatsapp IS NULL AND o.whatsapp IS NOT NULL`);
   await db.execute(sql`UPDATE properties p SET phone = o.phone FROM offices o WHERE p.office_id = o.id AND p.phone IS NULL AND o.phone IS NOT NULL`);
+  // Structured support / feedback tickets submitted by offices from the dashboard.
+  await db.execute(sql`CREATE TABLE IF NOT EXISTS support_tickets (
+    id serial PRIMARY KEY,
+    office_id integer REFERENCES offices(id),
+    office_name text NOT NULL,
+    office_phone text,
+    office_whatsapp text,
+    office_email text,
+    type text NOT NULL,
+    section text NOT NULL,
+    message text NOT NULL,
+    status text NOT NULL DEFAULT 'جديد',
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`);
   logger.info("Schema ensured");
 }
 

@@ -23,6 +23,7 @@ import {
   MapPin, CalendarDays, ExternalLink, ImageOff, BarChart2,
   Settings, Trash2, KeyRound, UserPlus, CreditCard,
   Image as ImageIcon, Plus, Upload, Loader2, Flag, Edit2, FileText, Clock, Compass, X,
+  LifeBuoy, MessageSquare, Lightbulb, HelpCircle,
 } from "lucide-react";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -91,6 +92,7 @@ const PERM_LABELS: Record<string, string> = {
   offices: "طلبات المكاتب",
   listings: "مراقبة الإعلانات",
   reports: "البلاغات",
+  support: "الدعم والاقتراحات",
   subscriptions: "الاشتراكات والباقات",
   locations: "المناطق",
   catalog: "خيارات الإعلان",
@@ -172,6 +174,20 @@ interface AdminReport {
   officeName: string | null;
 }
 
+interface SupportTicket {
+  id: number;
+  officeId: number | null;
+  officeName: string;
+  officePhone: string | null;
+  officeWhatsapp: string | null;
+  officeEmail: string | null;
+  type: string;      // استفسار | اقتراح
+  section: string;   // القسم المتعلّق
+  message: string;
+  status: string;    // جديد | تمت المراجعة | مغلق
+  createdAt: string;
+}
+
 async function adminFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { credentials: "include" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -224,7 +240,7 @@ export default function Admin() {
   const [loadingOffices, setLoadingOffices]   = useState(true);
   const [loadingListings, setLoadingListings] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "subscriptions" | "locations" | "catalog" | "tools">("offices");
+  const [activeTab, setActiveTab]         = useState<"offices" | "listings" | "reports" | "support" | "subscriptions" | "locations" | "catalog" | "tools">("offices");
 
   type CatalogOption = { id: number; kind: "furnished" | "amenity" | "lead_status"; nameAr: string; active: boolean; sortOrder: number; listings: number };
   const [catalog, setCatalog] = useState<CatalogOption[]>([]);
@@ -248,6 +264,10 @@ export default function Admin() {
   const [reports, setReports]             = useState<AdminReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [reportBusy, setReportBusy]       = useState<number | null>(null);
+  const [tickets, setTickets]             = useState<SupportTicket[]>([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketBusy, setTicketBusy]       = useState<number | null>(null);
+  const [ticketFilter, setTicketFilter]   = useState<string>("");   // "" = all sections
 
   /* ── Tools tab state ── */
   const [admins, setAdmins]               = useState<AdminUser[]>([]);
@@ -294,6 +314,7 @@ export default function Admin() {
     { tab: "offices" as const, title: "طلبات تسجيل المكاتب", text: "هنا تشوف المكاتب الجديدة. التسجيل بيتفعّل تلقائياً بعد تأكيد البريد، وتقدر ترفض أي مكتب مخالف — الرفض يخفي كل إعلاناته فوراً." },
     { tab: "listings" as const, title: "مراقبة الإعلانات", text: "آخر الإعلانات المنشورة على المنصة. الإعلانات بتنشر تلقائياً، ودورك هنا رقابي: أي إعلان مخالف اضغط «حظر» يختفي من الموقع، وتقدر ترجّعه بعدين." },
     { tab: "reports" as const, title: "البلاغات", text: "لو زائر بلّغ عن إعلان (احتيال، بيانات خاطئة...) البلاغ يوصل هنا. راجعه وقرر: تحظر الإعلان أو تتجاهل البلاغ." },
+    { tab: "support" as const, title: "الدعم والاقتراحات", text: "استفسارات واقتراحات المكاتب بتوصل هنا مصنّفة حسب القسم (لوحة التحكم، إعلاناتي...). الملخّص فوق بيوريك أكتر قسم فيه ملاحظات — يعني غالباً فيه مشكلة هناك تستاهل تطوير." },
     { tab: "subscriptions" as const, title: "الاشتراكات والباقات", text: "من هنا تتحكم في مدة التجربة المجانية (اليوم اللي فوق)، وتضيف وتعدّل الباقات وأسعارها — أي باقة تضيفها تظهر في صفحة الاشتراك فوراً. وتحت: كل مكتب وحالة اشتراكه، وتقدر تفعّل أو توقف أو تمنح تجربة يدوياً." },
     { tab: "locations" as const, title: "المناطق", text: "المحافظات والمناطق اللي بتظهر في البحث وفي إضافة الإعلان. أضف منطقة جديدة تظهر فوراً، وعطّل منطقة تختفي من البحث بدون ما تأثر على الإعلانات القديمة." },
     { tab: "catalog" as const, title: "خيارات الإعلان", text: "القوائم اللي المكتب يختار منها وقت إضافة الإعلان: مميزات العقار (مفروش، مصعد، مسبح...)، وحالات عملاء الـ CRM (مهتم، جاد...). كلها بإيدك — أضف وعدّل وعطّل." },
@@ -531,6 +552,36 @@ export default function Admin() {
     }
   }
 
+  const loadTickets = useCallback(async () => {
+    setLoadingTickets(true);
+    try {
+      const data = await adminFetch<{ tickets: SupportTicket[] }>("/api/admin/support");
+      setTickets(data.tickets);
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل رسائل الدعم", variant: "destructive" });
+    } finally {
+      setLoadingTickets(false);
+    }
+  }, [toast]);
+
+  async function updateTicketStatus(id: number, status: string) {
+    setTicketBusy(id);
+    try {
+      const res = await fetch(`${BASE}/api/admin/support/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحديث حالة الرسالة", variant: "destructive" });
+    } finally {
+      setTicketBusy(null);
+    }
+  }
+
   const loadAdmins = useCallback(async () => {
     setLoadingAdmins(true);
     try {
@@ -606,7 +657,7 @@ export default function Admin() {
   useEffect(() => {
     if (myPerms === null) return;
     if (!canSee(activeTab)) {
-      const first = (["offices", "listings", "reports", "subscriptions", "locations", "catalog", "tools"] as const).find((t) => canSee(t));
+      const first = (["offices", "listings", "reports", "support", "subscriptions", "locations", "catalog", "tools"] as const).find((t) => canSee(t));
       if (first) setActiveTab(first);
     }
   }, [myPerms, activeTab, canSee]);
@@ -620,6 +671,11 @@ export default function Admin() {
   useEffect(() => {
     if (activeTab === "reports" && user) loadReports();
   }, [activeTab, user, loadReports]);
+
+  // Load support tickets when that tab is opened
+  useEffect(() => {
+    if (activeTab === "support" && user) loadTickets();
+  }, [activeTab, user, loadTickets]);
 
   async function addAdmin(e: React.FormEvent) {
     e.preventDefault();
@@ -954,6 +1010,7 @@ export default function Admin() {
     { key: "offices",       icon: Users,         label: "طلبات تسجيل المكاتب", count: offices.length },
     { key: "listings",      icon: Building2,     label: "مراقبة الإعلانات",     count: blockedListings || undefined },
     { key: "reports",       icon: Flag,          label: "البلاغات",            count: reports.filter((r) => r.status === "جديد").length || undefined },
+    { key: "support",       icon: LifeBuoy,      label: "الدعم والاقتراحات",   count: tickets.filter((t) => t.status === "جديد").length || undefined },
     { key: "subscriptions", icon: CreditCard,    label: "الاشتراكات" },
     { key: "locations",     icon: MapPin,        label: "المناطق" },
     { key: "catalog",       icon: ClipboardList, label: "خيارات الإعلان" },
@@ -1477,6 +1534,166 @@ export default function Admin() {
             )}
           </div>
         )}
+
+        {/* ═══════════════ SUPPORT / FEEDBACK TAB ═══════════════ */}
+        {activeTab === "support" && (() => {
+          const SEC = ["لوحة التحكم", "إعلاناتي", "الإحصائيات", "حساب المكتب", "عام / أخرى"];
+          const newCount = tickets.filter((t) => t.status === "جديد").length;
+          const openTickets = tickets.filter((t) => t.status !== "مغلق");
+          const bySection = SEC.map((s) => ({
+            name: s,
+            total: tickets.filter((t) => t.section === s).length,
+            open: openTickets.filter((t) => t.section === s).length,
+          }));
+          const maxOpen = Math.max(0, ...bySection.map((s) => s.open));
+          const inquiries = tickets.filter((t) => t.type === "استفسار").length;
+          const suggestions = tickets.filter((t) => t.type === "اقتراح").length;
+          const shown = ticketFilter ? tickets.filter((t) => t.section === ticketFilter) : tickets;
+          return (
+          <div className="space-y-4">
+
+            {/* ── Aggregation summary: which section draws the most feedback ── */}
+            <div className="adm-card" style={{ padding: "18px 20px" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <BarChart2 className="h-4.5 w-4.5" style={{ color: NAVY }} />
+                <h3 className="text-base font-bold" style={{ color: NAVY }}>ملخّص حسب القسم</h3>
+              </div>
+              <p className="text-xs mb-4" style={{ color: BODY }}>
+                القسم الأكثر ملاحظاتٍ غالباً فيه مشكلة أو فرصة تطوير. الأرقام تعدّ الرسائل المفتوحة (غير المغلقة).
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+                {bySection.map((s) => {
+                  const isTop = s.open > 0 && s.open === maxOpen;
+                  return (
+                    <div key={s.name} style={{
+                      borderRadius: 14, padding: "13px 14px",
+                      border: `1.5px solid ${isTop ? "#FDBA74" : BORDER}`,
+                      background: isTop ? "#FFF7ED" : "#fff",
+                    }}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: NAVY }}>{s.name}</span>
+                        {isTop && <span className="adm-chip" style={{ background: "#FEECEC", color: RED }}>الأعلى</span>}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
+                        <span style={{ fontSize: 24, fontWeight: 800, color: isTop ? "#C2410C" : NAVY, fontVariantNumeric: "tabular-nums" }}>{s.open}</span>
+                        <span style={{ fontSize: 11.5, color: BODY }}>مفتوحة{s.total !== s.open ? ` · ${s.total} إجمالاً` : ""}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                <span className="adm-chip" style={{ background: "#EEF2FF", color: "#4B66E0" }}><HelpCircle className="h-3 w-3" /> استفسارات: {inquiries}</span>
+                <span className="adm-chip" style={{ background: "#ECFDF5", color: "#0F766E" }}><Lightbulb className="h-3 w-3" /> اقتراحات: {suggestions}</span>
+                <span className="adm-chip" style={{ background: "#F1F5F9", color: BODY }}>الإجمالي: {tickets.length}</span>
+              </div>
+            </div>
+
+            {/* ── Ticket list ── */}
+            <div className="adm-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 gap-2 flex-wrap" style={{ borderBottom: `1px solid ${BORDER}` }}>
+                <div className="flex items-center gap-2">
+                  <LifeBuoy className="h-4.5 w-4.5" style={{ color: NAVY }} />
+                  <h3 className="text-base font-bold" style={{ color: NAVY }}>رسائل الدعم والاقتراحات</h3>
+                  {newCount > 0 && <span className="adm-chip" style={{ background: "#FEF6E7", color: AMBER }}>{newCount} جديدة</span>}
+                </div>
+                <Button variant="ghost" size="sm" onClick={loadTickets} className="gap-1.5" style={{ color: BODY }}>
+                  <RefreshCw className="h-3.5 w-3.5" />تحديث
+                </Button>
+              </div>
+
+              {/* Section filter */}
+              <div className="flex items-center gap-2 px-5 py-3 flex-wrap" style={{ borderBottom: `1px solid ${BORDER}`, background: "#FBFCFE" }}>
+                <button
+                  type="button"
+                  onClick={() => setTicketFilter("")}
+                  className="adm-chip"
+                  style={{ cursor: "pointer", background: ticketFilter === "" ? BLUE : "#EEF1F5", color: ticketFilter === "" ? "#fff" : BODY }}
+                >الكل ({tickets.length})</button>
+                {bySection.filter((s) => s.total > 0).map((s) => (
+                  <button
+                    key={s.name}
+                    type="button"
+                    onClick={() => setTicketFilter(s.name)}
+                    className="adm-chip"
+                    style={{ cursor: "pointer", background: ticketFilter === s.name ? BLUE : "#EEF1F5", color: ticketFilter === s.name ? "#fff" : BODY }}
+                  >{s.name} ({s.total})</button>
+                ))}
+              </div>
+
+              {loadingTickets ? (
+                <div className="p-5 space-y-3">
+                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+                </div>
+              ) : shown.length === 0 ? (
+                <div className="text-center py-20" style={{ color: BODY }}>
+                  <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "#EEF2FE" }}>
+                    <MessageSquare className="h-7 w-7" style={{ color: BLUE }} />
+                  </div>
+                  <p className="font-bold" style={{ color: NAVY }}>{tickets.length === 0 ? "لا توجد رسائل بعد" : "لا توجد رسائل في هذا القسم"}</p>
+                  <p className="text-sm mt-1">استفسارات واقتراحات المكاتب هتظهر هنا</p>
+                </div>
+              ) : (
+                <div className="divide-y" style={{ borderColor: BORDER }}>
+                  {shown.map((t) => {
+                    const sc = t.status === "جديد"
+                      ? { bg: "#FEF6E7", fg: AMBER }
+                      : t.status === "تمت المراجعة"
+                        ? { bg: "#ECEFFB", fg: BLUE }
+                        : { bg: "#F1F5F9", fg: BODY };
+                    const isSug = t.type === "اقتراح";
+                    return (
+                      <div key={t.id} className="px-5 py-4" style={{ borderColor: BORDER }}>
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                              <span className="adm-chip" style={{ background: isSug ? "#ECFDF5" : "#EEF2FF", color: isSug ? "#0F766E" : "#4B66E0" }}>
+                                {isSug ? <Lightbulb className="h-3 w-3" /> : <HelpCircle className="h-3 w-3" />} {t.type}
+                              </span>
+                              <span className="adm-chip" style={{ background: "#F1F5F9", color: BODY }}>{t.section}</span>
+                              <span className="adm-chip" style={{ background: sc.bg, color: sc.fg }}>{t.status}</span>
+                            </div>
+                            <div className="text-sm font-bold" style={{ color: NAVY }}>{t.officeName}</div>
+                            <div className="text-xs mt-0.5" style={{ color: BODY }}>
+                              {t.officeEmail && <span dir="ltr">{t.officeEmail}</span>}
+                              {t.officePhone && <> · <span dir="ltr">{t.officePhone}</span></>}
+                              {(t.officeEmail || t.officePhone) && " · "}{formatDate(t.createdAt)}
+                            </div>
+                            <p className="text-sm mt-2 p-2.5 rounded-lg" style={{ background: "#F8FAFC", color: "#334155", whiteSpace: "pre-wrap" }}>{t.message}</p>
+                            {t.officeEmail && (
+                              <a
+                                href={`mailto:${t.officeEmail}?subject=${encodeURIComponent(`رد فايند — ${t.type}`)}`}
+                                className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold"
+                                style={{ color: BLUE, textDecoration: "none" }}
+                              >
+                                <FileText className="h-3.5 w-3.5" /> رد بالبريد
+                              </a>
+                            )}
+                          </div>
+                          {canDo("support", "edit") && (
+                            <div className="flex flex-col gap-1.5 flex-shrink-0">
+                              {t.status !== "تمت المراجعة" && (
+                                <Button size="sm" variant="outline" disabled={ticketBusy === t.id} onClick={() => updateTicketStatus(t.id, "تمت المراجعة")} className="gap-1.5 text-xs">
+                                  <CheckCircle className="h-3.5 w-3.5" /> تمت المراجعة
+                                </Button>
+                              )}
+                              {t.status !== "مغلق" && (
+                                <Button size="sm" variant="ghost" disabled={ticketBusy === t.id} onClick={() => updateTicketStatus(t.id, "مغلق")} className="gap-1.5 text-xs" style={{ color: BODY }}>
+                                  <XCircle className="h-3.5 w-3.5" /> إغلاق
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          );
+        })()}
 
         {/* ═══════════════ SUBSCRIPTIONS TAB ═══════════════ */}
         {activeTab === "subscriptions" && (
