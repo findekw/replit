@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/AuthContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import ForOffices from "@/pages/ForOffices";
 import Properties from "@/pages/Properties";
 import PropertyDetail from "@/pages/PropertyDetail";
 import Plans from "@/pages/Plans";
@@ -58,7 +59,9 @@ function ScrollToTop() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={ForOffices} />
+      <Route path="/home" component={Home} />
+      <Route path="/offices" component={ForOffices} />
       <Route path="/properties" component={Properties} />
       <Route path="/properties/:id" component={PropertyDetail} />
       <Route path="/plans" component={Plans} />
