@@ -77,13 +77,13 @@ export default function Plans() {
           /* ── Features section ── */
           .features-section {
             background: #F5F7FA;
-            padding: 10px 20px 24px;
+            padding: 30px 20px 28px;
             text-align: center;
           }
           .features-title {
             font-size: 28px;
             font-weight: 700;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
             color: var(--text-heading);
           }
           .feat-grid {

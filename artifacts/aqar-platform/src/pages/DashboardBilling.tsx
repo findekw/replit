@@ -290,42 +290,74 @@ export default function DashboardBilling() {
               );
             })()
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 560 }}>
-                <thead>
-                  <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "right" }}>
-                    <th style={{ padding: "12px 16px", fontWeight: 700 }}>التاريخ</th>
-                    <th style={{ padding: "12px 16px", fontWeight: 700 }}>الباقة</th>
-                    <th style={{ padding: "12px 16px", fontWeight: 700 }}>المبلغ</th>
-                    <th style={{ padding: "12px 16px", fontWeight: 700 }}>الحالة</th>
-                    <th style={{ padding: "12px 16px", fontWeight: 700 }}>رقم العملية</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((p) => {
-                    const st = PAY_STATUS[p.status] ?? { text: p.status, cls: "bg-gray-100 text-gray-700", icon: <Clock className="h-3.5 w-3.5" /> };
-                    return (
-                      <tr key={p.id} style={{ borderTop: "1px solid #F1F5F9", color: "#0f172a" }}>
-                        <td style={{ padding: "13px 16px" }}>{fmtDate(p.paidAt ?? p.createdAt)}</td>
-                        <td style={{ padding: "13px 16px" }}>
-                          {p.planNameAr ?? "—"}
-                          {p.planDurationDays ? <span style={{ color: "#94A3B8" }}>{` · ${p.planDurationDays} يوم`}</span> : null}
-                        </td>
-                        <td style={{ padding: "13px 16px", fontWeight: 700 }}>
-                          {kwd(p.amountFils)} <span style={{ color: "#94A3B8", fontWeight: 400 }}>{p.currency === "KWD" ? "د.ك" : p.currency}</span>
-                        </td>
-                        <td style={{ padding: "13px 16px" }}>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
-                            {st.icon}{st.text}
-                          </span>
-                        </td>
-                        <td style={{ padding: "13px 16px", color: "#94A3B8", fontFamily: "monospace", fontSize: 12, direction: "ltr" }}>{p.orderRef}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Mobile: stacked cards — no horizontal scroll on narrow screens */}
+              <div className="sm:hidden divide-y" style={{ borderColor: "#F1F5F9" }}>
+                {payments.map((p) => {
+                  const st = PAY_STATUS[p.status] ?? { text: p.status, cls: "bg-gray-100 text-gray-700", icon: <Clock className="h-3.5 w-3.5" /> };
+                  return (
+                    <div key={p.id} style={{ padding: "14px 16px" }}>
+                      <div className="flex items-center justify-between gap-2" style={{ marginBottom: 9 }}>
+                        <span style={{ fontSize: 13, color: "#64748B" }}>{fmtDate(p.paidAt ?? p.createdAt)}</span>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
+                          {st.icon}{st.text}
+                        </span>
+                      </div>
+                      <div className="flex items-end justify-between gap-3">
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", margin: 0 }}>
+                            {p.planNameAr ?? "—"}
+                            {p.planDurationDays ? <span style={{ color: "#94A3B8", fontWeight: 400 }}>{` · ${p.planDurationDays} يوم`}</span> : null}
+                          </p>
+                          <p style={{ fontSize: 11.5, color: "#94A3B8", fontFamily: "monospace", direction: "ltr", textAlign: "right", margin: "4px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.orderRef}</p>
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#111827", whiteSpace: "nowrap" }}>
+                          {kwd(p.amountFils)} <span style={{ color: "#94A3B8", fontWeight: 400, fontSize: 12 }}>{p.currency === "KWD" ? "د.ك" : p.currency}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: full table */}
+              <div className="hidden sm:block" style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 560 }}>
+                  <thead>
+                    <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "right" }}>
+                      <th style={{ padding: "12px 16px", fontWeight: 700 }}>التاريخ</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 700 }}>الباقة</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 700 }}>المبلغ</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 700 }}>الحالة</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 700 }}>رقم العملية</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p) => {
+                      const st = PAY_STATUS[p.status] ?? { text: p.status, cls: "bg-gray-100 text-gray-700", icon: <Clock className="h-3.5 w-3.5" /> };
+                      return (
+                        <tr key={p.id} style={{ borderTop: "1px solid #F1F5F9", color: "#0f172a" }}>
+                          <td style={{ padding: "13px 16px" }}>{fmtDate(p.paidAt ?? p.createdAt)}</td>
+                          <td style={{ padding: "13px 16px" }}>
+                            {p.planNameAr ?? "—"}
+                            {p.planDurationDays ? <span style={{ color: "#94A3B8" }}>{` · ${p.planDurationDays} يوم`}</span> : null}
+                          </td>
+                          <td style={{ padding: "13px 16px", fontWeight: 700 }}>
+                            {kwd(p.amountFils)} <span style={{ color: "#94A3B8", fontWeight: 400 }}>{p.currency === "KWD" ? "د.ك" : p.currency}</span>
+                          </td>
+                          <td style={{ padding: "13px 16px" }}>
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>
+                              {st.icon}{st.text}
+                            </span>
+                          </td>
+                          <td style={{ padding: "13px 16px", color: "#94A3B8", fontFamily: "monospace", fontSize: 12, direction: "ltr" }}>{p.orderRef}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 

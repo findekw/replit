@@ -1,12 +1,11 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star } from "lucide-react";
+import { ChevronDown, X, Check, Search, ArrowLeft, Building2, MapPin, MessageCircle, ShieldCheck, TrendingUp, Star, LayoutGrid, Heart, Phone, SlidersHorizontal } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getApiBase } from "@/lib/apiBase";
 import {
   useGetLatestProperties,
-  useGetPlatformStats,
   useListGovernorates,
   useListAreas,
 } from "@workspace/api-client-react";
@@ -26,10 +25,10 @@ const TYPES_BY_STATUS: Record<string, string[]> = {
 const FEAT_COLOR = "#667EEA";
 const FEAT_BG = "#EEF2FF";
 const FEATURES = [
-  { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية مرخّصة", desc: "كل الإعلانات من مكاتب عقارية مرخّصة في دولة الكويت", color: FEAT_COLOR, bg: FEAT_BG },
-  { icon: <Search size={26} strokeWidth={2} />, label: "بحث سريع ودقيق", desc: "فلتر حسب النوع والمنطقة والميزانية في ثوانٍ", color: FEAT_COLOR, bg: FEAT_BG },
-  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشر", desc: "تواصل مع المكتب مباشرة عبر واتساب أو اتصال", color: FEAT_COLOR, bg: FEAT_BG },
-  { icon: <MapPin size={26} strokeWidth={2} />, label: "كل الكويت في مكان واحد", desc: "تصفّح جميع المحافظات والمناطق من شاشة واحدة", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <Building2 size={26} strokeWidth={2} />, label: "مكاتب عقارية", desc: "تصفّح عقارات معروضة من مكاتب عقارية في الكويت", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <LayoutGrid size={26} strokeWidth={2} />, label: "عقارات متنوعة", desc: "اكتشف خيارات مختلفة تناسب ما تبحث عنه", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <SlidersHorizontal size={26} strokeWidth={2} />, label: "فلترة تناسب احتياجك", desc: "حدّد مواصفات العقار واعرض النتائج الأقرب لبحثك", color: FEAT_COLOR, bg: FEAT_BG },
+  { icon: <MessageCircle size={26} strokeWidth={2} />, label: "تواصل مباشرة", desc: "تواصل مع المكتب من صفحة العقار عبر واتساب أو اتصال", color: FEAT_COLOR, bg: FEAT_BG },
 ];
 
 export default function Home() {
@@ -57,7 +56,6 @@ export default function Home() {
     (areaList ?? []).find((a) => String(a.id) === id)?.nameAr ?? "";
 
   const { data: latest } = useGetLatestProperties({ limit: 8 } as any);
-  const { data: stats } = useGetPlatformStats();
 
   const latestList = (latest as any[]) ?? [];
 
@@ -79,7 +77,7 @@ export default function Home() {
   }, []);
 
   const current = slides[0] ?? null;
-  const heroSubtitle = current?.subtitle || "آلاف العقارات للبيع والإيجار والبدل من مكاتب عقارية — كل الكويت في مكان واحد";
+  const heroSubtitle = current?.subtitle || "تصفّح عقارات للبيع والإيجار والبدل من مكاتب عقارية في الكويت";
 
   // ── Scroll-reveal: fade sections in as they enter the viewport ──
   useEffect(() => {
@@ -357,7 +355,7 @@ export default function Home() {
           <div className="fh-hero-overlay" />
 
           <div className="fh-hero-inner">
-            <span className="fh-eyebrow"><ShieldCheck size={14} /> منصة العقارات الأولى للمكاتب في الكويت</span>
+            <span className="fh-eyebrow"><ShieldCheck size={14} /> عقارات مكاتب الكويت في مكان واحد</span>
             <h1 className="fh-headline fh-anim-1">
               {current?.title ? current.title : <>ابحث عن عقارك لدى <span className="hl">مكاتب عقارية</span></>}
             </h1>
@@ -404,9 +402,9 @@ export default function Home() {
         {/* ===== STATS ===== */}
         <div className="fh-stats">
           <div className="fh-stats-grid">
-            <div className="fh-stat"><div className="fh-stat-ic"><Building2 size={19} /></div><div className="fh-stat-num">{(stats?.totalProperties ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">عقار معروض</div></div>
-            <div className="fh-stat"><div className="fh-stat-ic"><Building2 size={19} /></div><div className="fh-stat-num">{(stats?.totalOffices ?? 0).toLocaleString("en-US")}+</div><div className="fh-stat-lbl">مكتب عقاري</div></div>
-            <div className="fh-stat"><div className="fh-stat-ic"><MapPin size={19} /></div><div className="fh-stat-num">{stats?.totalCities ?? 6}</div><div className="fh-stat-lbl">محافظات</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><LayoutGrid size={19} /></div><div className="fh-stat-lbl" style={{ fontSize: 14.5, fontWeight: 700, color: "#111827", marginTop: 2 }}>عقارات متنوعة</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><Heart size={19} /></div><div className="fh-stat-lbl" style={{ fontSize: 14.5, fontWeight: 700, color: "#111827", marginTop: 2 }}>حفظ العقارات</div></div>
+            <div className="fh-stat"><div className="fh-stat-ic"><Phone size={19} /></div><div className="fh-stat-lbl" style={{ fontSize: 14.5, fontWeight: 700, color: "#111827", marginTop: 2 }}>تواصل مباشر</div></div>
           </div>
         </div>
 
@@ -455,8 +453,8 @@ export default function Home() {
           <div className="fh-cta-box">
             <div className="fh-cta-inner">
               <span className="fh-cta-pill"><Star size={13} /> تجربة مجانية 14 يومًا</span>
-              <h2>لديك مكتب عقاري؟ اعرض عقاراتك على فايند</h2>
-              <p>سجّل مكتبك وابدأ تجربة مجانية لمدة 14 يومًا، احصل على صفحة هبوط احترافية برابط خاص، وابدأ باستقبال العملاء مباشرة.</p>
+              <h2>لديك مكتب عقاري؟ اجمع عقارات مكتبك في مكان واحد</h2>
+              <p>صفحة خاصة لمكتبك تجمع عقاراتك في مكان واحد، وتسهّل على عملائك تصفّحها والتواصل معك مباشرة.</p>
               <Link href="/" className="fh-cta-btn">اعرف كيف يساعدك فايند <ArrowLeft size={16} /></Link>
             </div>
           </div>

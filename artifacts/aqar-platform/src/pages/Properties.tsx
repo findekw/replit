@@ -662,6 +662,21 @@ export default function Properties() {
           .prop-sheet-panel { animation: propSheetSlideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
           .prop-sheet-backdrop { animation: propBackdropFade 0.2s ease both; }
 
+          /* Visible scrollbar for the desktop filter sidebar so it's obvious the
+             panel scrolls on its own — avoids the confusion of a hidden/overlay
+             bar while the page scrolls behind it. (Desktop-only: the sidebar is
+             hidden on mobile.) */
+          .prop-sidebar-scroll {
+            scrollbar-width: thin !important;                 /* Firefox — beat the global "hide all" */
+            scrollbar-color: #C3CBDA transparent !important;  /* Firefox: thumb + track */
+            -ms-overflow-style: auto !important;
+            scrollbar-gutter: stable;                         /* reserve the bar's space */
+          }
+          .prop-sidebar-scroll::-webkit-scrollbar { display: block !important; width: 8px !important; }
+          .prop-sidebar-scroll::-webkit-scrollbar-track { background: transparent !important; }
+          .prop-sidebar-scroll::-webkit-scrollbar-thumb { background: #C3CBDA !important; border-radius: 8px !important; }
+          .prop-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #A7B0C2 !important; }
+
           /* ── Pagination ── */
           .pagination button,
           .pagination a {
@@ -834,9 +849,9 @@ export default function Properties() {
                 <button
                   onClick={openMobileFilter}
                   style={{
-                    flex: 1, height: "44px", borderRadius: "12px",
-                    border: "1.5px solid #e2e8f0", background: "#F5F7FA",
-                    color: "#475569", fontWeight: 600, fontSize: "14px",
+                    flex: 1, height: "44px", borderRadius: "10px",
+                    border: "1px solid #94A3B8", background: "#fff",
+                    color: "#0f172a", fontWeight: 400, fontSize: "14px",
                     cursor: "pointer", outline: "none",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                   }}
@@ -856,7 +871,7 @@ export default function Properties() {
                 </button>
                 <div style={{ flexShrink: 0 }}>
                   <Select value={sort} onValueChange={setSort}>
-                    <SelectTrigger className="w-32" style={{ height: "44px" }}>
+                    <SelectTrigger className="w-32" style={{ height: "44px", justifyContent: "center", gap: "6px" }}>
                       <SelectValue placeholder="الترتيب" />
                     </SelectTrigger>
                     <SelectContent>
@@ -912,40 +927,46 @@ export default function Properties() {
 
         <div className="flex gap-6">
 
-          {/* Desktop Sidebar */}
+          {/* Desktop Sidebar — fixed header + scrollable body + pinned footer
+              (same shape as the mobile sheet). The visible scrollbar and the
+              footer's upward shadow signal that there's more content below. */}
           <aside className="w-72 flex-shrink-0 hidden md:block" dir="rtl">
             <div
               style={{
                 position: "sticky",
-                top: "100px",
-                maxHeight: "80vh",
-                overflowY: "auto",
+                top: "88px",
+                maxHeight: "calc(100vh - 220px)",
                 background: "#ffffff",
                 border: "1px solid #EEF1F5",
                 borderRadius: "18px",
                 boxShadow: "0 6px 24px rgba(15,23,42,0.06)",
-                padding: "22px 20px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "16px",
+                overflow: "hidden",
               }}
             >
-              <div style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+              {/* Header (fixed) */}
+              <div style={{ flexShrink: 0, padding: "18px 20px 14px", borderBottom: "1px solid #f1f5f9" }}>
                 <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#111827", margin: 0 }}>
                   تصفية النتائج
                 </h2>
               </div>
-              {SidebarFilters()}
 
-              {/* Search / reset — a solid footer bar (like the mobile sheet) so
-                  the filter content never shows through behind the buttons. The
-                  negative margins bleed it to the card's edges. */}
+              {/* Scrollable body. The scroll container is LTR so the scrollbar
+                  sits on the RIGHT (RTL would push it to the left); the inner
+                  wrapper is RTL again so the content stays laid out correctly. */}
+              <div className="prop-sidebar-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", direction: "ltr" }}>
+                <div style={{ direction: "rtl", padding: "18px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {SidebarFilters()}
+                </div>
+              </div>
+
+              {/* Footer pinned at the very bottom */}
               <div style={{
-                display: "flex", gap: "10px",
-                position: "sticky", bottom: 0,
+                flexShrink: 0, display: "flex", gap: "10px",
                 background: "#ffffff",
                 borderTop: "1px solid #EEF1F5",
-                margin: "0 -20px -22px",
+                boxShadow: "0 -10px 16px -10px rgba(15,23,42,0.12)",
                 padding: "14px 20px",
                 borderRadius: "0 0 18px 18px",
               }}>
@@ -956,6 +977,7 @@ export default function Properties() {
                     border: "1.5px solid #e2e8f0", background: "#F5F7FA",
                     color: "#64748b", fontWeight: 600, fontSize: "14.5px",
                     cursor: "pointer", outline: "none", fontFamily: "'Cairo',sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                 >
                   إعادة تعيين
@@ -1265,6 +1287,7 @@ export default function Properties() {
                   border: "1.5px solid #e2e8f0", background: "#F5F7FA",
                   color: "#64748b", fontWeight: 600, fontSize: "15px",
                   cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
               >
                 إعادة تعيين
@@ -1276,6 +1299,7 @@ export default function Properties() {
                   border: "none", background: "#667EEA",
                   color: "#ffffff", fontWeight: 700, fontSize: "15px",
                   cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
               >
                 عرض النتائج
