@@ -455,7 +455,7 @@ export default function Home() {
               <span className="fh-cta-pill"><Star size={13} /> تجربة مجانية 14 يومًا</span>
               <h2>لديك مكتب عقاري؟ اجمع عقارات مكتبك في مكان واحد</h2>
               <p>صفحة خاصة لمكتبك تجمع عقاراتك في مكان واحد، وتسهّل على عملائك تصفّحها والتواصل معك مباشرة.</p>
-              <Link href="/" className="fh-cta-btn">اعرف كيف يساعدك فايند <ArrowLeft size={16} /></Link>
+              <Link href="/register" className="fh-cta-btn">ابدأ تجربتك المجانية <ArrowLeft size={16} /></Link>
             </div>
           </div>
         </section>

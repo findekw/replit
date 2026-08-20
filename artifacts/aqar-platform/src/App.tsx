@@ -59,7 +59,7 @@ function ScrollToTop() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={ForOffices} />
+      <Route path="/" component={Home} />
       <Route path="/home" component={Home} />
       <Route path="/offices" component={ForOffices} />
       <Route path="/properties" component={Properties} />
