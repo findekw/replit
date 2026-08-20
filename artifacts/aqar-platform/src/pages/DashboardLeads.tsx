@@ -225,7 +225,7 @@ export default function DashboardLeads() {
 
   return (
     <DashboardLayout>
-      <div dir="rtl">
+      <div dir="rtl" className="max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div>

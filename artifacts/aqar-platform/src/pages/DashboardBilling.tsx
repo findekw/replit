@@ -225,7 +225,7 @@ export default function DashboardBilling() {
 
   return (
     <DashboardLayout>
-      <div dir="rtl" style={{ maxWidth: 1000, fontFamily: "'Cairo', sans-serif" }}>
+      <div dir="rtl" className="max-w-[1200px] mx-auto" style={{ fontFamily: "'Cairo', sans-serif" }}>
         {/* Header */}
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

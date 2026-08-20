@@ -81,7 +81,7 @@ export default function DashboardAnalytics() {
 
   return (
     <DashboardLayout>
-      <div dir="rtl">
+      <div dir="rtl" className="max-w-[1200px] mx-auto">
         <div className="mb-6">
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>الإحصائيات</h1>
           <p style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>أرقام إعلاناتك وتفاعل العملاء معها</p>

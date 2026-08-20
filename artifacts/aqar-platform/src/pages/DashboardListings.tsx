@@ -85,7 +85,7 @@ export default function DashboardListings() {
 
   return (
     <DashboardLayout>
-      <div dir="rtl">
+      <div dir="rtl" className="max-w-[1200px] mx-auto">
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0 }}>إعلاناتي</h1>
