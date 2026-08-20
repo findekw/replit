@@ -3,6 +3,7 @@ import { LayoutDashboard, Building, BarChart2, LogOut, Menu, X, Plus, Home, User
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useOfficeAuth } from "@/lib/AuthContext";
+import { useGetOffice } from "@workspace/api-client-react";
 
 const NAV_ITEMS = [
   { label: "لوحة التحكم", href: "/dashboard", icon: LayoutDashboard },
@@ -28,7 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Safari the initial layout can briefly evaluate at a desktop width (before the
   // viewport meta applies), which would otherwise animate the drawer out on load.
   const [ready, setReady] = useState(false);
-  const { officeUser: user, logout } = useOfficeAuth();
+  const { officeUser: user, officeId, logout } = useOfficeAuth();
+  // The office logo lives on the office entity (not the office-user account),
+  // so fetch it to show the real profile picture in the sidebar.
+  const { data: office } = useGetOffice(officeId ?? 0, { query: { enabled: (officeId ?? 0) > 0 } } as any);
+  const officeLogo = (office as any)?.logo as string | undefined;
+  const officeName = (office as any)?.nameAr || user?.name || "مكتبك";
 
   useEffect(() => {
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setReady(true)));
@@ -69,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           border-bottom:1px solid rgba(255,255,255,0.07);
         }
         .dsh-logo-badge {
-          width:34px; height:34px; border-radius:10px; flex-shrink:0;
+          width:42px; height:42px; border-radius:12px; flex-shrink:0;
           background:linear-gradient(135deg,#667EEA,#5B73E0);
           display:flex; align-items:center; justify-content:center;
           box-shadow:0 6px 16px rgba(63,91,216,0.45);
@@ -168,31 +174,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside className={`dsh-sidebar ${sidebarOpen ? "open" : ""}`}>
-        {/* Logo */}
+        {/* Office identity — the office's own logo + name + email (one block;
+            the separate Finde-brand header was redundant with this). */}
         <div className="dsh-logo-wrap">
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none" }}>
-            <span className="dsh-logo-badge">
-              <Building className="h-[18px] w-[18px]" style={{ color: "#fff" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0, width: "100%" }}>
+            <span className="dsh-logo-badge" style={{ overflow: "hidden" }}>
+              {officeLogo
+                ? <img src={officeLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>{initial}</span>}
             </span>
-            <span className="dsh-logo-text">
-              <b>Finde</b>
-              <span>منصة العقارات</span>
+            <span className="dsh-logo-text" style={{ minWidth: 0, flex: 1 }}>
+              <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{officeName}</b>
+              <span style={{ fontSize: 11, letterSpacing: 0, color: "#94A6C8", direction: "ltr", textAlign: "right", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</span>
             </span>
-          </Link>
-        </div>
-
-        {/* User info */}
-        {user && (
-          <div className="dsh-office">
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div className="dsh-avatar">{initial}</div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <p className="dsh-office-name">{user.name}</p>
-                <p className="dsh-office-email">{user.email}</p>
-              </div>
-            </div>
           </div>
-        )}
+        </div>
 
         {/* Nav */}
         <nav style={{ flex: "0 0 auto" }}>

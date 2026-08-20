@@ -502,7 +502,14 @@ export default function Properties() {
       <div>
         <span style={LABEL_STYLE}>حالة العقار</span>
         <StatusChips value={tempStatus} onChange={(v) => {
-          if (v === "للبدل" && tempType && !BDAL_TYPES.includes(tempType)) setTempType("");
+          if (v === "") {
+            // "الكل" means "show everything" — reset the draft sub-filters so
+            // pressing بحث doesn't stay stuck on the previous selection.
+            setTempType(""); setTempGovId(""); setTempAreaIds([]);
+            setTempMinPrice(""); setTempMaxPrice(""); setTempMinArea(""); setTempMaxArea(""); setTempBedrooms(""); setTempAmenities([]);
+          } else if (v === "للبدل" && tempType && !BDAL_TYPES.includes(tempType)) {
+            setTempType("");
+          }
           setTempStatus(v);
         }} />
       </div>
@@ -788,7 +795,14 @@ export default function Properties() {
                   key={s}
                   className="prop-status-tab"
                   onClick={() => {
-                    if (s === "للبدل") setTypes((p) => p.filter((t) => BDAL_TYPES.includes(t)));
+                    if (s === "") {
+                      // "الكل" means "show everything" — reset the sub-filters so
+                      // it doesn't stay stuck on the previous type/area selection.
+                      setTypes([]); setGovId(""); setAreaIds([]);
+                      setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms(""); setAmenities([]);
+                    } else if (s === "للبدل") {
+                      setTypes((p) => p.filter((t) => BDAL_TYPES.includes(t)));
+                    }
                     setStatus(s); applyFilters();
                   }}
                   style={{
@@ -908,7 +922,9 @@ export default function Properties() {
             {activeChips.length > 1 && (
               <button
                 onClick={() => {
-                  setStatus(""); setTypes([]); setGovId(""); setAreaIds([]);
+                  // "مسح الكل" clears the sub-filters but keeps the current
+                  // status tab (للإيجار/للبيع/للبدل) the user is browsing.
+                  setTypes([]); setGovId(""); setAreaIds([]);
                   setMinPrice(""); setMaxPrice(""); setMinArea(""); setMaxArea(""); setBedrooms(""); setAmenities([]);
                   applyFilters();
                 }}
